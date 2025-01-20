@@ -1,4 +1,4 @@
-# MasterThesisGDOP
+# Estimation-of-GDOP-in-Norwegian-Valleys
 
 ### Starte prosjektet
 

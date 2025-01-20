@@ -1,8 +1,7 @@
-.venv/
-venv/
+backend/venv
 backend/__pycache__/
 backend/unzipped/
 backend/DataFrames/
-frontend/node_modules/
-
+.DS_Store
+data/
 
