@@ -1,0 +1,70 @@
+.satellite-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Columns will auto-fill the space */
+  border: 1px solid #ccc;
+  border-collapse: collapse; /* Ensure borders are not doubled */
+  margin: 20px auto;
+  width: 35%; /* Center the table and control its width */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+  text-align: center;
+}
+
+.satellite-number p {
+  margin: 0;
+  font-size: 12px;
+  color: #333; /* Slightly dark text */
+}
+
+.satellite-number:hover {
+  background-color: #f1f1f1; /* Hover effect for better interactivity */
+}
+.dashboard-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.chart-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.chart-container {
+  width: 45%; /* Each chart will take 45% of the width */
+  margin: 10px;
+}
+
+.skyplot-table-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  margin: 20px 0;
+  min-height: 600px;
+}
+
+.skyplot {
+  width: 60%; /* Skyplot takes 60% of the row width */
+  margin: 10px;
+}
+
+.satellite-column {
+  border: 1px solid #ddd;
+  padding: 5px;
+  margin-bottom: 5px;
+}
+
+.satellite-name {
+  font-weight: bold;
+  padding: 10px;
+  color: #fff;
+}
+
+.satellite-number {
+  padding: 5px;
+  border-top: 1px solid #eee;
+}

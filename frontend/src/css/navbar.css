@@ -1,0 +1,26 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-logo {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.navbar-profile {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.navbar-profile:hover {
+  background-color: #0056b3;
+}

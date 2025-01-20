@@ -1,0 +1,15 @@
+.skyplot-container {
+    width: 100%; /* Make the container fill the parent width */
+    height: 600px; /* Make the container fill the parent height */
+    display: flex; /* Use flexbox to ensure content is properly centered and aligned */
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+  }
+  
+  .skyplot-canvas {
+    width: 100%; /* Make the canvas fill the entire container */
+    height: 100%; /* Make the canvas fill the entire container */
+    
+    border-radius: 10px; /* Optional: Add rounded corners */
+  }
+  

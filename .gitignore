@@ -1,0 +1,8 @@
+.venv/
+venv/
+backend/__pycache__/
+backend/unzipped/
+backend/DataFrames/
+frontend/node_modules/
+
+
