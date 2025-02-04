@@ -6,28 +6,8 @@ import ahrs
 from sortDataNew import sortData
 from datetime import datetime, timedelta
 from satellitePositions import get_satellite_positions
-
-T = 558000
-GM = 3.986005*10**14
-we = 7.2921151467 *10**(-5) 
-c = 299792458
-
-wgs = ahrs.utils.WGS()
-#romsdalen
-# phi = 62.42953 * np.pi/180
-# lam = 7.94942* np.pi/180
-# h = 117.5
-
-#Parkeringsplass NTNU 20 grader
-# phi = 63.41457900 * np.pi/180
-# lam = 10.41045326 * np.pi/180
-# h = 42.738
-
-#Parkeringsplass NTNU 10 grader
-phi = 63.41458293  * np.pi/180
-lam = 10.41044691  * np.pi/180
-h =39.689
-
+from generateElevationMask import check_satellite_sight, find_elevation_cutoff
+from common_variables import wgs, phi,lam, h, E, N
 
 def Cartesian(phi,lam, h):
     N = (wgs.a**2)/np.sqrt(wgs.a**2*(np.cos(phi))**2 + wgs.b**2*(np.sin(phi))**2)
@@ -35,9 +15,6 @@ def Cartesian(phi,lam, h):
     Y = (N+h)*np.cos(phi)*np.sin(lam)
     Z = (((wgs.b**2)/(wgs.a**2))*N + h)*np.sin(phi)
     return [X,Y,Z]
-
-#point 1 coordinates
-recieverPos0 = Cartesian(phi,lam, h)
 
 #calculate LG
 T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
@@ -65,41 +42,43 @@ def CartesianToGeodetic(X, Y, Z, a, b):
     
     return [phi_deg, lam_deg, h]
 
-#get daynumber(for broadcasting ephemeris)
+
 def getDayNumber(date):
     print('in getDayNumber', date)
-    given_date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S.%f")
-    start_date = datetime(given_date.year, 1, 1)
-    days_difference = (given_date - start_date).days + 1
-    if given_date.date() == datetime.now().date():
+    start_date = datetime(date.year, 1, 1)
+    days_difference = (date - start_date).days + 1
+    if date.date() == datetime.now().date():
         days_difference -= 1
-        given_date = given_date - timedelta(days=1)
+        date = date - timedelta(days=1)
     daynumber = f"{days_difference:03d}"
 
-    print(daynumber, given_date)
-    sortData(daynumber, given_date)
+    #print(daynumber, date)
+    sortData(daynumber, date)
     return daynumber
 
-def get_gnss(daynumber):
+def get_gnss(daynumber,year):
     print('in gnss_mapping')
     gnss_mapping = {
-        'GPS': pd.read_csv(f"backend/DataFrames/{daynumber}/structured_dataG.csv"),
-        'GLONASS': pd.read_csv(f"backend/DataFrames/{daynumber}/structured_dataR.csv"),
-        'Galileo': pd.read_csv(f"backend/DataFrames/{daynumber}/structured_dataE.csv"),
-        'QZSS': pd.read_csv(f"backend/DataFrames/{daynumber}/structured_dataJ.csv"),
-        'BeiDou': pd.read_csv(f"backend/DataFrames/{daynumber}/structured_dataC.csv"),
-        'NavIC': pd.read_csv(f"backend/DataFrames/{daynumber}/structured_dataI.csv"),
-        'SBAS': pd.read_csv(f"backend/DataFrames/{daynumber}/structured_dataS.csv")
+        'GPS': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataG.csv"),
+        'GLONASS': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataR.csv"),
+        'Galileo': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataE.csv"),
+        'QZSS': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataJ.csv"),
+        'BeiDou': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataC.csv"),
+        'NavIC': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataI.csv"),
+        'SBAS': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataS.csv")
     }
     return gnss_mapping
 
 #same as above but it return the values that are nececary for visualizing
-def visualCheck(dataframe, recieverPos0, elevationInput):
+def visualCheck(dataframe,observation_cartesian, observation_en, elevation_cutoffs, elevation_mask):
+    #print('in visual check')
     LGDF = pd.DataFrame(columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
+    nb = 0
+    length = len(dataframe)
     for index, row in dataframe.iterrows():
-        deltax = row["X"]-recieverPos0[0]
-        deltay = row["Y"]-recieverPos0[1]
-        deltaz = row["Z"]-recieverPos0[2]
+        deltax = row["X"]-observation_cartesian[0]
+        deltay = row["Y"]-observation_cartesian[1]
+        deltaz = row["Z"]-observation_cartesian[2]
         deltaCTRS = np.array([deltax,deltay,deltaz])
         
         xyzLG = T @ deltaCTRS.T
@@ -112,28 +91,39 @@ def visualCheck(dataframe, recieverPos0, elevationInput):
         elevation = 90- abs(zenith)
         if azimuth < 0:
             azimuth = 360 + azimuth
-        if(elevation >=elevationInput):
+        minElev = elevation_cutoffs[int(round(azimuth))]
+        #if check_satellite_sight((observation_en[0], observation_en[1]), 5000, elevation, azimuth):
+        if elevation > minElev and elevation > elevation_mask:
             LGDF.loc[len(LGDF)] = [row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith]
-    
+        #print(f"{nb} /{length}")
+        nb +=1
     return LGDF
 
 
 def runData(gnss_list, elevationstring, t, epoch):
+    print(f"gnss_list:{gnss_list}")
+    observation_Cartesian = Cartesian(phi,lam, h)
+    observation_en = (E, N)
+    elevation_cutoffs = find_elevation_cutoff(observation_en, 5)
+    #elevation_cutoff = []
     print('in runData')
-    daynumber = getDayNumber(t)
-    gnss_mapping =  get_gnss(daynumber)
+    given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
+    daynumber = getDayNumber(given_date)
+    gnss_mapping =  get_gnss(daynumber,given_date.year )
     elevation = float(elevationstring)
     #create a list that contains the seconds for every halfhour in the epoch when epoch is hours
     final_list = []
     final_listdf = []
-    print('finds visual satellites')
+    #print('finds visual satellites')
     for i in range(0, int(epoch)*2 + 1):
+        print(f"{i}/{int(epoch)*2 + 1}")
         time = pd.to_datetime(t)+ pd.Timedelta(minutes=i*30)
         LGDF_dict = []
         LGDF_df = []
         for gnss in gnss_list:
+            print(gnss)
             positions = get_satellite_positions(gnss_mapping[gnss],gnss,time)
-            data = visualCheck(positions, recieverPos0, elevation)
+            data = visualCheck(positions,observation_Cartesian, observation_en, elevation_cutoffs, elevation_mask)
             if not data.empty:
                 LGDF_dict += [data.to_dict()]  
                 LGDF_df += [data]
@@ -141,7 +131,8 @@ def runData(gnss_list, elevationstring, t, epoch):
         final_listdf.append(LGDF_df)
     return final_list, final_listdf
 
-#test = runData(['GPS', 'Galileo', 'GLONASS', 'BeiDou'], '10', '2024-11-12T00:00:00.000', 4)
+# test_f,test = runData(['GPS', 'Galileo', 'GLONASS', 'BeiDou'], '10', '2025-01-30T12:00:00.000',1)
+# print(test)
 # test funksjoner
 # def visualCheck2(dataframe, recieverPos0, elevationInput):
 #     LGDF = pd.DataFrame(columns = ["satelite_id","time", "X","Y","Z", "azimuth", "zenith"])

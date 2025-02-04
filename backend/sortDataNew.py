@@ -515,12 +515,13 @@ def SBASdata(df,satellitt_id,time, values_list, SV, type):
 
 
 def sortData(daynumber, date):
-    if os.path.exists(f"backend/DataFrames/{daynumber}/structured_dataG.csv"):
+
+    if os.path.exists(f"DataFrames/{date.year}/{daynumber}/structured_dataG.csv"):
         print(f"Data on day {daynumber} already sorted")
         return
     else:
-        filename = f'backend/unzipped/BRD400DLR_S_2024{daynumber}0000_01D_MN.rnx'
-        lastned(daynumber)
+        filename = f'unzipped/BRD400DLR_S_{date.year}{daynumber}0000_01D_MN.rnx'
+        lastned(daynumber,date.year )
         #current date
         current_date = date.date()
         #creates new dataFrames, based on the columns from Dataframes
@@ -591,7 +592,7 @@ def sortData(daynumber, date):
                     Galileiodata(structured_dataE,satellitt_id,time,values_list, SV, type)
 
         print(f"Processing at {time}")
-        output_folder = "backend/DataFrames/" + str(daynumber)
+        output_folder = f"DataFrames/{date.year}/" + str(daynumber)
         os.makedirs(output_folder, exist_ok=True)
         file_pathG = os.path.join(output_folder, "structured_dataG.csv")
         structured_dataG = structured_dataG.sort_values(by=['satelite_id', 'Datetime'])

@@ -36,7 +36,7 @@ for file in tif_files:
 romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
                      [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
                      [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
-
+center = (127961.24,6948183.94)
 def calculate_distance(point1, point2):
     return math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
@@ -112,14 +112,15 @@ def generate_triangles(center, radius, step=1):
     
     return polygons
 
-def find_highest_elevation_triangle(raster_path, center,center_height, radius_km):
+def find_highest_elevation_triangle(rastername, center, radius_km):
     """Finn høyeste punkt innenfor en radius for hver 5. grad rundt senter."""
     #radius_deg = radius_km / 111  # 1 grad ≈ 111 km
     polygons = generate_triangles(center, radius_km*1000)
     #print(polygons)
-    with rasterio.open(raster_path) as src:
+    with rasterio.open(rastername) as src:
+        dem_data = src.read(1)
+        center_height = dem_data[src.index(center[0], center[1])]
         highest_points = []
-        
         for polygon in polygons:             
             out_image, out_transform = mask(src, polygon, crop=True, nodata=src.nodata)
             out_data = out_image[0]  # Hent første bånd  
@@ -128,7 +129,7 @@ def find_highest_elevation_triangle(raster_path, center,center_height, radius_km
             best_point = None   
             # # Finn høyeste verdi i masken
             if out_data.size > 0:
-           
+            
                 #iterate through all cells that do not have the nodata value
                 for i in range(out_data.shape[0]):
                     for j in range(out_data.shape[1]):
@@ -143,7 +144,7 @@ def find_highest_elevation_triangle(raster_path, center,center_height, radius_km
             
             highest_points.append((best_point, best_height))        
         
-        return highest_points
+        return center_height,highest_points
 
 
 
@@ -289,6 +290,8 @@ def plotCirle(observer, obstructions_lines, obstructions_triangles, observer_hei
 
     deg0_x = [90* math.cos(math.radians(angle))  for angle in range(0, 360, 1)]
     deg0_y = [90* math.sin(math.radians(angle))  for angle in range(0, 360, 1)]
+    deg10_x = [ (1- (10)/90)*90* math.cos(math.radians(angle))  for angle in range(0, 360, 1)]
+    deg10_y = [(1- (10)/90)*90* math.sin(math.radians(angle))  for angle in range(0, 360, 1)]
     deg20_x = [ (1- (20)/90)*90* math.cos(math.radians(angle))  for angle in range(0, 360, 1)]
     deg20_y = [(1- (20)/90)*90* math.sin(math.radians(angle))  for angle in range(0, 360, 1)]
     deg40_x = [ (1- (40)/90)*90* math.cos(math.radians(angle))  for angle in range(0, 360, 1)]
@@ -300,6 +303,7 @@ def plotCirle(observer, obstructions_lines, obstructions_triangles, observer_hei
     ax.plot(0, 0, label="Observer Position", marker='o', color='red')
     ax.plot(deg0_x, deg0_y, color='black')
     ax.plot(deg20_x, deg20_y,color='black')
+    ax.plot(deg10_x, deg10_y,color='black')
     ax.plot(deg40_x, deg40_y,color='black')
     ax.plot(deg60_x, deg60_y, color='black')
     ax.plot(points_x_lines, points_y_lines, label="Cut off angle Lines", color='blue')
@@ -310,24 +314,25 @@ def plotCirle(observer, obstructions_lines, obstructions_triangles, observer_hei
     ax.text(deg60_x[-1], deg60_y[-1], "60°", fontsize=12, color='black', verticalalignment='bottom')
     ax.set_title(title)
     plt.legend()
+    plt.grid()
     plt.show()
 	
 	
 
 # Åpne DEM-data
-with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
-    dem_data = src.read(1)
-    transform = src.transform
+# with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+#     dem_data = src.read(1)
+#     transform = src.transform
 
 
-observer = romsdalen_punkter[1]  # Observatørposisjon
-observer_height = dem_data[src.index(observer[0], observer[1])]  # Høyde på observatørposisjonen
-blocked_points = find_obstruction(dem_data, transform, observer, 5000) #sjekker med radius 5km
-blocked_points_triangles = find_highest_elevation_triangle("data/merged_raster_romsdalen_10.tif", observer, observer_height, 5)
+# observer = romsdalen_punkter[1]  # Observatørposisjon
+# observer_height = dem_data[src.index(observer[0], observer[1])]  # Høyde på observatørposisjonen
+# blocked_points = find_obstruction(dem_data, transform, center, 5000) #sjekker med radius 5km
+# observer_height,blocked_points_triangles = find_highest_elevation_triangle("data/merged_raster_romsdalen_10.tif", center, 5)
 
-# plot_obstructions(observer, blocked_points)
-#plot_sight(observer, blocked_points, observer_height)
-plotCirle(observer, blocked_points, blocked_points_triangles, observer_height, f'Cut off angle for observer at {observer}') 
+# # # plot_obstructions(observer, blocked_points)
+# # #plot_sight(observer, blocked_points, observer_height)
+#plotCirle(center, blocked_points, blocked_points_triangles, observer_height, f'Cut off angle for observer at {center}') 
 
 
 

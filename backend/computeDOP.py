@@ -1,21 +1,8 @@
-
 import itertools
 import numpy as np
 import pandas as pd
-import ahrs
-
 from computebaner import runData
-
-
-T = 558000
-GM = 3.986005*10**14
-we = 7.2921151467 *10**(-5) 
-c = 299792458
-wgs = ahrs.utils.WGS()
-#romsdalen
-phi = 62.42953 * np.pi/180
-lam = 7.94942* np.pi/180
-h = 117.5
+from common_variables import wgs, phi,lam, h
 
 def R2(theta):
     return np.array([[np.cos(theta),0,-np.sin(theta)],
