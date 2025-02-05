@@ -93,7 +93,7 @@ def visualCheck(dataframe,observation_cartesian, observation_en, elevation_cutof
             azimuth = 360 + azimuth
         minElev = elevation_cutoffs[int(round(azimuth))]
         #if check_satellite_sight((observation_en[0], observation_en[1]), 5000, elevation, azimuth):
-        if elevation > minElev and elevation > elevation_mask:
+        if  elevation > elevation_mask: #elevation > minElev and
             LGDF.loc[len(LGDF)] = [row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith]
         #print(f"{nb} /{length}")
         nb +=1
@@ -123,7 +123,7 @@ def runData(gnss_list, elevationstring, t, epoch):
         for gnss in gnss_list:
             print(gnss)
             positions = get_satellite_positions(gnss_mapping[gnss],gnss,time)
-            data = visualCheck(positions,observation_Cartesian, observation_en, elevation_cutoffs, elevation_mask)
+            data = visualCheck(positions,observation_Cartesian, observation_en, elevation_cutoffs, elevation)
             if not data.empty:
                 LGDF_dict += [data.to_dict()]  
                 LGDF_df += [data]

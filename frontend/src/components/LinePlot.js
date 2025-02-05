@@ -43,7 +43,8 @@ export const LineChart = ({ data, labels, satellites }) => {
   const HDOP = data.map((array) => array[3]);
   const VDOP = data.map((array) => array[4]);
   let satTypes = [];
-  satellites[1].forEach((satelliteGroup) => {
+  console.log('satellites',satellites)
+  satellites[0].forEach((satelliteGroup) => {
     satTypes.push(satelliteGroup.type);
   });
   // Single chart configuration with multiple datasets

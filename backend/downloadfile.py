@@ -1,6 +1,7 @@
 import requests
 import gzip
 import os
+import json
 # day = 317
 folder = 'unzipped/'
 
@@ -29,3 +30,24 @@ def lastned(day, year):
         print('File Exists')
 
 # lastned(day)
+
+def downloadRoad(roadname):
+    url = f"https://nvdbapiles-v3.utv.atlas.vegvesen.no/vegnett/veglenkesekvenser?{roadname}"
+    header = {
+        "Accept": "application/json",
+        "X-Client": "Masteroppgave-vegnett"
+        }
+    response = requests.get(url, headers=header)
+
+    if response.status_code == 200:
+        data = response.json()
+        #print(data)
+        #create a file with the data as json data
+        # print(len(data['objekter'][0]['veglenker']))
+
+        # with open(f'{roadname}.json', 'w',  encoding='utf-8') as f:
+        #     json.dump(data, f, ensure_ascii=False, indent=4)
+    else:
+        print("Error:", response)
+
+    return data

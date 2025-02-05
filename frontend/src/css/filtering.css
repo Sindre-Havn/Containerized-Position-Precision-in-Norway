@@ -1,7 +1,26 @@
 .filter-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto;
+  column-gap: 10px;
+  margin: 10px;
+  background-color: #f7f7f7;
+  padding: 10px;
+  border-radius: 20px;
+  
+}
+
+.filter-comp h3 {
+  margin-bottom: 20px;
+}
+
+.filter-comp h4 {
+  margin: 10px 0 5px;
+}
+.filter-comp{
   display: flex;
   flex-direction: column;
-  justify-content: left;
+  justify-content: center;
   align-items: center;
   margin: 0 auto;
   margin-top: 20px;
@@ -10,14 +29,6 @@
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 50%; /* Adjust to control component width */
-}
-
-.filter-container h3 {
-  margin-bottom: 20px;
-}
-
-.filter-container h4 {
-  margin: 10px 0 5px;
 }
 
 .checkbox-group label {

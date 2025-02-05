@@ -7,6 +7,8 @@ export const timeState = atom(new Date())
 export const epochState = atom(2)
 export const elevationState = atom(0)
 
+export const endPointsState = []
+
 export const gnssState = atom({
     GPS: true,
     GLONASS: true,

@@ -14,10 +14,20 @@ phi = 62.47714 * np.pi/180
 lam = 7.772829 * np.pi/180
 h = 60.7
 
-#romsdalen på veg
+#romsdalen  E N
 N = 6948183.94
 E = 127961.24
 h = 60.7
+
+# #ntnu
+# phi = 63.41452 * np.pi/180
+# lam = 10.41038 * np.pi/180
+# h = 41.6
+
+# #ntnu E N
+# N = 7039984
+# E = 270974
+
 #Parkeringsplass NTNU 20 grader
 # phi = 63.41457900 * np.pi/180
 # lam = 10.41045326 * np.pi/180

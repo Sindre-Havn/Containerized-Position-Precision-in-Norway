@@ -7,7 +7,7 @@ import '../css/skyplot.css';
 
 function sphericalToCartesian2D(r, azimuth, zenith, center) {
   // Convert to radians
-  azimuth = (azimuth * Math.PI) / 180 ;
+  azimuth = ((90-azimuth) * Math.PI) / 180 ;
   zenith = (zenith * Math.PI) / 180 ;
 
   //const newRad = r* (90-zenith)/90; 

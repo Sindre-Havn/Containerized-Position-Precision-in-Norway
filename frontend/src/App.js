@@ -10,6 +10,7 @@ function App() {
         <div>
             <NavBar />
             <FilterComponent />
+            
             <Visualization />
   
         </div>
