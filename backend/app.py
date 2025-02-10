@@ -5,6 +5,8 @@ from computebaner import  runData
 from computeDOP import best
 from flask_cors import CORS
 from datetime import datetime
+from downloadfile import downloadRoad
+from romsdalenRoad import get_road_between_points
 
 # Set up basic configuration for logging
 #logging.basicConfig(level=logging.INFO)
@@ -43,7 +45,35 @@ def satellites():
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
         return response, 202
 
+@app.route('/road', methods=['POST','OPTIONS'])
+def road():
+    if request.method == 'OPTIONS':
+        # Handle the preflight request with necessary headers
+        response = jsonify({'status': 'Preflight request passed'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+        return response, 200
 
+
+    is_processing = True
+    #data = downloadRoad('EV136')
+    startPoint = request.json.get('startPoint')
+    endPoint = request.json.get('endPoint')
+    print(request.json)
+    distance = request.json.get('distance')
+    road =  get_road_between_points(startPoint, endPoint)
+    is_processing = False
+    
+    if not is_processing:
+        response = jsonify({'message': 'Data processed successfully', 'data': road})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
+        return response, 200
+    else:
+        response = jsonify({"data": "Data is not ready"})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
+        return response, 202
+    
 @app.route('/initialize', methods=['GET'])
 def initialize():
     #todays date in strdatetimeformat 

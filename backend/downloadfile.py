@@ -32,7 +32,7 @@ def lastned(day, year):
 # lastned(day)
 
 def downloadRoad(roadname):
-    url = f"https://nvdbapiles-v3.utv.atlas.vegvesen.no/vegnett/veglenkesekvenser?{roadname}"
+    url = f"https://nvdbapiles-v3.utv.atlas.vegvesen.no/vegnett/veglenkesekvenser?vegsystemreferanse={roadname}"
     header = {
         "Accept": "application/json",
         "X-Client": "Masteroppgave-vegnett"
@@ -41,6 +41,7 @@ def downloadRoad(roadname):
 
     if response.status_code == 200:
         data = response.json()
+        return data
         #print(data)
         #create a file with the data as json data
         # print(len(data['objekter'][0]['veglenker']))
@@ -50,4 +51,4 @@ def downloadRoad(roadname):
     else:
         print("Error:", response)
 
-    return data
+    

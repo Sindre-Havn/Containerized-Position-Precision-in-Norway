@@ -91,9 +91,10 @@ def visualCheck(dataframe,observation_cartesian, observation_en, elevation_cutof
         elevation = 90- abs(zenith)
         if azimuth < 0:
             azimuth = 360 + azimuth
+        print(f'azimuth: {int(round(azimuth))}')
         minElev = elevation_cutoffs[int(round(azimuth))]
         #if check_satellite_sight((observation_en[0], observation_en[1]), 5000, elevation, azimuth):
-        if  elevation > elevation_mask: #elevation > minElev and
+        if  elevation > elevation_mask and elevation > minElev: #elevation > minElev and
             LGDF.loc[len(LGDF)] = [row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith]
         #print(f"{nb} /{length}")
         nb +=1

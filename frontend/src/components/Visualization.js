@@ -81,7 +81,7 @@ const Visualization = () => {
     const [DOP, setDOP] = useState([[0,0,0]]);
 
     useEffect(() => {
-      //setLoading(true);
+      if (!updateData) return; 
     
       const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
     
@@ -119,7 +119,7 @@ const Visualization = () => {
       
 
 
-    }, [updateData]);
+    }, [updateData, time, elevationAngle, epoch, gnssNames, setUpdateData]);
     
   if (updateData) {
     return <p>Loading data...</p>;
