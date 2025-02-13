@@ -26,8 +26,11 @@ def lastned(day, year):
 
         with open(folder+filename[:-3],'wb') as f:
             f.write(gzip_fd)
+        
+        return os.path.join(folder, filename[:-3]) 
     else:
         print('File Exists')
+        return os.path.join(folder, filename[:-3]) 
 
 # lastned(day)
 

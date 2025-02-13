@@ -26,7 +26,7 @@ def Cartesian(phi,lam, h):
     return [X,Y,Z]
 
 #point 1 coordinates
-recieverPos0 = Cartesian(phi,lam, h)
+
 def geometric_range(sat_pos, rec_pos):
     return np.sqrt((sat_pos[0] - rec_pos[0])**2 +
                    (sat_pos[1] - rec_pos[1])**2 +
@@ -69,6 +69,7 @@ def DOPvalues(satellites, recieverPos0):
     return GDOP,PDOP,TDOP,HDOP,VDOP
 
 def best(satellites):
+    recieverPos0 = Cartesian(phi,lam, h)
     final_DOP_values = []
     for satelitedf in satellites:
         satellites_array = []
@@ -83,6 +84,36 @@ def best(satellites):
     
     return final_DOP_values
 
-# data, datadf = runData(["GPS"], "10", "2024-09-26T04:00:00.000", "6")
+
+# import time
+
+# # Start tidtaking
+# start_time = time.time()
+
+# # Kjør funksjonen
+# #sortData('042', datetime(2025, 2, 11, 0, 0))
+#data, datadf = runData(['GPS', 'Galileo','GLONASS','BeiDou' ], "10", "2025-02-11T04:00:00.000", "1")
+
+# #best(datadf)
+
+# # Stopp tidtaking
+# end_time = time.time()
+
+# # Beregn og skriv ut kjøretiden
+# elapsed_time = end_time - start_time
+# print(f"Kjøretid rundata: {elapsed_time:.2f} sekunder")
+
+# start_time = time.time()
+
+# # Kjør funksjonen
+# #sortData('042', datetime(2025, 2, 11, 0, 0))
+# #data, datadf = runData(['GPS', 'Galileo','GLONASS','Beidou' ], "10", "2025-02-11T04:00:00.000", "6")
 
 # best(datadf)
+
+# # Stopp tidtaking
+# end_time = time.time()
+
+# # Beregn og skriv ut kjøretiden
+# elapsed_time = end_time - start_time
+# print(f"Kjøretid best: {elapsed_time:.2f} sekunder")
