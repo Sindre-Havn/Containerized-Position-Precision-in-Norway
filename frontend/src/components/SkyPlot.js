@@ -2,33 +2,37 @@ import React, {useState} from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Line, Text } from '@react-three/drei';
 import { Satellite, colors } from './Satellite';
-import { Vector3 } from 'three';
+import { CatmullRomCurve3,Vector3 } from 'three';
 import '../css/skyplot.css';
 
 function sphericalToCartesian2D(r, azimuth, zenith, center) {
   // Convert to radians
-  azimuth = (azimuth * Math.PI) / 180 ;
+  azimuth = ((90-azimuth) * Math.PI) / 180 ;
   zenith = (zenith * Math.PI) / 180 ;
 
+  //const newRad = r* (90-zenith)/90; 
+
   // Calculate X and Y based on 2D plane
-  const x = r * Math.sin(zenith) * Math.cos(azimuth) + center[0];
-  const y = r * Math.sin(zenith) * Math.sin(azimuth) + center[1];
+  const x = r * Math.sin(zenith) * Math.cos(azimuth) + center[0];// * Math.sin(zenith)
+  const y = r * Math.sin(zenith) * Math.sin(azimuth) + center[1];// * Math.sin(zenith)
 
-  
-  const rotatedX = y; 
-  const rotatedY = x; 
+  // const rotatedX = newRad * Math.cos(azimuth) + center[0];
+  // const rotatedY = newRad * Math.sin(azimuth) + center[1]; 
 
-  return [rotatedX, rotatedY];
+  return [x, y];
 }
 
-const SatelliteRoute = ({ points, color }) => (
-  <Line
-    points={points}  
-    color={color}  // Line color
-    lineWidth={2}  // Width of the line
-    dashed={false}  // Optional: use dashed line if desired
-  />
-);
+const SatelliteRoute = ({ points, color }) => {
+  return (
+    <Line
+      points={points}
+      color={color}
+      lineWidth={2}
+      dashed={false}
+    />
+  );
+};
+
 const CircleOutline = ({ radius, position, color, lineWidth, text }) => {
     const points = [];
     const textPoints = [];
@@ -131,8 +135,8 @@ export const SatelliteMap = ({satellites, cutOffElevation}) => {
   const center = [0, 0];
   const radius = 4;
   const cutOffRad = radius * Math.cos((cutOffElevation * Math.PI) / 180);
-  const elevations = [0, 40, 70]; // Example: 0°, 40°, 70° elevations
-  const radii = elevations.map(elev => radius * Math.cos((elev * Math.PI) / 180));
+  const elevations = [0, 20, 40, 60]; // Example: 0°, 40°, 70° elevations
+  const radii = elevations.map((elevation) => radius * Math.cos((elevation * Math.PI) / 180)); // radius * Math.cos((elevation * Math.PI) / 180)
   let satellitesGrouped = {};
   // eslint-disable-next-line
   satellites.map((satellitesBefore, index) =>

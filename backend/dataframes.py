@@ -1,6 +1,3 @@
-
-import pandas as pd
-
 # G: GPS
 # R: GLONASS
 # E: Galileo

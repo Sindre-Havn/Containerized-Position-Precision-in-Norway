@@ -3,5 +3,5 @@ backend/__pycache__/
 backend/unzipped/
 backend/DataFrames/
 .DS_Store
-data/
-
+backend/data/
+backend/veglenkerEV136.json
