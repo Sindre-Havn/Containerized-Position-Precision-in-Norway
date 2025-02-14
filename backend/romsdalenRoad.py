@@ -3,136 +3,39 @@ from pyproj import Transformer
 from shapely.wkt import loads
 from downloadfile import downloadRoad
 import requests
+import requests
+import concurrent.futures
+from itertools import chain
+
+from shapely.geometry import LineString, Point
 
 
-transformer = Transformer.from_crs("EPSG:32633", "EPSG:4326", always_xy=True)
 
+transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
+transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
 def linestring_to_coordinates(linestring):
     wkt_string = linestring.replace("LINESTRING Z(", "").replace(")", "")
     points = [tuple(map(float, p.split())) for p in wkt_string.split(", ")]  # Parse E, N values 
     converted_points = [[transformer.transform(e, n)[0], transformer.transform(e, n)[1]] for e, n,h in points]
     return converted_points
-def get_total_road(roadJson):
-    # print(roadJson)
-    total_road = []
-    road = roadJson['objekter']
-    num = 0
-    for segment in road:
-        segmentID = segment['veglenkesekvensid']
-        veglenker = segment['veglenker']
-        #sorterer porter etter relativ posisjon på en vegsekvens
-        porter = sorted(segment['porter'], key=lambda x: x['relativPosisjon'])
-        porter_list = [port['id'] for port in porter]
-        port_index = {port: idx for idx, port in enumerate(porter_list)}
-        sort_veglenker = sorted(veglenker, key=lambda x: port_index.get(x['startport'], float('inf')))
-        #print portid sortert
-        # print(porter_list)
-        # print(port_index)
-        # print(f'porter lengde:{len(porter)}, veglenker lengde:{len(veglenker)}')
-        total_vegsegment = []
-        for i in range(0,len(sort_veglenker)):
-            veglenke = sort_veglenker[i]
-            if(veglenke['type'] == 'HOVED'):
-                #print(veglenke['startport'], veglenke['sluttport'])
-                converted_points = linestring_to_coordinates(veglenke['geometri']['wkt'])
-    
-                # if (veglenke['startport'] == sort_veglenker[i-1]['startport']) and (veglenke['sluttport'] == sort_veglenker[i-1]['sluttport']):
-                #     #choose the one with the newest måledato
-                #     if (i >0) and (veglenke['startdato'] > sort_veglenker[i-1]['startdato']):
-                #         total_vegsegment[len(total_vegsegment)-1] = converted_points
-                # else:
-                total_vegsegment.append(converted_points)
-        
-        total_veg_list = []
-        for seg in total_vegsegment:
-           for point in seg:
-                total_veg_list.append(point)
 
-        geojson_data = {
-            "type": "Feature",
-            "geometry": {
-                "type": "LineString",
-                "coordinates": total_veg_list
-            },
-            "properties": {"name": "Road Segment", "id": segmentID}
-        }
-        total_road.append(geojson_data)
-       
-    return total_road
+def convert_coordinates(wgs84_coords):
+    #wgs84_coords = wgs84_coords
+    #points = [tuple(map(float, p.split())) for p in wkt_string.split(", ")]  # Parse E, N values 
+    converted_points = [[transformerToEN.transform(lng, lat)[0], transformerToEN.transform(lng, lat)[1]] for lng,lat in wgs84_coords]
+    return converted_points
 
 
-# data = downloadRoad('EV136')
-# road = get_total_road(data)
-# print(road)
 
-# def get_road_between_points(startpoint, sluttpoint):
+def sort_road(total_road):
+    sorted_road = sorted(total_road, key=lambda segment: segment["geometry"]["coordinates"][0])
+    return sorted_road
 
-#     url = f"https://nvdbapiles-v3.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=10&omkrets=100&konnekteringslenker=true&detaljerte_lenker=true&behold_trafikantgruppe=false&pretty=true&kortform=true"
-#     header = {
-#         "Accept": "application/json",
-#         "X-Client": "Masteroppgave-vegnett"
-#         }
-    
-#     response = requests.get(url, headers=header)
-#     total_road = []
-#     if response.status_code == 200:
-#         data = response.json()
-#         segmenter = data['vegnettsrutesegmenter']
-#         for vegnettrutesegment in segmenter:
-#             segmentId = vegnettrutesegment['veglenkesekvensid']
-#             url_veg = f"https://nvdbapiles-v3.atlas.vegvesen.no/vegnett/veglenkesekvenser/{segmentId}"
-#             responseveg = requests.get(url_veg, headers=header)
-#             segment = responseveg.json()
-            
-#             veglenker = segment['veglenker']
-#             #sorterer porter etter relativ posisjon på en vegsekvens
-#             porter = sorted(segment['porter'], key=lambda x: x['relativPosisjon'])
-#             porter_list = [port['id'] for port in porter]
-#             port_index = {port: idx for idx, port in enumerate(porter_list)}
-#             sort_veglenker = sorted(veglenker, key=lambda x: port_index.get(x['startport'], float('inf')))
-#             #print portid sortert
-#             # print(porter_list)
-#             # print(port_index)
-#             # print(f'porter lengde:{len(porter)}, veglenker lengde:{len(veglenker)}')
-#             total_vegsegment = []
-#             for i in range(0,len(sort_veglenker)):
-#                 veglenke = sort_veglenker[i]
-#                 if(veglenke['type'] == 'HOVED'):
-#                     #print(veglenke['startport'], veglenke['sluttport'])
-#                     converted_points = linestring_to_coordinates(veglenke['geometri']['wkt'])
-        
-#                     # if (veglenke['startport'] == sort_veglenker[i-1]['startport']) and (veglenke['sluttport'] == sort_veglenker[i-1]['sluttport']):
-#                     #     #choose the one with the newest måledato
-#                     #     if (i >0) and (veglenke['startdato'] > sort_veglenker[i-1]['startdato']):
-#                     #         total_vegsegment[len(total_vegsegment)-1] = converted_points
-#                     # else:
-#                     total_vegsegment.append(converted_points)
-            
-#                 total_veg_list = []
-#                 for seg in total_vegsegment:
-#                     for point in seg:
-#                         total_veg_list.append(point)
 
-#                 geojson_data = {
-#                     "type": "Feature",
-#                     "geometry": {
-#                         "type": "LineString",
-#                         "coordinates": total_veg_list
-#                     },
-#                     "properties": {"name": "Road Segment", "id": segmentId}
-#                 }
-#                 total_road.append(geojson_data)
-#         return total_road
-    
 
-import requests
-import concurrent.futures
-from itertools import chain
-
-def get_road_between_points(startpoint, sluttpoint):
-    print('in get_road_between_points')
-    url = f"https://nvdbapiles-v3.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=3&omkrets=5&konnekteringslenker=true&pretty=true&kortform=true&srid=utm33&vegsystemreferanse=EV136"
-    
+def get_road(startpoint,sluttpoint):
+    print('in get_road')
+    url =f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=10&omkrets=100&konnekteringslenker=true&detaljerte_lenker=false&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse=EV136'
     headers = {
         "Accept": "application/json",
         "X-Client": "Masteroppgave-vegnett"
@@ -145,54 +48,79 @@ def get_road_between_points(startpoint, sluttpoint):
     data = response.json()
     segmenter = data.get('vegnettsrutesegmenter', [])
     
-    segment_ids = [seg['veglenkesekvensid'] for seg in segmenter]
-    
-    total_road = []
-    
-    def fetch_segment(segment_id):
-        """ Henter data for et enkelt segment parallelt. """
-        url_veg = f"https://nvdbapiles-v3.atlas.vegvesen.no/vegnett/veglenkesekvenser/{segment_id}?srid=utm33"
-        responseveg = requests.get(url_veg, headers=headers)
+    i = 0
+    total_vegsegment_wgs84=[]
+    for veglenke in segmenter:
+        if (
+                veglenke['type'] == 'HOVED' 
+                and veglenke['typeVeg_sosi'] == 'enkelBilveg' 
+            ):
+          
+                converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
+                geojson_feature = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": converted
+                    },
+                    "properties": {"name": "RoadSegment ", "id": i}
+                }
+
+                total_vegsegment_wgs84.append(geojson_feature)
+                i += 1
+
+    total_veg_sorted = sort_road(total_vegsegment_wgs84)
+
+    # geojson_output = {
+    #     "type": "FeatureCollection",
+    #     "features": total_veg_sorted
+    # }
+    # with open("merged_road.geojson", "w") as f:
+    #     json.dump(geojson_output, f, indent=4)
+    return total_veg_sorted
+
+
+road = get_road([124429.61,6957703.95], [193547.58,6896803.47])
+
+
+
+def find_points(line, avstand):
+    distance= 0
+    left_distance = 0
+    points = []
+    for feature in line:
+        coords = feature["geometry"]["coordinates"]
+        coords = convert_coordinates(coords)
+   
+        line = LineString(coords)
+        length = line.length
+
+        if distance < length:
+            while distance < length:
+                left_distance = length-distance
+                point = line.interpolate(distance)
+                points.append(point)
+                distance += avstand
+            distance -= left_distance
+        else:
+            distance -= length
         
-        if responseveg.status_code != 200:
-            return None
-        
-        segment = responseveg.json()
-        veglenker = segment.get('veglenker', [])
-        porter = sorted(segment.get('porter', []), key=lambda x: x['relativPosisjon'])
-        
-        porter_list = [port['id'] for port in porter]
-        port_index = {port: idx for idx, port in enumerate(porter_list)}
-        
-        sort_veglenker = sorted(veglenker, key=lambda x: port_index.get(x['startport'], float('inf')))
-        print(veglenker[0]['geometri']['wkt'])
-        
-        total_vegsegment = [
-            linestring_to_coordinates(veglenke['geometri']['wkt'])
-            for veglenke in sort_veglenker if veglenke['type'] == 'HOVED'
-        ]
-        
-        total_veg_list = list(chain.from_iterable(total_vegsegment))  # Unngå nested loops
-        
-        return {
+
+    #converter tilbake til 
+    geoJson_points_list = []
+    for point in points:
+        point_converted = transformer.transform(point.x, point.y)
+        point_geojson = {
             "type": "Feature",
             "geometry": {
-                "type": "LineString",
-                "coordinates": total_veg_list
+                "type": "Point",
+                "coordinates": [point_converted[0], point_converted[1]]
             },
-            "properties": {"name": "Road Segment", "id": segment_id}
+            "properties": {"name": "Point"}
         }
-    
-    # 🚀 Parallelliser API-kallene for segmentdetaljer
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = list(executor.map(fetch_segment, segment_ids))
-    
-    # Filter ut None-resultater
-    total_road.extend(filter(None, results))
-    
-    return total_road
+        geoJson_points_list.append(point_geojson)
+    return geoJson_points_list
 
-road = get_road_between_points([124429.61,6957703.95], [193547.58,6896803.47])
-#print(road)
+
 
 #https://nvdbapiles-v3.atlas.vegvesen.no/beta/vegnett/rute?start=124429.61,6957703.95&slutt=193547.58,6896803.47&maks_avstand=3&omkrets=5&konnekteringslenker=true&pretty=true&kortform=true&srid=utm33&vegsystemreferanse=EV136&trafikantgruppe=K

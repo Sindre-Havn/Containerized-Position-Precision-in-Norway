@@ -17,7 +17,13 @@ const customIcon = new L.Icon({
     iconAnchor: [16, 32], // Center the icon
     popupAnchor: [0, -32], // Adjust popup position
   });
-
+const colors = [
+    "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFF2",
+    "#F2FF33", "#FF8C33", "#33FFA1", "#A1FF33", "#8C33FF", "#FF336E",
+    "#33A1FF", "#FFD633", "#33FFD6", "#FF33F2", "#F233FF", "#FF5733",
+    "#5733FF", "#D633FF", "#33FF8C", "#FFA133", "#33D6FF", "#F2A133",
+    "#8CFF33", "#336EFF"
+  ];
 const position = [62.47714, 7.772829]; // Example coordinates
 
 const SearchControl = () => {
@@ -128,14 +134,22 @@ const NavMap = () => {
         </Marker>
       ))} */}
       <SearchControl />
-      {geoJsonData && (geoJsonData.map((data, index) => (
+      {/* {geoJsonData && (geoJsonData.map((data, index) => (
         <GeoJSON
             key={index}
             data={data}
-            style={{ color: "black", weight: 5, opacity: 1 }} // Tilpass farge & sti
+            style={{ color: colors[index], weight: 5, opacity: 1 }} // Tilpass farge & sti
           />
         ))
-      )}
+      )} */}
+      {geoJsonData && 
+        <GeoJSON
+            key={145}
+            data={geoJsonData}
+            style={{ color: "black", weight: 5, opacity: 1 }} // Tilpass farge & sti
+          />
+        
+      }
     </MapContainer>
   </div>
   );
