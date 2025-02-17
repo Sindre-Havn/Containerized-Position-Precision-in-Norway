@@ -28,7 +28,7 @@ def convert_coordinates(wgs84_coords):
 
 
 def sort_road(total_road):
-    sorted_road = sorted(total_road, key=lambda segment: segment["geometry"]["coordinates"][0])
+    sorted_road = sorted(total_road, key=lambda segment: segment["geometry"]["coordinates"][0][0])
     return sorted_road
 
 
@@ -80,7 +80,7 @@ def get_road(startpoint,sluttpoint):
     return total_veg_sorted
 
 
-road = get_road([124429.61,6957703.95], [193547.58,6896803.47])
+#road = get_road([124429.61,6957703.95], [193547.58,6896803.47])
 
 
 
@@ -88,6 +88,7 @@ def find_points(line, avstand):
     distance= 0
     left_distance = 0
     points = []
+
     for feature in line:
         coords = feature["geometry"]["coordinates"]
         coords = convert_coordinates(coords)
@@ -108,6 +109,7 @@ def find_points(line, avstand):
 
     #converter tilbake til 
     geoJson_points_list = []
+    i = 0
     for point in points:
         point_converted = transformer.transform(point.x, point.y)
         point_geojson = {
@@ -116,11 +118,12 @@ def find_points(line, avstand):
                 "type": "Point",
                 "coordinates": [point_converted[0], point_converted[1]]
             },
-            "properties": {"name": "Point"}
+            "properties": {"name": "Point", "id": i}
         }
         geoJson_points_list.append(point_geojson)
+        i += 1
     return geoJson_points_list
 
 
 
-#https://nvdbapiles-v3.atlas.vegvesen.no/beta/vegnett/rute?start=124429.61,6957703.95&slutt=193547.58,6896803.47&maks_avstand=3&omkrets=5&konnekteringslenker=true&pretty=true&kortform=true&srid=utm33&vegsystemreferanse=EV136&trafikantgruppe=K
+#https://nvdbapiles-v3.atlas.vegvesen.no/beta/vegnett/rute?start=124429.61,6957703.95&slutt=193547.58,6896803.47&maks_avstand=3&omkrets=5&konnekteringslenker=true&pretty=true&kortform=true&srid=utm33&vegsystemreferanse=EV136

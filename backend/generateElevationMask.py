@@ -59,18 +59,23 @@ def check_satellite_sight(observer, max_distance, elevation_satellite, azimuth_s
             break  # Stop if we go outside raster bounds
     return sight
     
-def find_elevation_cutoff(observer, max_distance):
+def find_elevation_cutoff(observer, max_distance, elevation_mask):
     observer_height, heights_and_points = find_highest_elevation_triangle("data/merged_raster_romsdalen_10.tif", observer,max_distance)
     elevation = []
+    #print(heights_and_points)
     for i in range(0,len(heights_and_points)):
-        height = heights_and_points[i][1]
-        distance = calculate_distance(observer, heights_and_points[i][0])
-        elevation.append(np.rad2deg(np.arctan((height-observer_height)/distance)))
+        if heights_and_points[i][0] == None or heights_and_points[i][1] == None:
+            elevation.append(elevation)
+        else:
+            height = heights_and_points[i][1]
+            #print(observer, heights_and_points[i][0])
+            distance = calculate_distance(observer, heights_and_points[i][0])
+            elevation.append(np.rad2deg(np.arctan((height-observer_height)/distance)))
     
     elevation_azimuth = sort_elevation_azimuth(elevation)
     # print(f"elev deg: {elevation[180]}")
     # print(f"elev az : {elevation_azimuth[270]}")
-    return elevation_azimuth
+    return elevation_azimuth, observer_height
 
 N = 6948183.94
 E = 127961.24

@@ -37,6 +37,8 @@ romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94],
                      [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
                      [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
 center = (127961.24,6948183.94)
+
+
 def calculate_distance(point1, point2):
     return math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
@@ -141,8 +143,11 @@ def find_highest_elevation_triangle(rastername, center, radius_km):
                                 highest_elevation = elevation
                                 best_point = (x, y)
                                 best_height = height
-            
-            highest_points.append((best_point, best_height))        
+  
+                highest_points.append((best_point, best_height))   
+            else:
+                highest_points.append((None, None))
+     
         
         return center_height,highest_points
 
