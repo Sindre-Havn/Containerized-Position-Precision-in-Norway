@@ -6,19 +6,24 @@ import NavMap from './components/MapComponent.js';
 import { useAtom } from 'jotai';
 import {updateDataState} from './states/states';
 import './css/filtering.css';
+import { DOPLineChart } from './components/DOPplot.js';
 
 function App() {
     const [updateData,setUpdateData] = useAtom(updateDataState);
+   
     const handleUpdateData = () => {
         setUpdateData(true);
       }
+
     return (
         <div>
             <NavBar />
             <FilterComponent />
             <NavMap/>
+
+            <DOPLineChart/>
             <div>
-                <button className={`searchButton ${updateData ? 'loading' : ''}`} onClick={handleUpdateData} disabled={updateData}>{updateData ? '' : 'Search Satellites'}</button>
+                <button className={`searchButton ${updateData ? 'loading' : ''}`} onClick={handleUpdateData} disabled={updateData}>{updateData ? '' : 'Search Satellites at Start Point'}</button>
             </div>
             <Visualization />
   

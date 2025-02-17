@@ -129,9 +129,18 @@ const Axes = ({ radius = 4.1, color = 'white', lineWidth = 2 }) => {
     </>
   );
 };
+const TerrainCutoffLine = ({ points }) => {
+  return (
+    <Line
+      points={points}
+      color="blue"
+      lineWidth={2}
+      dashed={false}
+    />
+  );
+};
 
-
-export const SatelliteMap = ({satellites, cutOffElevation}) => {
+export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
   const center = [0, 0];
   const radius = 4;
   const cutOffRad = radius * Math.cos((cutOffElevation * Math.PI) / 180);
@@ -153,6 +162,11 @@ export const SatelliteMap = ({satellites, cutOffElevation}) => {
       });
     }))
   //console.log(satellitesGrouped);
+  const tcf = terrainCutOff.map((elevation, index) => { 
+    const zenith = 90-elevation;
+    const coords = sphericalToCartesian2D(radius, index, zenith, center);
+    return new Vector3(coords[0], coords[1], 0);  // Convert to Vector3
+  });
   return (
     <div className="skyplot-container">
       <Canvas className="skyplot-canvas" camera={{ position: [0, 0, 10], fov: 50 }}>
@@ -182,6 +196,7 @@ export const SatelliteMap = ({satellites, cutOffElevation}) => {
           const sat = sattelittes[sattelittes.length - 1];
           return <Satellite key={sat[0]} position={[sat[0], sat[1], 0]} label={satName} />;
         })}
+        <TerrainCutoffLine points={tcf} />
       </Canvas>
     </div>
   );

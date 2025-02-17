@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai'
-import {elevationState, updateDataState,timeState, gnssState, epochState} from '../states/states';
+import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState} from '../states/states';
 import { SatelliteMap } from './SkyPlot';
 import '../css/visualization.css';
 import { BarChartGraph } from './BoxPlot';
@@ -75,10 +75,12 @@ const Visualization = () => {
     const elevationAngle = useAtomValue(elevationState);
     const time =useAtomValue(timeState);
     const epoch = useAtomValue(epochState);
+    const points = useAtomValue(pointsState);
     const labels = Array.from({ length: 2 * epoch +1}, (_, i) => 
       new Date(time.getTime() + i * 30 * 60 * 1000).toISOString().slice(11, 16)
     );
-    const [DOP, setDOP] = useState([[0,0,0]]);
+    //const [DOP, setDOP] = useState([[0,0,0]]);
+    const [elevation_masks, setElevationMasks] = useState([]);
 
     useEffect(() => {
       if (!updateData) return; 
@@ -96,6 +98,7 @@ const Visualization = () => {
           elevationAngle: elevationAngle.toString(),
           epoch: epoch.toString(),
           GNSS: filteredGNSS,
+          point: points[0],
         }),
         mode: 'cors'
       })
@@ -108,7 +111,7 @@ const Visualization = () => {
         .then(data => {
           console.log("updated", data);
           setSatellites(fixData(data.data));
-          setDOP(data.DOP);
+          setElevationMasks(data.elevation_cutoffs);
           setUpdateData(false);
         })
         .catch(error => {
@@ -137,7 +140,7 @@ const Visualization = () => {
       <div className="skyplot-table-container">
         {/* Skyplot Container */}
         <div className='skyplot'>
-          <SatelliteMap satellites={satellites} cutOffElevation={elevationAngle} />
+          <SatelliteMap satellites={satellites} cutOffElevation={elevationAngle} terrainCutOff = {elevation_masks} />
         </div>
       {/* Satellite Table */}
         <div className="satellite-table">
@@ -171,9 +174,9 @@ const Visualization = () => {
         </div>
 
         {/* Line Chart */}
-        <div className="chart-container">
+        {/* <div className="chart-container">
           <LineChart data={DOP} labels={labels} satellites = {satellites} />
-        </div>
+        </div> */}
       </div>
     </>
     )
