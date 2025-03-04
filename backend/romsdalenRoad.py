@@ -24,18 +24,9 @@ def linestring_to_coordinates(linestring):
     return converted_points
 
 def convert_coordinates(wgs84_coords):
-    #wgs84_coords = wgs84_coords
-    #points = [tuple(map(float, p.split())) for p in wkt_string.split(", ")]  # Parse E, N values 
+
     converted_points = [[transformerToEN.transform(lng, lat)[0], transformerToEN.transform(lng, lat)[1]] for lng,lat in wgs84_coords]
     return converted_points
-
-
-#old
-
-def distance(point1, point2):
-    #print("points:",point1, point2)
-    return ((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)**0.5
-
 
 def connect_road(total_road):
     road_segments = total_road.copy()
