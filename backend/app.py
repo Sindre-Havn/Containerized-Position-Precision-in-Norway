@@ -7,7 +7,7 @@ from computeDOP import best
 from flask_cors import CORS
 from datetime import datetime, time, timedelta
 from downloadfile import downloadRoad
-from romsdalenRoad import get_road,find_points
+from romsdalenRoad import calculate_travel_time, get_road_api
 
 # Set up basic configuration for logging
 #logging.basicConfig(level=logging.INFO)
@@ -70,12 +70,12 @@ def road():
     endPoint = request.json.get('endPoint')
     #(request.json)
     distance = request.json.get('distance')
-    road =  get_road(startPoint, endPoint)
-    points = find_points(road, float(distance))
+    road_utm,road_wgs =  get_road_api(startPoint, endPoint, 'EV136')
+    points = calculate_travel_time(road_utm, float(distance))
     is_processing = False
     
     if not is_processing:
-        response = jsonify({'message': 'Data processed successfully', 'road': road, 'points': points})
+        response = jsonify({'message': 'Data processed successfully', 'road': road_wgs, 'points': points})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
         return response, 200
     else:

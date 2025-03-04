@@ -6,8 +6,12 @@ import requests
 import requests
 import concurrent.futures
 from itertools import chain
-
+import pandas as pd
 from shapely.geometry import LineString, Point
+import nvdbapiv3 
+import geopandas as gpd
+from shapely import wkt
+from shapely.geometry import mapping
 
 
 
@@ -26,15 +30,81 @@ def convert_coordinates(wgs84_coords):
     return converted_points
 
 
+#old
 
-def sort_road(total_road):
-    sorted_road = sorted(total_road, key=lambda segment: segment["geometry"]["coordinates"][0][0])
-    return sorted_road
+def distance(point1, point2):
+    #print("points:",point1, point2)
+    return ((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)**0.5
 
 
+def connect_road(total_road):
+    road_segments = total_road.copy()
+    connected = [road_segments[0]]
+    for i in range(1,len(road_segments)-1):
+        prev_segment_end_point = road_segments[i-1]["geometry"]["coordinates"][-1]
+        start_point = road_segments[i]["geometry"]["coordinates"][0]
+        fartsgrense = road_segments[i]["properties"]["fartsgrense"]
+        if prev_segment_end_point != start_point:
+                geojson_feature = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [prev_segment_end_point, start_point]
+                    },
+                    "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
+                } 
+                connected.append(geojson_feature)
+        connected.append(road_segments[i])
+    return connected
 
-def get_road(startpoint,sluttpoint):
-    print('in get_road')
+
+def calculate_travel_time(road_segments, avstand):
+    points_geojson = []
+    total_time = 0  # Akkumulert tid fra startpunktet
+    total_distance = 0  # Akkumulert distanse fra startpunktet
+    remaining_distance = 0  # Restlengde fra forrige segment
+
+    transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)  # UTM til WGS84 (Eksempel)
+
+    for segment in road_segments:
+        coords = segment["geometry"]["coordinates"] 
+        line = LineString(coords) 
+        length = line.length  # Lengden på segmentet
+        fartsgrense = segment["properties"]["fartsgrense"] / 3.6  # Konverter km/t til m/s
+        
+        distance = remaining_distance  # Start med restlengde fra forrige segment
+        while distance < length:
+            point = line.interpolate(distance)  # Finner punkt på veien
+            point_latlng = transformer.transform(point.x, point.y)  # Konverterer til WGS84
+            
+            # Tid til dette punktet
+            travel_time = (distance) / fartsgrense  # Tid fra forrige punkt
+            
+            # Lagre punkt i GeoJSON-format
+            points_geojson.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": point_latlng
+                },
+                "properties": {
+                    "distance_from_start": total_distance + distance,
+                    "time_from_start": total_time + travel_time
+                }
+            })
+
+            distance += avstand  # Flytt til neste punkt
+
+        remaining_distance = distance - length  # Hvor mye av neste steg må videreføres?
+        total_distance += length  # Oppdater total distanse
+        total_time += length / fartsgrense
+
+    return points_geojson
+
+
+def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
+    fartsgrenser = nvdbapiv3.nvdbFagdata(105)
+    fartsgrenser.filter({'vegsystemreferanse':vegsystemreferanse})
     url =f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=10&omkrets=100&konnekteringslenker=true&detaljerte_lenker=false&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse=EV136'
     headers = {
         "Accept": "application/json",
@@ -47,83 +117,80 @@ def get_road(startpoint,sluttpoint):
     
     data = response.json()
     segmenter = data.get('vegnettsrutesegmenter', [])
-    
+    df = pd.DataFrame(fartsgrenser.to_records())
+    df = df[(df['typeVeg'] == 'Enkel bilveg')]
     i = 0
     total_vegsegment_wgs84=[]
+    total_vegsegment_utm = []
     for veglenke in segmenter:
         if (
-                veglenke['type'] == 'HOVED' 
-                and veglenke['typeVeg_sosi'] == 'enkelBilveg' 
+                # veglenke['type'] == 'HOVED' and
+                veglenke['typeVeg_sosi'] == 'enkelBilveg' 
             ):
-          
+                fartsgrense_row = df[df['veglenkesekvensid'] == veglenke['veglenkesekvensid']]['Fartsgrense']
+                fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else None
+                #print(fartsgrense)
                 converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
-                geojson_feature = {
+                if veglenke['vegsystemreferanse']['strekning']['retning'] == 'MOT':
+                    print('reversing')
+                    converted = converted[::-1]
+                geojson_feature_wgs = {
                     "type": "Feature",
                     "geometry": {
                         "type": "LineString",
                         "coordinates": converted
                     },
-                    "properties": {"name": "RoadSegment ", "id": i}
+                    "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
                 }
-
-                total_vegsegment_wgs84.append(geojson_feature)
+                utm_converted = convert_coordinates(converted)
+                geojson_feature_utm = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": utm_converted
+                    },
+                    "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
+                }
+                total_vegsegment_wgs84.append(geojson_feature_wgs)
+                total_vegsegment_utm.append(geojson_feature_utm)
                 i += 1
 
-    total_veg_sorted = sort_road(total_vegsegment_wgs84)
+    connected_utm = connect_road(total_vegsegment_utm)
+    connected_wgs = connect_road(total_vegsegment_wgs84)
+    return connected_utm, connected_wgs
 
-    # geojson_output = {
-    #     "type": "FeatureCollection",
-    #     "features": total_veg_sorted
-    # }
-    # with open("merged_road.geojson", "w") as f:
-    #     json.dump(geojson_output, f, indent=4)
-    return total_veg_sorted
+# start = [136149.75, 6941757.94]
+# slutt = [193547.58,6896803.47]
+# import time
 
+#     # Start tidtaking
+# start_time = time.time()
+# road_utm, road_wgs =  get_road_api(start, slutt, 'EV136')
+# #sorted_road = sort_road_api(road_wgs)
+# points = calculate_travel_time(road_utm, 100)
+# end_time = time.time()
 
-#road = get_road([124429.61,6957703.95], [193547.58,6896803.47])
-
-
-
-def find_points(line, avstand):
-    distance= 0
-    left_distance = 0
-    points = []
-
-    for feature in line:
-        coords = feature["geometry"]["coordinates"]
-        coords = convert_coordinates(coords)
-   
-        line = LineString(coords)
-        length = line.length
-
-        if distance < length:
-            while distance < length:
-                left_distance = length-distance
-                point = line.interpolate(distance)
-                points.append(point)
-                distance += avstand
-            distance -= left_distance
-        else:
-            distance -= length
-        
-
-    #converter tilbake til 
-    geoJson_points_list = []
-    i = 0
-    for point in points:
-        point_converted = transformer.transform(point.x, point.y)
-        point_geojson = {
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [point_converted[0], point_converted[1]]
-            },
-            "properties": {"name": "Point", "id": i}
-        }
-        geoJson_points_list.append(point_geojson)
-        i += 1
-    return geoJson_points_list
+# # Beregn og skriv ut kjøretiden
+# elapsed_time = end_time - start_time
+# print(f"Kjøretid finn elevation: {elapsed_time:.2f} sekunder")
+# points_geojson = {
+#     "type": "FeatureCollection",
+#     "features": points
+# }
+# Create a FeatureCollection manually
+# geojson_object = {
+#     "type": "FeatureCollection",
+#     "features": road_wgs
+# }
 
 
 
-#https://nvdbapiles-v3.atlas.vegvesen.no/beta/vegnett/rute?start=124429.61,6957703.95&slutt=193547.58,6896803.47&maks_avstand=3&omkrets=5&konnekteringslenker=true&pretty=true&kortform=true&srid=utm33&vegsystemreferanse=EV136
+# # # Save it as a GeoJSON file
+# with open("points.geojson", "w") as f:
+#     json.dump(points_geojson, f, indent=4)
+# print(filtered[['veglenkesekvensid','veglenkenummer', 'segmentnummer']])
+# fart = nvdbapiv3.finnid(85288328, kunfagdata=True) # python-dict
+# fartobj = nvdbapiv3.nvdbFagObjekt(fart)   # Objektorientert representasjon, se definisjonen nvdbFagobjekt
+# veg = nvdbapiv3.finnid(1812388, kunvegnett=True)
+
+# print(fart)
