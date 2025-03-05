@@ -3,7 +3,7 @@
 import json
 from flask import Flask, Response, jsonify, request
 from computebaner import  runData, satellites_at_point
-from computeDOP import best
+from computeDOP import best, dop_along_road
 from flask_cors import CORS
 from datetime import datetime, time, timedelta
 from downloadfile import downloadRoad
@@ -66,11 +66,12 @@ def road():
 
     is_processing = True
     #data = downloadRoad('EV136')
+    vegReferanse = request.json.get('vegReferanse')
     startPoint = request.json.get('startPoint')
     endPoint = request.json.get('endPoint')
     #(request.json)
     distance = request.json.get('distance')
-    road_utm,road_wgs =  get_road_api(startPoint, endPoint, 'EV136')
+    road_utm,road_wgs =  get_road_api(startPoint, endPoint,vegReferanse)
     points = calculate_travel_time(road_utm, float(distance))
     is_processing = False
     
@@ -104,15 +105,16 @@ def dopValues():
     
     is_processing = True
     #finner dopvalues for hvert point, gjennomsnitts fart = 70kmh = 19.44m/s
-    DOPvalues = []
+    DOPvalues = dop_along_road(points, time, gnss, elevation_angle)
+    # DOPvalues = []
     
-    for i,point in enumerate(points):
-        timeElaped = (i*float(distance))/19.44
-        timeNow = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f") + timedelta(seconds=timeElaped)
-        df = satellites_at_point(gnss, elevation_angle, timeNow, point) 
-        DOPvalue = best(df)
-        DOPvalues.append(DOPvalue)
-        print(f'{i}/{len(points)}')
+    # for i,point in enumerate(points):
+    #     timeElaped = (i*float(distance))/19.44
+    #     timeNow = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f") + timedelta(seconds=timeElaped)
+    #     df = satellites_at_point(gnss, elevation_angle, timeNow, point) 
+    #     DOPvalue = best(df)
+    #     DOPvalues.append(DOPvalue)
+    #     print(f'{i}/{len(points)}')
     
     is_processing = False
     

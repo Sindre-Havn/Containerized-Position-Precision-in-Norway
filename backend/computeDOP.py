@@ -1,7 +1,8 @@
+from datetime import datetime, timedelta
 import itertools
 import numpy as np
 import pandas as pd
-from computebaner import runData
+from computebaner import runData, satellites_at_point
 from common_variables import wgs, phi,lam, h
 
 def R2(theta):
@@ -84,7 +85,19 @@ def best(satellites):
     
     return final_DOP_values
 
+def dop_along_road(points, time, gnss, elevation_angle):
 
+    DOPvalues = []
+    
+    for point in points:
+        # coord = point['geometry']['coordinates']
+        timeElapsed = point['properties']['time_from_start']
+        timeNow = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f") + timedelta(seconds=timeElapsed)
+        df = satellites_at_point(gnss, elevation_angle, timeNow, point) 
+        DOPvalue = best(df)
+        DOPvalues.append(DOPvalue)
+    return DOPvalues
+ 
 # import time
 
 # # Start tidtaking

@@ -6,7 +6,7 @@ import { OpenStreetMapProvider, GeoSearchControl } from 'leaflet-geosearch';
 import L from 'leaflet';
 import customMarkerIcon from '../assets/pngwing.png';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import {startPointState, endPointState, distanceState, roadState,pointsState} from '../states/states';
+import {startPointState, endPointState, distanceState, roadState,pointsState, vegReferanseState} from '../states/states';
 import '../css/map.css';
 
 
@@ -68,6 +68,7 @@ const SearchControl = () => {
 // };
 
 const NavMap = () => {
+  const vegreferanse = useAtomValue(vegReferanseState);
   const startPoint = useAtomValue(startPointState);
   const endPoint = useAtomValue(endPointState);
   const distance = useAtomValue(distanceState);
@@ -89,6 +90,7 @@ const NavMap = () => {
       },
       method: 'POST',
       body: JSON.stringify({
+        vegReferanse: vegreferanse,
         startPoint: startPoint,
         endPoint: endPoint,
         distance: distance,

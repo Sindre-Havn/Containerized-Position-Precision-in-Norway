@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import {elevationState, updateDataState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState} from '../states/states';
+import {elevationState, updateDataState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState} from '../states/states';
 import '../css/filtering.css';
 
 
@@ -10,6 +10,7 @@ const FilterComponent = () => {
   const [time, setTime] =useAtom(timeState);
   const [hours, setHours] = useAtom(epochState);
   
+  const [vegsystemreferanse, setVegsystemreferanse] = useAtom(vegReferanseState);
   const [startPoint, setStartPoint] = useAtom(startPointState);
   const [endPoint, setEndPoint] = useAtom(endPointState);
   const [distance, setDistance] = useAtom(distanceState);
@@ -95,24 +96,33 @@ const FilterComponent = () => {
       </div>
       <div className="road-comps">
         {/* New Inputs */}
-        
         <div>
-          <h4>Start Point</h4>
+          <h4>Vegsystemreferanse</h4>
           <input
             type="text"
-            value={startPoint}
-            onChange={(e) => setStartPoint(e.target.value)}
-            placeholder="Enter point [E,N] ..."
+            value={vegsystemreferanse}
+            onChange={(e) => setVegsystemreferanse(e.target.value)}
+            placeholder="F.eks. EV136 ..."
           />
           
         </div>
         <div>
-          <h4>End Point</h4>
+          <h4>Start Point E,N</h4>
+          <input
+            type="text"
+            value={startPoint}
+            onChange={(e) => setStartPoint(e.target.value)}
+            placeholder="Enter point E,N ..."
+          />
+          
+        </div>
+        <div>
+          <h4>End Point E,N</h4>
           <input
             type="text"
             value={endPoint}
             onChange={(e) => setEndPoint(e.target.value)}
-            placeholder="Enter point [E,N]..."
+            placeholder="Enter point E,N..."
           />
         </div>
     
@@ -125,6 +135,7 @@ const FilterComponent = () => {
             placeholder="Enter distance..."
           />
         </div>
+
         <button className={`searchButton ${updateRoad ? 'loading' : ''}`} onClick={handleUpdateRoad} disabled={updateRoad}>{updateRoad ? '' : 'Find Road'}</button>
       </div>
       {/* <NavMap /> */}
