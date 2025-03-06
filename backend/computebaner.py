@@ -1,8 +1,5 @@
-from matplotlib import pyplot as plt
 import pandas as pd
 import numpy as np
-import re
-import ahrs
 from pyproj import Transformer
 from sortDataNew import sortData
 from datetime import datetime, timedelta
@@ -10,6 +7,7 @@ from satellitePositions import get_satellite_positions
 from generateElevationMask import check_satellite_sight, find_elevation_cutoff
 from common_variables import wgs
 
+transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
 
 def Cartesian(phi,lam, h):
@@ -49,9 +47,8 @@ def getDayNumber(date):
     if date.date() == datetime.now().date():
         days_difference -= 1
         date = date - timedelta(days=1)
-    daynumber = f"{days_difference:03d}"
 
-    #print(daynumber, date)
+    daynumber = f"{days_difference:03d}"
     sortData(daynumber, date)
     return daynumber
 
@@ -73,7 +70,7 @@ def visualCheck(dataframe, observation_lnglat, observation_cartesian, observatio
     #print('in visual check')
     LGDF = pd.DataFrame(columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
     nb = 0
-    length = len(dataframe)
+
     phi = observation_lnglat[1]
     lam =  observation_lnglat[0]
     T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
@@ -105,8 +102,6 @@ def visualCheck(dataframe, observation_lnglat, observation_cartesian, observatio
         if isinstance(minElev, (list, np.ndarray)): # her må det fikses- finner ikke grunnen til at noen verdier er arrays
             minElev = minElev[0]  
         minElev = float(minElev)  
-        #print(f'azimuth: {azimuth}, rounded:{index} minElev: {minElev}')
-        #if check_satellite_sight((observation_en[0], observation_en[1]), 5000, elevation, azimuth):
         if  (elevation > elevation_mask) and (elevation > minElev):
             LGDF.loc[len(LGDF)] = [row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith]
         #print(f"{nb} /{length}")
@@ -204,6 +199,63 @@ def satellites_at_point(gnss_list, elevation_angle, time, point):
     final_listdf.append(LGDF_df)
     return final_listdf
 
+
+def visualCheck_2(satellites, observer,observation_lngLat, elevation_mask, dem_data, src):
+        #print('in visual check')
+    
+    visual_satellites = []
+
+    phi = observation_lngLat[1]
+    lam =  observation_lngLat[0]
+    T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
+            [-np.sin(lam), np.cos(lam), 0],
+            [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])
+
+  
+    for index, row in satellites.iterrows():
+        deltaCTRS = np.array([row["X"]-observer[0],
+                              row["Y"]-observer[1],
+                              row["Z"]-observer[2]])
+        
+        xyzLG = T @ deltaCTRS.T
+        xyzLG = np.array(xyzLG).flatten() 
+        #calculate angles
+        Ss = (xyzLG[0]**2 + xyzLG[1]**2 + xyzLG[2]**2)**(0.5)
+        azimuth = np.arctan2(xyzLG[1],xyzLG[0]) *180/np.pi
+        zenith = np.arccos(xyzLG[2]/Ss)* 180/np.pi
+        elevation = 90- abs(zenith)
+
+        if azimuth < 0:
+            azimuth = 360 + azimuth
+        #fra generateEvelationMask.py
+        if elevation > 0:
+            if check_satellite_sight(observer, dem_data,src, 5000, elevation, azimuth, elevation_mask):
+                visual_satellites.append([row["X"],row["Y"],row["Z"]])
+
+    return visual_satellites
+
+def satellites_at_point_2(gnss_mapping,gnss_list,given_date, observer, elevation_angle, dem_data,src):
+
+    print('in satellites_at_point_2')
+    #print(f'point: {point}')
+    # Kjør funksjonen
+    elevation_mask = float(elevation_angle)
+    observation_lngLat = transformer.transform(observer[0], observer[1])
+
+
+    #final_list = []
+    final_list = []
+    #print('finds visual satellites')
+
+  
+    for gnss in gnss_list:
+        #fra satellitePositions.py
+        satellites = get_satellite_positions(gnss_mapping[gnss],gnss,given_date)
+        #her oppe
+        visual_satellites = visualCheck_2(satellites, observer,observation_lngLat, elevation_mask, dem_data,src)
+        final_list = final_list + visual_satellites
+    
+    return final_list
 
 # list, df, elevation_cutoffs = runData(['GPS','GLONASS','Galileo','BeiDou'], '15', '2025-02-13T12:00:00.000', 1, [7.6866582, 62.5580949])
 # print(elevation_cutoffs)

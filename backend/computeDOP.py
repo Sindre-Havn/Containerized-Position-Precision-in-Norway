@@ -1,9 +1,13 @@
-from datetime import datetime, timedelta
-import itertools
+from datetime import timedelta
 import numpy as np
-import pandas as pd
-from computebaner import runData, satellites_at_point
+import rasterio
+from pyproj import Transformer
+from computebaner import Cartesian, get_gnss, getDayNumber, satellites_at_point_2
 from common_variables import wgs, phi,lam, h
+
+transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
+transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
+
 
 def R2(theta):
     return np.array([[np.cos(theta),0,-np.sin(theta)],
@@ -18,21 +22,10 @@ def R3(theta):
 def P2():
     return np.array([[1,0,0],[0,-1,0],[0,0,1]])
 
-
-def Cartesian(phi,lam, h):
-    N = (wgs.a**2)/np.sqrt(wgs.a**2*(np.cos(phi))**2 + wgs.b**2*(np.sin(phi))**2)
-    X = (N+h)*np.cos(phi)*np.cos(lam)
-    Y = (N+h)*np.cos(phi)*np.sin(lam)
-    Z = (((wgs.b**2)/(wgs.a**2))*N + h)*np.sin(phi)
-    return [X,Y,Z]
-
-#point 1 coordinates
-
 def geometric_range(sat_pos, rec_pos):
     return np.sqrt((sat_pos[0] - rec_pos[0])**2 +
                    (sat_pos[1] - rec_pos[1])**2 +
                    (sat_pos[2] - rec_pos[2])**2)
-
 
 def DOPvalues(satellites, recieverPos0):
     size = len(satellites)
@@ -85,19 +78,77 @@ def best(satellites):
     
     return final_DOP_values
 
-def dop_along_road(points, time, gnss, elevation_angle):
 
-    DOPvalues = []
-    
+def DOPvalues_2(satellites, recieverPos0):
+    size = len(satellites)
+    A = np.zeros((size, 4))  
+    Qxx =np.zeros((4, 4)) 
+    if(size >= 4):
+        #creates the A matrix
+        i = 0
+        for satellite in satellites:
+            rho_i = geometric_range([satellite[0], satellite[1], satellite[2]], recieverPos0)
+
+            A[i][0] = -((satellite[0]-recieverPos0[0]) / rho_i)
+            A[i][1] = -((satellite[1] - recieverPos0[1]) / rho_i)
+            A[i][2] = -((satellite[2] - recieverPos0[2] ) / rho_i)
+            A[i][3] = -1
+            i +=1
+        
+        AT = A.T
+        ATA = AT@A
+        Qxx = np.linalg.inv(ATA)
+        Qxx_local = Qxx[0:3,0:3]
+        T = P2()@R2(phi-np.pi/2)@R3(lam-np.pi)
+        Qxx_local = T@Qxx_local@T.T
+        GDOP = np.sqrt(Qxx[0][0] + Qxx[1][1] + Qxx[2][2] + Qxx[3][3])
+        PDOP = np.sqrt(Qxx[0][0] + Qxx[1][1] + Qxx[2][2])
+        TDOP = np.sqrt(Qxx[3][3])
+        HDOP = np.sqrt(Qxx_local[0][0]+Qxx_local[1][1])
+        VDOP = np.sqrt(Qxx_local[2][2])
+    else:
+        GDOP = 0
+        PDOP = 0
+        TDOP = 0
+        HDOP = 0
+        VDOP = 0
+    return GDOP,PDOP,TDOP,HDOP,VDOP
+
+def best_2(satellites, observer):
+    final_DOP_values = []
+    if(len(satellites) > 0):
+        GDOP, PDOP, TDOP,HDOP,VDOP = DOPvalues_2(satellites, observer)
+        final_DOP_values.append([GDOP, PDOP, TDOP, HDOP, VDOP])
+    else:
+        final_DOP_values.append([0, 0, 0, 0, 0])
+
+    return final_DOP_values
+
+
+def find_dop_along_road(points, time, gnss, elevation_angle):
+    dop_list = [] 
+
+    daynumber = getDayNumber(time)
+    gnss_mapping = get_gnss(daynumber,time.year )
+
+    with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+        dem_data = src.read(1)   
+    #for hvert punkt finn alle satelliters posisjon som er i gnss, og som er innenfor sight
     for point in points:
-        # coord = point['geometry']['coordinates']
-        timeElapsed = point['properties']['time_from_start']
-        timeNow = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f") + timedelta(seconds=timeElapsed)
-        df = satellites_at_point(gnss, elevation_angle, timeNow, point) 
-        DOPvalue = best(df)
-        DOPvalues.append(DOPvalue)
-    return DOPvalues
- 
+        observation_point_latlng = point['geometry']['coordinates']
+        observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])
+        observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
+
+        observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
+
+        timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
+        #fra computebaner.py
+        satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow, observer, elevation_angle, dem_data,src)
+        
+        #finn så dop
+        dopvalues = best_2(satellites, observer)
+        dop_list.append(dopvalues)
+    return dop_list
 # import time
 
 # # Start tidtaking

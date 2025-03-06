@@ -89,17 +89,7 @@ def get_closest_row(data, time):
     return data.loc[differences.idxmin()]
 
 def cartesianA_list(data, time):
-    # diff = 720100000000#high start number
-    # theIndex = 0
-    # i = 0
-    # for index, row in data.iterrows():
-    #     if (row["Datetime"] <= time) and ((time-row["Datetime"]).total_seconds() <= diff):
-    #         theIndex = i
-    #         diff = (time-row["Datetime"]).total_seconds()
-    #     i += 1
-    
-    # tk = TK(diff)
-    # row = data.iloc[theIndex]
+
     row = get_closest_row(data, time)
     if row is None:
         return []
@@ -171,15 +161,11 @@ def cartesianC_list(data, time, today, i):
 
     # Determine the correct time to compare
     timeBack = time - timedelta(hours=11, minutes=15, seconds=44) if today else time
-
-    # Vectorized search for closest timestamp
-    # closest_idx = (timeBack - data["Datetime"]).abs().idxmin()
-    # row = data.iloc[closest_idx]
     row = get_closest_row(data,timeBack)
 
     # Compute GMST
-    thetaG0 = gmst_at_midnight(time.year, time.month, time.day)
-    theta_Gc = thetaG0 + 0.7292115 * 10**(-4) * (row['a2'] - 3 * 3600)  # rad
+    #thetaG0 = gmst_at_midnight(time.year, time.month, time.day)
+    #theta_Gc = thetaG0 + 0.7292115 * 10**(-4) * (row['a2'] - 3 * 3600)  # rad
 
     # Compute Cartesian coordinates
     x = (row["X"]) * 1000 - 0.36

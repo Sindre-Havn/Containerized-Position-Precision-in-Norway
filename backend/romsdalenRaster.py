@@ -13,30 +13,30 @@ from rasterio.mask import mask
 from shapely.geometry import Point, Polygon, mapping
 import geopandas as gpd
 # #Mappe som inneholder rasterfiler
-folder_path = "data/dom10/data/"
+#folder_path = "data/dom10/data/"
 
 
-tif_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(".tif")]
+# tif_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(".tif")]
 
-raster_list = []
-#raster_midtpunkt = []
-raster_midtpunkt_NE = []
-for file in tif_files:
-    raster = rasterio.open(file)
-    midtpunkt = raster.xy(raster.width//2, raster.height//2)
-    # p2 = Proj(init=raster.crs, proj="utm", zone=33)
-    # lng, lat = p2(midtpunkt[0],midtpunkt[1],inverse=True)
-    raster_list.append(raster)
-    raster_midtpunkt_NE.append([midtpunkt[0],midtpunkt[1]])
-    #raster_midtpunkt.append([lng,lat])
+# raster_list = []
+# #raster_midtpunkt = []
+# raster_midtpunkt_NE = []
+# for file in tif_files:
+#     raster = rasterio.open(file)
+#     midtpunkt = raster.xy(raster.width//2, raster.height//2)
+#     # p2 = Proj(init=raster.crs, proj="utm", zone=33)
+#     # lng, lat = p2(midtpunkt[0],midtpunkt[1],inverse=True)
+#     raster_list.append(raster)
+#     raster_midtpunkt_NE.append([midtpunkt[0],midtpunkt[1]])
+#     #raster_midtpunkt.append([lng,lat])
 
-#print(raster_midtpunkt)
-#print(raster_midtpunkt_NE)
+# #print(raster_midtpunkt)
+# #print(raster_midtpunkt_NE)
 
-romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
-                     [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
-                     [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
-center = (127961.24,6948183.94)
+# romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
+#                      [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
+#                      [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
+# center = (127961.24,6948183.94)
 
 
 def calculate_distance(point1, point2):
@@ -44,24 +44,24 @@ def calculate_distance(point1, point2):
 
 #lage en stor raster med alle filene samlet
 
-raster_list = []
-for file in tif_files:
-    raster = rasterio.open(file)
-    raster_list.append(raster)
-mosaic, out_transform = merge(raster_list)
-# Hent metadata fra den første rasterfilen
-out_meta = raster_list[0].meta.copy()
-out_meta.update({
-    "driver": "GTiff",
-    "height": mosaic.shape[1],
-    "width": mosaic.shape[2],
-    "transform": out_transform
-})
+# raster_list = []
+# for file in tif_files:
+#     raster = rasterio.open(file)
+#     raster_list.append(raster)
+# mosaic, out_transform = merge(raster_list)
+# # Hent metadata fra den første rasterfilen
+# out_meta = raster_list[0].meta.copy()
+# out_meta.update({
+#     "driver": "GTiff",
+#     "height": mosaic.shape[1],
+#     "width": mosaic.shape[2],
+#     "transform": out_transform
+# })
 
-# Lagre mosaikken til en midlertidig fil
-output_path = f"data/merged_raster_romsdalen_10.tif"
-with rasterio.open(output_path, "w", **out_meta) as dest:
-    dest.write(mosaic)
+# # Lagre mosaikken til en midlertidig fil
+# output_path = f"data/merged_raster_romsdalen_10.tif"
+# with rasterio.open(output_path, "w", **out_meta) as dest:
+#     dest.write(mosaic)
 
 
 # Sjekke informasjon om rasterfilen

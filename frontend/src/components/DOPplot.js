@@ -42,79 +42,22 @@ export const DOPLineChart = () => {
     const time =useAtomValue(timeState);
     const epoch = useAtomValue(epochState);
     const points = useAtomValue(pointsState);
-    const distance = useAtomValue(distanceState);
+
     const [updateDOP,setUpdateDOP] = useAtom(updateDOPState);
     //const [DOP, setDOP] = useState([]);
-    const[GDOP,setGDOP] = useState([]);
-    const[PDOP,setPDOP] = useState([]);
-    const[TDOP,setTDOP] = useState([]);
-    const[HDOP,setHDOP] = useState([]);
-    const[VDOP,setVDOP] = useState([]);
+    const[DOP,setDOP] = useState([]);
+
 
     const [progress, setProgress] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
     
-    const labels = points.map((point) => point.properties.id);
+    const labels = points.map((point) => Math.round(point.properties.distance_from_start));
     
     useEffect(() => {
         console.log('points :',points)
         if (!updateDOP) return; 
 
-        // setIsProcessing(true);
-        // setProgress(0);
-
         const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
-        // if (eventSource) {
-        //     eventSource.close();
-        //   }
-        // const dataSend = {
-        //     time: time.toISOString(),
-        //     elevationAngle: elevationAngle.toString(),
-        //     GNSS: filteredGNSS,
-        //     points: points,
-        //     distance: distance.toString(),
-        //   };
-        
-        //   // Send initial data to start processing
-        //   fetch('http://localhost:5000/dopvalues', {
-        //     method: 'POST',
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify(dataSend),
-        //   }).catch(error => console.error('Error starting processing:', error));
-
-        // // Create the EventSource
-        // eventSource = new EventSource('http://localhost:5000/dopvalues');
-        
-        //   // Handle incoming messages
-        // eventSource.onmessage = function(event) {
-        //     const data = JSON.parse(event.data);
-        //     if (data.progress) {
-        //       // Update progress
-        //       console.log(`Progress: ${data.progress}%`);
-        //       setProgress(data.progress);
-        //       // You can update a progress bar or other UI element here
-        //     } else if (data.message && data.DOP) {
-        //       // Final result
-        
-        //       console.log('DOP values:', data.DOP);
-        //         setGDOP(data.DOP.map((array) => array[0]));
-        //         setPDOP(data.DOP.map((array) => array[1]));
-        //         setTDOP(data.DOP.map((array) => array[2]));
-        //         setHDOP(data.DOP.map((array) => array[3]));
-        //         setVDOP(data.DOP.map((array) => array[4]));
-        //         setUpdateDOP(false);
-        //       eventSource.close();
-        //     }
-        // };
-        
-        //   // Handle errors
-        // eventSource.onerror = function(error) {
-        //     console.error('EventSource failed:', error);
-        //     eventSource.close();
-        // };   
-
 
         fetch('http://127.0.0.1:5000/dopvalues', {
         headers: {
@@ -128,7 +71,6 @@ export const DOPLineChart = () => {
             epoch: epoch.toString(),
             GNSS: filteredGNSS,
             points: points,
-            distance: distance.toString(),
         }),
         mode: 'cors'
         })
@@ -139,13 +81,9 @@ export const DOPLineChart = () => {
             return response.json(); 
         })
         .then(data => {
-            console.log("updated", data);
-            
-            setGDOP(data.DOP.map((array) => array[0]));
-            setPDOP(data.DOP.map((array) => array[1]));
-            setTDOP(data.DOP.map((array) => array[2]));
-            setHDOP(data.DOP.map((array) => array[3]));
-            setVDOP(data.DOP.map((array) => array[4]));
+            console.log("updated dop", data.DOP.map(arr => arr[0]));
+            const array_of_arrays = data.DOP.map(arr => arr[0]);
+            setDOP(array_of_arrays);
             setUpdateDOP(false);
         })
         .catch(error => {
@@ -167,7 +105,7 @@ export const DOPLineChart = () => {
     datasets: [
       {
         label: 'GDOP',
-        data: GDOP,
+        data: DOP.map((array) => array[0]),
         borderColor: 'rgba(75, 192, 192, 1)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         pointBorderColor: 'rgba(75, 192, 192, 1)',
@@ -177,7 +115,7 @@ export const DOPLineChart = () => {
       },
       {
         label: 'PDOP',
-        data: PDOP,
+        data: DOP.map((array) => array[1]),
         borderColor: 'rgba(255, 99, 132, 1)',
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         pointBorderColor: 'rgba(255, 99, 132, 1)',
@@ -187,7 +125,7 @@ export const DOPLineChart = () => {
       },
       {
         label: 'TDOP',
-        data: TDOP,
+        data: DOP.map((array) => array[2]),
         borderColor: 'rgba(54, 162, 235, 1)',
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         pointBorderColor: 'rgba(54, 162, 235, 1)',
@@ -197,7 +135,7 @@ export const DOPLineChart = () => {
       },
       {
         label: 'HDOP',
-        data: HDOP,
+        data: DOP.map((array) => array[3]),
         borderColor: 'rgba(54, 162, 0, 1)',
         backgroundColor: 'rgba(54, 162, 0, 0.2)',
         pointBorderColor: 'rgba(54, 162, 235, 1)',
@@ -207,7 +145,7 @@ export const DOPLineChart = () => {
       },
       {
         label: 'VDOP',
-        data: VDOP,
+        data: DOP.map((array) => array[4]),
         borderColor: 'rgba(54, 0, 235, 1)',
         backgroundColor: 'rgba(54, 0, 235, 0.2)',
         pointBorderColor: 'rgba(54, 162, 235, 1)',
@@ -217,7 +155,7 @@ export const DOPLineChart = () => {
       }
     ]
   };
-
+  console.log(chartData);
   const options = {
     responsive: true,
     plugins: {
