@@ -79,7 +79,7 @@ const Visualization = () => {
     const labels = Array.from({ length: 2 * epoch +1}, (_, i) => 
       new Date(time.getTime() + i * 30 * 60 * 1000).toISOString().slice(11, 16)
     );
-    //const [DOP, setDOP] = useState([[0,0,0]]);
+    const [DOP, setDOP] = useState([[0,0,0]]);
     const [elevation_masks, setElevationMasks] = useState([]);
 
     useEffect(() => {
@@ -112,6 +112,7 @@ const Visualization = () => {
           console.log("updated", data);
           setSatellites(fixData(data.data));
           setElevationMasks(data.elevation_cutoffs);
+          setDOP(data.DOP);
           setUpdateData(false);
         })
         .catch(error => {
@@ -174,9 +175,9 @@ const Visualization = () => {
         </div>
 
         {/* Line Chart */}
-        {/* <div className="chart-container">
+        <div className="chart-container">
           <LineChart data={DOP} labels={labels} satellites = {satellites} />
-        </div> */}
+        </div>
       </div>
     </>
     )

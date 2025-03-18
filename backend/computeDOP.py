@@ -1,8 +1,8 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 import numpy as np
 import rasterio
 from pyproj import Transformer
-from computebaner import Cartesian, get_gnss, getDayNumber, satellites_at_point_2
+from computebaner import Cartesian, get_gnss, getDayNumber, runData, satellites_at_point_2
 from common_variables import wgs, phi,lam, h
 
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
@@ -62,8 +62,8 @@ def DOPvalues(satellites, recieverPos0):
         VDOP = 0
     return GDOP,PDOP,TDOP,HDOP,VDOP
 
-def best(satellites):
-    recieverPos0 = Cartesian(phi,lam, h)
+def best(satellites, recieverPos0):
+
     final_DOP_values = []
     for satelitedf in satellites:
         satellites_array = []
@@ -114,6 +114,7 @@ def DOPvalues_2(satellites, recieverPos0):
         VDOP = 0
     return GDOP,PDOP,TDOP,HDOP,VDOP
 
+
 def best_2(satellites, observer):
     final_DOP_values = []
     if(len(satellites) > 0):
@@ -130,25 +131,58 @@ def find_dop_along_road(points, time, gnss, elevation_angle):
 
     daynumber = getDayNumber(time)
     gnss_mapping = get_gnss(daynumber,time.year )
-
+    print('gnss_', gnss)
     with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
         dem_data = src.read(1)   
-    #for hvert punkt finn alle satelliters posisjon som er i gnss, og som er innenfor sight
-    for point in points:
-        observation_point_latlng = point['geometry']['coordinates']
-        observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])
-        observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
+        #for hvert punkt finn alle satelliters posisjon som er i gnss, og som er innenfor sight
+        for point in points:
+            observation_point_latlng = point['geometry']['coordinates']
+            observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])
+            observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
+            obs_cartesian = Cartesian(observation_point_latlng[1], observation_point_latlng[0], observation_height)
 
-        observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
+            observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
 
-        timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
-        #fra computebaner.py
-        satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow, observer, elevation_angle, dem_data,src)
-        
-        #finn så dop
-        dopvalues = best_2(satellites, observer)
-        dop_list.append(dopvalues)
+            timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
+            #fra computebaner.py
+            satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow, observer, elevation_angle, dem_data,src)
+            
+            #finn så dop
+            dopvalues = best_2(satellites, obs_cartesian)
+            dop_list.append(dopvalues)
+
     return dop_list
+
+def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle):
+
+    observation_point_latlng = point['geometry']['coordinates']
+    observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])  
+    observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
+
+    obs_cartesian = Cartesian(observation_point_latlng[1], observation_point_latlng[0], observation_height)
+
+    observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
+
+    timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
+    #fra computebaner.py
+    satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow, observer, elevation_angle, dem_data,src)
+    
+    #finn så dop
+    dopvalues = best_2(satellites, obs_cartesian)
+    
+    return dopvalues
+
+point = {
+    "type": "Feature",
+    "geometry": {
+        "type": "Point",
+        "coordinates": [7.6866582, 62.5580949]
+    },
+    "properties": {"time_from_start": 0, "id": 1}
+}
+# timedate = datetime.strptime( '2025-03-13T12:00:00.000', "%Y-%m-%dT%H:%M:%S.%f")
+# doplist = find_dop_along_road([point],timedate, ['GPS', 'GLONASS', 'Galileo'], '10')
+# print('doplist:', doplist)
 # import time
 
 # # Start tidtaking
@@ -156,9 +190,10 @@ def find_dop_along_road(points, time, gnss, elevation_angle):
 
 # # Kjør funksjonen
 # #sortData('042', datetime(2025, 2, 11, 0, 0))
-#data, datadf = runData(['GPS', 'Galileo','GLONASS','BeiDou' ], "10", "2025-02-11T04:00:00.000", "1")
+# list, df, elevation_cutoffs ,observation_cartesian = runData(['GPS', 'GLONASS', 'Galileo'], '10','2025-03-13T12:00:00.000' , 1 ,point)
 
-# #best(datadf)
+# dop = best(df,observation_cartesian)
+# print('dop:', dop[0])
 
 # # Stopp tidtaking
 # end_time = time.time()

@@ -52,49 +52,105 @@ export const DOPLineChart = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     
     const labels = points.map((point) => Math.round(point.properties.distance_from_start));
-    
     useEffect(() => {
-        console.log('points :',points)
-        if (!updateDOP) return; 
+      if (!updateDOP) return;
+      setIsProcessing(true);
+  
+      const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
+  
+      const payload = {
+          time: time.toISOString(),
+          elevationAngle: elevationAngle.toString(),
+          epoch: epoch.toString(),
+          GNSS: filteredGNSS,  // Already an array, no need to convert to string
+          points: points       // Send directly as an array
+      };
+  
+      fetch('http://127.0.0.1:5000/dopvalues', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+      })
+      .then(response => {
+          const reader = response.body.getReader();
+          let dopData = [];
+  
+          const readStream = async () => {
+              const decoder = new TextDecoder();
+              while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+  
+                  const text = decoder.decode(value);
+                  console.log('Received text:', text);
+                  if (text.startsWith('[')) {
+                      try {
+                          dopData = JSON.parse(text);
+                          const array_of_arrays = dopData.map(arr => arr[0]);
+                          setDOP(array_of_arrays);
+                          setUpdateDOP(false);
+                          setIsProcessing(false);
+                      } catch (error) {
+                          console.error('Error parsing DOP data:', error);
+                      }
+                  } else {
+                      const uptprogress = parseInt(text, 10);
+                      setProgress(uptprogress);
+                      console.log(`Progress: ${uptprogress}%`);
+                  }
+              }
+          };
+  
+          readStream();
+      })
+      .catch(error => {
+          console.error('Error:', error);
+      });
+  }, [updateDOP]);
+    // useEffect(() => {
+    //     console.log('points :',points)
+    //     if (!updateDOP) return; 
 
-        const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
+    //     const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
 
-        fetch('http://127.0.0.1:5000/dopvalues', {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-        method: 'POST',
-        body: JSON.stringify({
-            time: time.toISOString(),
-            elevationAngle: elevationAngle.toString(),
-            epoch: epoch.toString(),
-            GNSS: filteredGNSS,
-            points: points,
-        }),
-        mode: 'cors'
-        })
-        .then(response => {
-            if (!response.ok) {
-            throw new Error('Network response was not ok');
-            }
-            return response.json(); 
-        })
-        .then(data => {
-            console.log("updated dop", data.DOP.map(arr => arr[0]));
-            const array_of_arrays = data.DOP.map(arr => arr[0]);
-            setDOP(array_of_arrays);
-            setUpdateDOP(false);
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
-            console.error('Error name:', error.name);
-            console.error('Error message:', error.message);
-        });
+    //     fetch('http://127.0.0.1:5000/dopvalues', {
+    //     headers: {
+    //         'Accept': 'application/json',
+    //         'Content-Type': 'application/json',
+    //     },
+    //     method: 'POST',
+    //     body: JSON.stringify({
+    //         time: time.toISOString(),
+    //         elevationAngle: elevationAngle.toString(),
+    //         epoch: epoch.toString(),
+    //         GNSS: filteredGNSS,
+    //         points: points,
+    //     }),
+    //     mode: 'cors'
+    //     })
+    //     .then(response => {
+    //         if (!response.ok) {
+    //         throw new Error('Network response was not ok');
+    //         }
+    //         return response.json(); 
+    //     })
+    //     .then(data => {
+    //         console.log("updated dop", data.DOP.map(arr => arr[0]));
+    //         const array_of_arrays = data.DOP.map(arr => arr[0]);
+    //         setDOP(array_of_arrays);
+    //         setUpdateDOP(false);
+    //     })
+    //     .catch(error => {
+    //         console.error('Fetch error:', error);
+    //         console.error('Error name:', error.name);
+    //         console.error('Error message:', error.message);
+    //     });
         
 
 
-     }, [updateDOP]);
+    //  }, [updateDOP]);
     
     const handleUpdateDOP = () => {
         setUpdateDOP(true);
@@ -138,9 +194,9 @@ export const DOPLineChart = () => {
         data: DOP.map((array) => array[3]),
         borderColor: 'rgba(54, 162, 0, 1)',
         backgroundColor: 'rgba(54, 162, 0, 0.2)',
-        pointBorderColor: 'rgba(54, 162, 235, 1)',
+        pointBorderColor: 'rgba(54, 162, 0, 1)',
         pointBackgroundColor: '#fff',
-        pointHoverBackgroundColor: 'rgba(54, 162, 235, 1)',
+        pointHoverBackgroundColor: 'rgba(54, 162, 0, 1)',
         pointHoverBorderColor: 'rgba(220, 220, 220, 1)'
       },
       {
@@ -148,14 +204,14 @@ export const DOPLineChart = () => {
         data: DOP.map((array) => array[4]),
         borderColor: 'rgba(54, 0, 235, 1)',
         backgroundColor: 'rgba(54, 0, 235, 0.2)',
-        pointBorderColor: 'rgba(54, 162, 235, 1)',
+        pointBorderColor: 'rgba(54, 0, 235, 1)',
         pointBackgroundColor: '#fff',
-        pointHoverBackgroundColor: 'rgba(54, 162, 235, 1)',
+        pointHoverBackgroundColor: 'rgba(54, 0, 235, 1)',
         pointHoverBorderColor: 'rgba(220, 220, 220, 1)'
       }
     ]
   };
-  console.log(chartData);
+  
   const options = {
     responsive: true,
     plugins: {
@@ -168,11 +224,18 @@ export const DOPLineChart = () => {
       }
     },
     scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Distance in meters from the start' 
+        }
+      },
       y: {
         beginAtZero: true
       }
     }
   };
+
 
   return (
     <div className="line-chart-container">
@@ -181,15 +244,40 @@ export const DOPLineChart = () => {
         </div>
         {/* Loading Bar */}
         {isProcessing && (
-            <div style={{ width: '100%', backgroundColor: '#ddd', marginBottom: '10px' }}>
+            <div style={{
+              width: '50%',
+              backgroundColor: '#eee',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              position: 'relative',
+              justifySelf: 'center',
+              marginBottom: '10px',
+              boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+            }}>
             <div
-                style={{
-                width: `${progress}%`,
-                height: '10px',
-                backgroundColor: 'green',
-                transition: 'width 0.3s ease-in-out',
-                }}
-            ></div>
+              style={{
+              width: `${progress}%`,
+              height: '10px',
+              backgroundColor: 'rgba(0, 128, 0, 0.5)',
+              transition: 'width 0.3s ease-in-out',
+            }}>
+            </div>
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                color: '#333',
+                fontWeight: 'bold'
+            }}>
+              {progress}%
+            </div>
             </div>
         )}
       <h4>DOP Values Line Chart Along The road at Specified Points</h4>

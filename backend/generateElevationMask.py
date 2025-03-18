@@ -55,23 +55,15 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
     # Sjekk om noen punkter blokkerer sikten
     if np.any((target_elevations > elevation_satellite) & (elevation_satellite > elevation_mask)):
         return False  # Sikt blokkert
+    
     return True  # Satellitten er synlig
     
 
 #bruker trekanter
-def find_elevation_cutoff(observer, max_distance, elevation_mask):
-    observer_height, heights_and_points = find_highest_elevation_triangle("data/merged_raster_romsdalen_10.tif", observer,max_distance)
-    elevation = []
+def find_elevation_cutoff(dem_data, src,observer, max_distance, elevation_mask):
+    observer_height, heights_and_points = find_highest_elevation_triangle(dem_data,src, observer,max_distance, elevation_mask)
 
-    for i in range(0,len(heights_and_points)):
-        if heights_and_points[i][0] == None or heights_and_points[i][1] == None:
-            elevation.append(elevation_mask)
-        else:
-            height = heights_and_points[i][1]
-            distance = calculate_distance(observer, heights_and_points[i][0])
-            elevation.append(np.rad2deg(np.arctan((height-observer_height)/distance)))
-    
-    elevation_azimuth = sort_elevation_azimuth(elevation)
+    elevation_azimuth = sort_elevation_azimuth(heights_and_points)
     return elevation_azimuth, observer_height
 
 N = 6948183.94
