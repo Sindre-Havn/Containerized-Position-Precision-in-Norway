@@ -73,35 +73,35 @@ E = 127961.24
 #print(check_satellite_sight((E,N), 5000, 1.9,345.102093)
 #find_elevation_cutoff((E,N), 5)
 
-observer = [140913.05,6932288.59]
-list_top = []
-with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
-    dem_data = src.read(1)
-    elevs, height = find_elevation_cutoff(dem_data, src,observer, 5, 10)
-    for i in range(0,360,1):
-        top = check_satellite_sight([observer[0], observer[1],height ],dem_data,src, 5000, 90, 10, i)
-        list_top.append(top)
+# observer = [140913.05,6932288.59]
+# list_top = []
+# with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+#     dem_data = src.read(1)
+#     elevs, height = find_elevation_cutoff(dem_data, src,observer, 5, 10)
+#     for i in range(0,360,1):
+#         top = check_satellite_sight([observer[0], observer[1],height ],dem_data,src, 5000, 90, 10, i)
+#         list_top.append(top)
         
-elev_new = [(90-elev) for elev in elevs]
-list_top_new = [(90-top) for top in list_top]
-# print(f'360 med trekanter: {elev_new}')
+# elev_new = [(90-elev) for elev in elevs]
+# list_top_new = [int(top) for top in list_top]
+# # print(f'360 med trekanter: {elev_new}')
 # print(f'360 med linjer: {list_top}')
 
 
-import matplotlib.pyplot as plt
-azimuth = np.linspace(0, 2 * np.pi, 360)  # 0° til 359° i radianer
+# import matplotlib.pyplot as plt
+# azimuth = np.linspace(0, 2 * np.pi, 360)  # 0° til 359° i radianer
 
-# Plott
-plt.figure(figsize=(8, 8))
-ax = plt.subplot(1, 1, 1, polar=True)
+# # Plott
+# plt.figure(figsize=(8, 8))
+# ax = plt.subplot(1, 1, 1, polar=True)
 
-ax.plot(azimuth, elev_new, label='trekanter')
-ax.plot(azimuth, list_top_new, label='linjer')
+# ax.plot(azimuth, elev_new, label='trekanter')
+# ax.plot(azimuth, list_top_new, label='linjer')
 
-# Ekstra innstillinger for å gjøre det tydeligere
-ax.set_theta_zero_location("N")  # Starter i nord
-ax.set_theta_direction(-1)       # Går med klokken
+# # Ekstra innstillinger for å gjøre det tydeligere
+# ax.set_theta_zero_location("N")  # Starter i nord
+# ax.set_theta_direction(-1)       # Går med klokken
 
-plt.title("Polarplott med elevasjonsvinkler")
-plt.legend()
-plt.show()
+# plt.title("Polarplott med elevasjonsvinkler")
+# plt.legend()
+# plt.show()
