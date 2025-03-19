@@ -172,16 +172,19 @@ def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_
     
     return dopvalues
 
-point = {
-    "type": "Feature",
-    "geometry": {
-        "type": "Point",
-        "coordinates": [7.6866582, 62.5580949]
-    },
-    "properties": {"time_from_start": 0, "id": 1}
-}
+# point = {
+#     "type": "Feature",
+#     "geometry": {
+#         "type": "Point",
+#         "coordinates": [8.0552304, 62.3482632]
+#     },
+#     "properties": {"time_from_start": 0, "id": 1}
+# }
 # timedate = datetime.strptime( '2025-03-13T12:00:00.000', "%Y-%m-%dT%H:%M:%S.%f")
-# doplist = find_dop_along_road([point],timedate, ['GPS', 'GLONASS', 'Galileo'], '10')
+# doplist = find_dop_along_road([point],timedate, ['GPS', 'GLONASS', 'Galileo', 'BeiDou', 'QZSS'], '10')
+
+# list, df, elevation_cutoffs, obs_cartesian = runData(['GPS', 'GLONASS', 'Galileo', 'BeiDou', 'QZSS'], '10', '2025-03-13T12:00:00.000', 1, point) 
+# print(f'satellites2:, {list[0]}')
 # print('doplist:', doplist)
 # import time
 
