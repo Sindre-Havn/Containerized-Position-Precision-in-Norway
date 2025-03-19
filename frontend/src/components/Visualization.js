@@ -1,11 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai'
-import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState} from '../states/states';
+import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState, startPointState} from '../states/states';
 import { SatelliteMap } from './SkyPlot';
 import '../css/visualization.css';
 import { BarChartGraph } from './BoxPlot';
 import { LineChart } from './LinePlot';
+import proj4 from 'proj4';
+
+// Define WGS84 (latitude/longitude) and UTM Zone 33 (Easting/Northing)
+proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs");
+proj4.defs("EPSG:32633", "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs");
+
 
 
 const gps = {
@@ -75,7 +81,7 @@ const Visualization = () => {
     const elevationAngle = useAtomValue(elevationState);
     const time =useAtomValue(timeState);
     const epoch = useAtomValue(epochState);
-    const points = useAtomValue(pointsState);
+    const startPoint = useAtomValue(startPointState);
     const labels = Array.from({ length: 2 * epoch +1}, (_, i) => 
       new Date(time.getTime() + i * 30 * 60 * 1000).toISOString().slice(11, 16)
     );
@@ -86,7 +92,7 @@ const Visualization = () => {
       if (!updateData) return; 
     
       const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
-    
+      const [lat, lng] = proj4("EPSG:32633","EPSG:4326", [startPoint[0], startPoint[1]]);
       fetch('http://127.0.0.1:5000/satellites', {
         headers: {
           'Accept': 'application/json',
@@ -98,7 +104,7 @@ const Visualization = () => {
           elevationAngle: elevationAngle.toString(),
           epoch: epoch.toString(),
           GNSS: filteredGNSS,
-          point: points[0],
+          point: [lat, lng],
         }),
         mode: 'cors'
       })

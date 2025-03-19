@@ -112,7 +112,7 @@ def visualCheck(dataframe, observation_lnglat, observation_cartesian, observatio
     return LGDF
 
 
-def runData(gnss_list, elevationstring, t, epoch, point):
+def runData(gnss_list, elevationstring, t, epoch, observation_lngLat):
 
     print('in runData')
 
@@ -123,7 +123,7 @@ def runData(gnss_list, elevationstring, t, epoch, point):
 
     # Kjør funksjonen
     elevation_mask = float(elevationstring)
-    observation_lngLat = point['geometry']['coordinates']
+
     print(f'observation_lngLat: {observation_lngLat}')
     observation_EN = transformerToEN.transform(observation_lngLat[0], observation_lngLat[1])
 
