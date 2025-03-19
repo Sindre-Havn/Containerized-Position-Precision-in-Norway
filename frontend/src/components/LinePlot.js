@@ -86,9 +86,9 @@ export const LineChart = ({ data, labels, satellites }) => {
         data: HDOP,
         borderColor: 'rgba(54, 162, 0, 1)',
         backgroundColor: 'rgba(54, 162, 0, 0.2)',
-        pointBorderColor: 'rgba(54, 162, 235, 1)',
+        pointBorderColor: 'rgba(54, 162, 0, 1)',
         pointBackgroundColor: '#fff',
-        pointHoverBackgroundColor: 'rgba(54, 162, 235, 1)',
+        pointHoverBackgroundColor: 'rgba(54, 162, 0, 1)',
         pointHoverBorderColor: 'rgba(220, 220, 220, 1)'
       },
       {
@@ -96,9 +96,9 @@ export const LineChart = ({ data, labels, satellites }) => {
         data: VDOP,
         borderColor: 'rgba(54, 0, 235, 1)',
         backgroundColor: 'rgba(54, 0, 235, 0.2)',
-        pointBorderColor: 'rgba(54, 162, 235, 1)',
+        pointBorderColor: 'rgba(54, 0, 235, 1)',
         pointBackgroundColor: '#fff',
-        pointHoverBackgroundColor: 'rgba(54, 162, 235, 1)',
+        pointHoverBackgroundColor: 'rgba(54, 0, 235, 1)',
         pointHoverBorderColor: 'rgba(220, 220, 220, 1)'
       }
     ]

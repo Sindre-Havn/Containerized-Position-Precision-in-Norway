@@ -13,30 +13,30 @@ from rasterio.mask import mask
 from shapely.geometry import Point, Polygon, mapping
 import geopandas as gpd
 # #Mappe som inneholder rasterfiler
-folder_path = "data/dom10/data/"
+#folder_path = "data/dom10/data/"
 
 
-tif_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(".tif")]
+# tif_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(".tif")]
 
-raster_list = []
-#raster_midtpunkt = []
-raster_midtpunkt_NE = []
-for file in tif_files:
-    raster = rasterio.open(file)
-    midtpunkt = raster.xy(raster.width//2, raster.height//2)
-    # p2 = Proj(init=raster.crs, proj="utm", zone=33)
-    # lng, lat = p2(midtpunkt[0],midtpunkt[1],inverse=True)
-    raster_list.append(raster)
-    raster_midtpunkt_NE.append([midtpunkt[0],midtpunkt[1]])
-    #raster_midtpunkt.append([lng,lat])
+# raster_list = []
+# #raster_midtpunkt = []
+# raster_midtpunkt_NE = []
+# for file in tif_files:
+#     raster = rasterio.open(file)
+#     midtpunkt = raster.xy(raster.width//2, raster.height//2)
+#     # p2 = Proj(init=raster.crs, proj="utm", zone=33)
+#     # lng, lat = p2(midtpunkt[0],midtpunkt[1],inverse=True)
+#     raster_list.append(raster)
+#     raster_midtpunkt_NE.append([midtpunkt[0],midtpunkt[1]])
+#     #raster_midtpunkt.append([lng,lat])
 
-#print(raster_midtpunkt)
-#print(raster_midtpunkt_NE)
+# #print(raster_midtpunkt)
+# #print(raster_midtpunkt_NE)
 
-romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
-                     [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
-                     [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
-center = (127961.24,6948183.94)
+# romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
+#                      [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
+#                      [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
+# center = (127961.24,6948183.94)
 
 
 def calculate_distance(point1, point2):
@@ -44,24 +44,24 @@ def calculate_distance(point1, point2):
 
 #lage en stor raster med alle filene samlet
 
-raster_list = []
-for file in tif_files:
-    raster = rasterio.open(file)
-    raster_list.append(raster)
-mosaic, out_transform = merge(raster_list)
-# Hent metadata fra den første rasterfilen
-out_meta = raster_list[0].meta.copy()
-out_meta.update({
-    "driver": "GTiff",
-    "height": mosaic.shape[1],
-    "width": mosaic.shape[2],
-    "transform": out_transform
-})
+# raster_list = []
+# for file in tif_files:
+#     raster = rasterio.open(file)
+#     raster_list.append(raster)
+# mosaic, out_transform = merge(raster_list)
+# # Hent metadata fra den første rasterfilen
+# out_meta = raster_list[0].meta.copy()
+# out_meta.update({
+#     "driver": "GTiff",
+#     "height": mosaic.shape[1],
+#     "width": mosaic.shape[2],
+#     "transform": out_transform
+# })
 
-# Lagre mosaikken til en midlertidig fil
-output_path = f"data/merged_raster_romsdalen_10.tif"
-with rasterio.open(output_path, "w", **out_meta) as dest:
-    dest.write(mosaic)
+# # Lagre mosaikken til en midlertidig fil
+# output_path = f"data/merged_raster_romsdalen_10.tif"
+# with rasterio.open(output_path, "w", **out_meta) as dest:
+#     dest.write(mosaic)
 
 
 # Sjekke informasjon om rasterfilen
@@ -91,7 +91,6 @@ with rasterio.open(output_path, "w", **out_meta) as dest:
 def generate_triangles(center, radius, step=1):
     """Generer punkter i en sirkel rundt et senterpunkt for hver grad."""
     polygons = []
-    
     for angle in range(0, 360, step):
         # Calculate endpoints for the two angles
         x_end_first = center[0] + radius * math.cos(math.radians(angle))
@@ -114,42 +113,35 @@ def generate_triangles(center, radius, step=1):
     
     return polygons
 
-def find_highest_elevation_triangle(rastername, center, radius_km):
-    """Finn høyeste punkt innenfor en radius for hver 5. grad rundt senter."""
-    #radius_deg = radius_km / 111  # 1 grad ≈ 111 km
-    polygons = generate_triangles(center, radius_km*1000)
-    #print(polygons)
-    with rasterio.open(rastername) as src:
-        dem_data = src.read(1)
-        center_height = dem_data[src.index(center[0], center[1])]
-        highest_points = []
-        for polygon in polygons:             
-            out_image, out_transform = mask(src, polygon, crop=True, nodata=src.nodata)
-            out_data = out_image[0]  # Hent første bånd  
-            highest_elevation = 0
-            best_height = None
-            best_point = None   
-            # # Finn høyeste verdi i masken
-            if out_data.size > 0:
-            
-                #iterate through all cells that do not have the nodata value
-                for i in range(out_data.shape[0]):
-                    for j in range(out_data.shape[1]):
-                        if out_data[i][j] != src.nodata:
-                            x, y = rasterio.transform.xy(out_transform, i, j)
-                            height = out_data[i, j]
-                            elevation = np.rad2deg(np.arctan((height - center_height)/ calculate_distance(center, (x, y))))
-                            if elevation > highest_elevation:
-                                highest_elevation = elevation
-                                best_point = (x, y)
-                                best_height = height
-  
-                highest_points.append((best_point, best_height))   
-            else:
-                highest_points.append((None, None))
-     
-        
-        return center_height,highest_points
+def find_highest_elevation_triangle(dem_data, src, center, radius_km, elevation_mask, step=1):
+    """Finn høyeste punkt innenfor en radius for hver grad rundt senter."""
+    polygons = generate_triangles(center, radius_km*1000, step)
+    center_height = dem_data[src.index(center[0], center[1])]
+   
+    highest_elevations = []
+    for polygon in polygons:             
+        out_image, out_transform = mask(src, polygon, crop=True, nodata=src.nodata)
+        out_data = out_image[0]  # Hent første bånd  
+        highest_elevation = elevation_mask
+
+        if out_data.size > 0:
+            #iterate through all cells that do not have the nodata value
+            for i in range(out_data.shape[0]):
+                for j in range(out_data.shape[1]):
+                    if out_data[i][j] != src.nodata:
+                        x, y = rasterio.transform.xy(out_transform, i, j)
+                        height = out_data[i, j]
+                        elevation = np.rad2deg(np.arctan((height - center_height)/ calculate_distance(center, (x, y))))
+                        if elevation > highest_elevation:
+                            highest_elevation = elevation
+
+            highest_elevations.append(highest_elevation) 
+        else:
+            highest_elevations.append(elevation_mask)
+    if step != 1:
+        highest_elevations = [item for item in highest_elevations for _ in range(step)]
+    
+    return center_height, highest_elevations
 
 
 

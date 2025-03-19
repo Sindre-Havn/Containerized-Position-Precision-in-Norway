@@ -5,14 +5,27 @@ import 'leaflet-geosearch/dist/geosearch.css';
 import { OpenStreetMapProvider, GeoSearchControl } from 'leaflet-geosearch';
 import L from 'leaflet';
 import customMarkerIcon from '../assets/pngwing.png';
+import endstopIcons from '../assets/marker.png';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import {startPointState, endPointState, distanceState, roadState,pointsState} from '../states/states';
+import {startPointState, endPointState, distanceState, roadState,pointsState, vegReferanseState} from '../states/states';
 import '../css/map.css';
+import proj4 from 'proj4';
+
+// Define WGS84 (latitude/longitude) and UTM Zone 33 (Easting/Northing)
+proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs");
+proj4.defs("EPSG:32633", "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs");
+
 
 
 // Fix Leaflet's default marker icon issue
 const customIcon = new L.Icon({
     iconUrl: customMarkerIcon,
+    iconSize: [32, 32], // Adjust size as needed
+    iconAnchor: [16, 32], // Center the icon
+    popupAnchor: [0, -32], // Adjust popup position
+  });
+const endstopCustomIcon = new L.Icon({
+    iconUrl: endstopIcons,
     iconSize: [32, 32], // Adjust size as needed
     iconAnchor: [16, 32], // Center the icon
     popupAnchor: [0, -32], // Adjust popup position
@@ -52,22 +65,35 @@ const SearchControl = () => {
 };
 
 
-// const ClickableMap = ({ markers, setMarkers }) => {
-//   const [endPoints, setEndPoints ] = useAtom(endPointsState);
+const ClickableMap = ({ markers, setMarkers }) => {
+  const [startPoint, setStartPoint ] = useAtom(startPointState);
+  const [endPoint, setEndPoint ] = useAtom(endPointState);
 
-//   useMapEvents({
-//     click(e) {
-//       if (markers.length < 2) {
-//         setMarkers([...markers, e.latlng]);
-//         setEndPoints([...endPoints, e.latlng]);
-//       }
-//     },
-//   });
+  const convertToUTM = (latlng) => {
+    const [easting, northing] = proj4("EPSG:4326", "EPSG:32633", [latlng.lng, latlng.lat]);
+    return [easting, northing ];
+  };
 
-//   return null;
-// };
+  useMapEvents({
+    click(e) {
+      const utmCoords = convertToUTM(e.latlng);
+      if (markers.length === 1) {
+        setMarkers([...markers, e.latlng]);
+        setEndPoint(utmCoords);
+      }
+      if (markers.length === 0) {
+        setMarkers([...markers, e.latlng]);
+        setStartPoint(utmCoords);
+      }
+      
+    },
+  });
+
+  return null;
+};
 
 const NavMap = () => {
+  const vegreferanse = useAtomValue(vegReferanseState);
   const startPoint = useAtomValue(startPointState);
   const endPoint = useAtomValue(endPointState);
   const distance = useAtomValue(distanceState);
@@ -75,6 +101,8 @@ const NavMap = () => {
   const [markers, setMarkers] = useAtom(pointsState);
   const [geoJsonData, setGeoJsonData] = useState(null);
   
+  const [endstopMarkers, setEndstopMarkers] = useState([]);
+ 
 
   const fetchRoadData = useCallback(() => {
     if (geoJsonData != null || !updateRoad) return;
@@ -89,6 +117,7 @@ const NavMap = () => {
       },
       method: 'POST',
       body: JSON.stringify({
+        vegReferanse: vegreferanse,
         startPoint: startPoint,
         endPoint: endPoint,
         distance: distance,
@@ -119,9 +148,12 @@ const NavMap = () => {
     fetchRoadData();
   }, [fetchRoadData]);
   // Function to remove a marker when clicked
-  const handleMarkerClick = (index) => {
-    //setMarkers(markers.filter((_, i) => i !== index));
-  };
+  // const handleMarkerClick = (index) => {
+  //   if (index === 0) {
+  //     setMarkers(markers.filter((_, i) => i !== index));
+  //   }
+  //   setMarkers(markers.filter((_, i) => i !== index));
+  // };
 
   return (
   <div className="map" >
@@ -130,12 +162,12 @@ const NavMap = () => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      {/* <ClickableMap markers={markers} setMarkers={setMarkers} /> */}
-      {/* {markers.map((position, index) => (
-        <Marker key={index} position={position} icon={customIcon} eventHandlers={{ click: () => handleMarkerClick(index) }}>
+      <ClickableMap markers={endstopMarkers} setMarkers={setEndstopMarkers} />
+      {endstopMarkers && endstopMarkers.map((position, index) => (
+        <Marker key={index} position={position} icon={endstopCustomIcon}>
           <Popup>Click to remove</Popup>
         </Marker>
-      ))} */}
+      ))}
       <SearchControl />
       {geoJsonData && (geoJsonData.map((data, index) => (
         <GeoJSON
@@ -147,7 +179,7 @@ const NavMap = () => {
       )}
       {markers && (markers.map((point, index) => (
           
-          <Marker key={index} position={[point.geometry.coordinates[1],point.geometry.coordinates[0] ]} icon={customIcon} eventHandlers={{ click: () => handleMarkerClick(index) }}>
+          <Marker key={index} position={[point.geometry.coordinates[1],point.geometry.coordinates[0] ]} icon={customIcon}>
             <Popup>Position : {point.geometry.coordinates[0]},  {point.geometry.coordinates[1]}</Popup>
           </Marker>
           ))

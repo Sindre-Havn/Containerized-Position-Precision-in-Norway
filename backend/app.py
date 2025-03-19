@@ -1,14 +1,13 @@
 
 
 import json
-from flask import Flask, Response, jsonify, request
-from computebaner import  runData, satellites_at_point
-from computeDOP import best
+from flask import Flask, Response, jsonify, request, stream_with_context
+from computebaner import  get_gnss, getDayNumber, runData
+from computeDOP import best, find_dop_along_road, find_dop_on_point
 from flask_cors import CORS
-from datetime import datetime, time, timedelta
-from downloadfile import downloadRoad
+from datetime import datetime, time
 from romsdalenRoad import calculate_travel_time, get_road_api
-
+import rasterio
 # Set up basic configuration for logging
 #logging.basicConfig(level=logging.INFO)
 
@@ -17,6 +16,7 @@ points = None
 
 app = Flask(__name__)
 CORS(app, resources={r"/satellites": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+CORS(app, resources={r"/dopvalues": {"origins": "http://localhost:3000"}})
 
 @app.route('/satellites', methods=['POST', 'OPTIONS'])
 def satellites():
@@ -38,14 +38,14 @@ def satellites():
     #print(f'point: {point}')
     
     is_processing = True
-    list, df, elevation_cutoffs = runData(gnss, elevation_angle, time, epoch, point) 
+    list, df, elevation_cutoffs, obs_cartesian = runData(gnss, elevation_angle, time, epoch, point) 
     elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
-    #DOPvalues = best(df)
+    DOPvalues = best(df, obs_cartesian)
 
     is_processing = False
     
     if not is_processing:
-        response = jsonify({'message': 'Data processed successfully', 'data': list, 'elevation_cutoffs': elevation_strings})
+        response = jsonify({'message': 'Data processed successfully', 'data': list, 'DOP': DOPvalues,   'elevation_cutoffs': elevation_strings})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
         return response, 200
     else:
@@ -65,12 +65,12 @@ def road():
 
 
     is_processing = True
-    #data = downloadRoad('EV136')
+    vegReferanse = request.json.get('vegReferanse')
     startPoint = request.json.get('startPoint')
     endPoint = request.json.get('endPoint')
     #(request.json)
     distance = request.json.get('distance')
-    road_utm,road_wgs =  get_road_api(startPoint, endPoint, 'EV136')
+    road_utm,road_wgs =  get_road_api(startPoint, endPoint,vegReferanse)
     points = calculate_travel_time(road_utm, float(distance))
     is_processing = False
     
@@ -86,86 +86,83 @@ def road():
 @app.route('/dopvalues', methods=['POST', 'OPTIONS'])
 def dopValues():
     if request.method == 'OPTIONS':
-        # Handle the preflight request with necessary headers
         response = jsonify({'status': 'Preflight request passed'})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Cache-Control")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         return response, 200
 
     # Main POST request handling
-    data = request.json  
-    time = data.get('time').strip('Z')
-    elevation_angle = data.get('elevationAngle')
-    gnss = data.get('GNSS')
-    points = data.get('points')
-    distance = float(data.get('distance'))
-    
-    
-    is_processing = True
-    #finner dopvalues for hvert point, gjennomsnitts fart = 70kmh = 19.44m/s
-    DOPvalues = []
-    
-    for i,point in enumerate(points):
-        timeElaped = (i*float(distance))/19.44
-        timeNow = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f") + timedelta(seconds=timeElaped)
-        df = satellites_at_point(gnss, elevation_angle, timeNow, point) 
-        DOPvalue = best(df)
-        DOPvalues.append(DOPvalue)
-        print(f'{i}/{len(points)}')
-    
-    is_processing = False
-    
-    if not is_processing:
-        response = jsonify({'message': 'Data processed successfully','DOP': DOPvalues})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-        return response, 200
-    else:
-        response = jsonify({"data": "Data is not ready"})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-        return response, 202
+    try:
+        data = request.get_json()
+        time_str = data.get('time').strip('Z')
+        elevation_angle = data.get('elevationAngle')
+        gnss = data.get('GNSS')
+        points = data.get('points')
+    except Exception as e:
+        return jsonify({"error": f"Invalid data format: {e}"}), 400
+
+    time = datetime.fromisoformat(time_str)
+
+    dop_list = []
+    daynumber = getDayNumber(time)
+    gnss_mapping = get_gnss(daynumber, time.year)
+    total_steps = len(points) + 1
+
+    def generate():
+        with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+            dem_data = src.read(1)
+
+            for step, point in enumerate(points, start=1):
+                dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle)
+                dop_list.append(dop_point)
+
+                yield f"{int((step / total_steps) * 100)}\n\n"
+
+        # Når prosessen er ferdig
+        yield f"{json.dumps(dop_list)}\n\n"
+
+    response = Response(stream_with_context(generate()), content_type='text/event-stream')
+    response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+    return response
 
 # def dopValues():
 #     if request.method == 'OPTIONS':
-#         # Handle CORS preflight request
+#         # Handle the preflight request with necessary headers
 #         response = jsonify({'status': 'Preflight request passed'})
 #         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
 #         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
 #         response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
 #         return response, 200
 
-#     # Get request data
+#     # Main POST request handling
 #     data = request.json  
-#     time_str = data.get('time').strip('Z')
+#     time1 = data.get('time').strip('Z')
 #     elevation_angle = data.get('elevationAngle')
 #     gnss = data.get('GNSS')
 #     points = data.get('points')
-#     distance = data.get('distance')
     
-#     def generate():
-#         total_points = len(points)
-#         DOPvalues = []
-        
-#         for i, point in enumerate(points):
-#             time_elapsed = (i * float(distance)) / 19.44
-#             time_now = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%f") + timedelta(seconds=time_elapsed)
-            
-#             df = satellites_at_point(gnss, elevation_angle, time_now, point) 
-#             DOPvalue = best(df)
-#             DOPvalues.append(DOPvalue)
+#     is_processing = True
 
-#             # **Send Progress Update**
-#             progress = (i + 1) / total_points * 100  # Percentage complete
-#             yield f"data: {json.dumps({'progress': progress})}\n\n"
-#             #time.sleep(0.1)  # Simulate delay (optional)
+#     import time
+#     start = time.time()
+#     timeNow = datetime.strptime(time1, "%Y-%m-%dT%H:%M:%S.%f")
+#     dopvalues = find_dop_along_road(points, timeNow, gnss, int(elevation_angle))
+#     end = time.time()
+#     print(f"Kjøretid dop: {end-start} sekunder")
 
-#         # **Final Response**
-#         yield f"data: {json.dumps({'message': 'Data processed successfully', 'DOP': DOPvalues})}\n\n"
+#     is_processing = False
 
-#     # **Enable SSE (Streaming)**
-#     response = Response(generate(), content_type='text/event-stream')
-#     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-#     return response
+    
+#     if not is_processing:
+#         response = jsonify({'message': 'Data processed successfully','DOP': dop_list})
+#         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
+#         return response, 200
+#     else:
+#         response = jsonify({"data": "Data is not ready"})
+#         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
+#         return response, 202
+
 
 @app.route('/submit-filter', methods=['POST'])
 def submit_time():

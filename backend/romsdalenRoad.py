@@ -1,17 +1,10 @@
-import json
 from pyproj import Transformer
-from shapely.wkt import loads
-from downloadfile import downloadRoad
 import requests
 import requests
-import concurrent.futures
-from itertools import chain
 import pandas as pd
-from shapely.geometry import LineString, Point
+from shapely.geometry import LineString
 import nvdbapiv3 
-import geopandas as gpd
-from shapely import wkt
-from shapely.geometry import mapping
+
 
 
 
@@ -96,7 +89,7 @@ def calculate_travel_time(road_segments, avstand):
 def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     fartsgrenser = nvdbapiv3.nvdbFagdata(105)
     fartsgrenser.filter({'vegsystemreferanse':vegsystemreferanse})
-    url =f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=10&omkrets=100&konnekteringslenker=true&detaljerte_lenker=false&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse=EV136'
+    url =f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=1000&omkrets=100&konnekteringslenker=true&detaljerte_lenker=false&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse=EV136'
     headers = {
         "Accept": "application/json",
         "X-Client": "Masteroppgave-vegnett"
@@ -105,7 +98,7 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
         return []  # Returnerer tom liste hvis feil i forespørselen
-    
+    #print("road data:",response.json())
     data = response.json()
     segmenter = data.get('vegnettsrutesegmenter', [])
     df = pd.DataFrame(fartsgrenser.to_records())
@@ -123,7 +116,7 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
                 #print(fartsgrense)
                 converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
                 if veglenke['vegsystemreferanse']['strekning']['retning'] == 'MOT':
-                    print('reversing')
+                 
                     converted = converted[::-1]
                 geojson_feature_wgs = {
                     "type": "Feature",
@@ -145,7 +138,8 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
                 total_vegsegment_wgs84.append(geojson_feature_wgs)
                 total_vegsegment_utm.append(geojson_feature_utm)
                 i += 1
-
+    # print(len(total_vegsegment_wgs84))
+    # print(total_vegsegment_utm)
     connected_utm = connect_road(total_vegsegment_utm)
     connected_wgs = connect_road(total_vegsegment_wgs84)
     return connected_utm, connected_wgs
