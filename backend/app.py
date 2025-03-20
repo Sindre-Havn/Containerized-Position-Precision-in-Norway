@@ -2,8 +2,8 @@
 
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
-from computebaner import  get_gnss, getDayNumber, runData
-from computeDOP import best, find_dop_along_road, find_dop_on_point
+from computebaner import  get_gnss, getDayNumber, runData, runData_check_sight
+from computeDOP import best, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime, time
 from romsdalenRoad import calculate_travel_time, get_road_api
@@ -38,7 +38,7 @@ def satellites():
     #print(f'point: {point}')
     
     is_processing = True
-    list, df, elevation_cutoffs, obs_cartesian = runData(gnss, elevation_angle, time, epoch, point) 
+    list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch, point) 
     elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
     DOPvalues = best(df, obs_cartesian)
 
@@ -114,7 +114,7 @@ def dopValues():
             dem_data = src.read(1)
 
             for step, point in enumerate(points, start=1):
-                dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle)
+                dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, step)
                 dop_list.append(dop_point)
 
                 yield f"{int((step / total_steps) * 100)}\n\n"
