@@ -11,7 +11,7 @@ export const endPointsState = atom([])
 
 export const vegReferanseState = atom('EV136')
 export const startPointState = atom([124657.85,	6957624.16])
-export const endPointState = atom([193547.58,6896803.47])
+export const endPointState = atom([193510.27,6896504.01])
 export const distanceState = atom(10)
 
 export const roadState = atom(false)
