@@ -2,7 +2,7 @@ from pyproj import Transformer
 import requests
 import requests
 import pandas as pd
-from shapely.geometry import LineString
+from shapely.geometry import LineString, Point
 import nvdbapiv3 
 
 
@@ -29,16 +29,19 @@ def connect_road(total_road):
         start_point = road_segments[i]["geometry"]["coordinates"][0]
         fartsgrense = road_segments[i]["properties"]["fartsgrense"]
         if prev_segment_end_point != start_point:
-                geojson_feature = {
-                    "type": "Feature",
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": [prev_segment_end_point, start_point]
-                    },
-                    "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
-                } 
-                connected.append(geojson_feature)
+            geojson_feature = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [prev_segment_end_point, start_point]
+                },
+                "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
+            } 
+            connected.append(geojson_feature)
+    
+             
         connected.append(road_segments[i])
+    
     return connected
 
 
@@ -89,7 +92,8 @@ def calculate_travel_time(road_segments, avstand):
 def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     fartsgrenser = nvdbapiv3.nvdbFagdata(105)
     fartsgrenser.filter({'vegsystemreferanse':vegsystemreferanse})
-    url =f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=1000&omkrets=1000&konnekteringslenker=true&detaljerte_lenker=false&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse={vegsystemreferanse}'
+    url =f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=1000&omkrets=10&konnekteringslenker=true&detaljerte_lenker=false&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse={vegsystemreferanse}'
+    print(url)
     headers = {
         "Accept": "application/json",
         "X-Client": "Masteroppgave-vegnett"
@@ -101,9 +105,20 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     #print("road data:",response.json())
     data = response.json()
     segmenter = data.get('vegnettsrutesegmenter', [])
+
+    startveg = segmenter[0]
+
     df = pd.DataFrame(fartsgrenser.to_records())
     df = df[(df['typeVeg'] == 'Enkel bilveg')]
     i = 0
+    retning = 'MED'
+    #finne ut om start og sluttpunkt i er i retning med vegen eller mot
+    if 'sluttnode' in startveg:
+        retning = 'MED'
+    if 'startnode' in startveg:
+        #segmenter = segmenter[::-1]
+        retning = 'MOT'
+
     total_vegsegment_wgs84=[]
     total_vegsegment_utm = []
     for veglenke in segmenter:
@@ -115,9 +130,12 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
                 fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else None
                 #print(fartsgrense)
                 converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
-                if veglenke['vegsystemreferanse']['strekning']['retning'] == 'MOT':
-                 
+                
+                #if veglenke['vegsystemreferanse']['strekning']['retning'] == :
+                if retning == 'MOT':
                     converted = converted[::-1]
+
+                
                 geojson_feature_wgs = {
                     "type": "Feature",
                     "geometry": {
@@ -144,13 +162,34 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     connected_wgs = connect_road(total_vegsegment_wgs84)
     return connected_utm, connected_wgs
 
-# start = [136149.75, 6941757.94]
-# slutt = [193547.58,6896803.47]
+def truncate_road_segment(road_segments, start_point):
+    """
+    Truncate the road segment from the start point by finding the closest point on the segment.
+    """
+    truncated_segments = []
+    start_point_geom = Point(start_point)
+
+    for segment in road_segments:
+        line = LineString(segment["geometry"]["coordinates"])
+        closest_point = line.interpolate(line.project(start_point_geom))  # Find the closest point on the line
+        truncated_line = LineString([closest_point] + list(line.coords))  # Truncate the line from the closest point
+        segment["geometry"]["coordinates"] = list(truncated_line.coords)
+        truncated_segments.append(segment)
+        break  # Only truncate the first segment
+
+    return truncated_segments
+
+start = [136149.75, 6941757.94]
+slutt = [193547.58,6896803.47]
 # import time
+
+#når vegen går mot ålesund(feil veg), er sluttniode først, men dette er det"første" segmentet som går i rikig veg, retning er mot
+#når vegen går mot dombås, er første segment startnode, men geometrien går feil veg. retnign er mot
 
 #     # Start tidtaking
 # start_time = time.time()
 # road_utm, road_wgs =  get_road_api(start, slutt, 'EV136')
+# truncated_road = truncate_road_segment(road_utm, start)
 # #sorted_road = sort_road_api(road_wgs)
 # points = calculate_travel_time(road_utm, 100)
 # end_time = time.time()
