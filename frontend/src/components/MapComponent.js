@@ -74,27 +74,29 @@ const SearchControl = () => {
 };
 
 
-const ClickableMap = ({ markers, setMarkers }) => {
-  const [startPoint, setStartPoint ] = useAtom(startPointState);
-  const [endPoint, setEndPoint ] = useAtom(endPointState);
+const ClickableMap = ({ setStartMarker, setEndMarker, startMarker, endMarker }) => {
+  const setStartPoint = useSetAtom(startPointState);
+  const setEndPoint = useSetAtom(endPointState);
 
   const convertToUTM = (latlng) => {
     const [easting, northing] = proj4("EPSG:4326", "EPSG:32633", [latlng.lng, latlng.lat]);
-    return [easting, northing ];
+    return [easting, northing];
   };
 
   useMapEvents({
     click(e) {
-      const utmCoords = convertToUTM(e.latlng);
-      if (markers.length === 1) {
-        setMarkers([...markers, e.latlng]);
-        setEndPoint(utmCoords);
+      const { latlng } = e;
+
+      // Hvis ingen startMarker: sett start
+      if (!startMarker) {
+        setStartMarker(latlng);
+        setStartPoint(convertToUTM(latlng));
       }
-      if (markers.length === 0) {
-        setMarkers([...markers, e.latlng]);
-        setStartPoint(utmCoords);
+      // Hvis start er satt men slutt ikke er det: sett slutt
+      else if (!endMarker) {
+        setEndMarker(latlng);
+        setEndPoint(convertToUTM(latlng));
       }
-      
     },
   });
 
@@ -103,15 +105,16 @@ const ClickableMap = ({ markers, setMarkers }) => {
 
 const NavMap = () => {
   const vegreferanse = useAtomValue(vegReferanseState);
-  const startPoint = useAtomValue(startPointState);
-  const endPoint = useAtomValue(endPointState);
+  const [startPoint, setStartPoint] = useAtom(startPointState);
+  const [endPoint, setEndPoint] = useAtom(endPointState);
   const distance = useAtomValue(distanceState);
   const [updateRoad,setUpdateRoad] = useAtom(roadState);
   const [markers, setMarkers] = useAtom(pointsState);
   const [geoJsonData, setGeoJsonData] = useState(null);
   
   const [endstopMarkers, setEndstopMarkers] = useState([]);
- 
+  const [startMarker, setStartMarker] = useState(null);
+  const [endMarker, setEndMarker] = useState(null);
 
   const fetchRoadData = useCallback(() => {
     if (geoJsonData != null || !updateRoad) return;
@@ -171,12 +174,42 @@ const NavMap = () => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      <ClickableMap markers={endstopMarkers} setMarkers={setEndstopMarkers} />
-      {endstopMarkers && endstopMarkers.map((position, index) => (
-        <Marker key={index} position={position} icon={endstopMarkersicon[index]}>
-          <Popup>Click to remove</Popup>
+      <ClickableMap
+        setStartMarker={setStartMarker}
+        setEndMarker={setEndMarker}
+        startMarker={startMarker}
+        endMarker={endMarker}
+      />
+      {startMarker && (
+        <Marker
+          position={startMarker}
+          icon={startstopCustomIcon}
+          eventHandlers={{
+            click: () => {
+              setStartMarker(null);
+              setStartPoint(null);
+            }
+          }}
+        >
+          <Popup>Klikk for å fjerne startpunkt</Popup>
         </Marker>
-      ))}
+      )}
+
+      {endMarker && (
+        <Marker
+          position={endMarker}
+          icon={endstopCustomIcon}
+          eventHandlers={{
+            click: () => {
+              setEndMarker(null);
+              setEndPoint(null);
+            }
+          }}
+        >
+          <Popup>Klikk for å fjerne endepunkt</Popup>
+        </Marker>
+      )}
+
       <SearchControl />
       {geoJsonData && (geoJsonData.map((data, index) => (
         <GeoJSON
