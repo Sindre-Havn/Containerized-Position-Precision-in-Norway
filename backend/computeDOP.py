@@ -159,7 +159,7 @@ def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_
     observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])  
     observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
 
-    obs_cartesian = Cartesian(observation_point_latlng[1], observation_point_latlng[0], observation_height)
+    obs_cartesian = Cartesian(observation_point_latlng[1]* np.pi/180, observation_point_latlng[0]* np.pi/180, observation_height)
 
     observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
 

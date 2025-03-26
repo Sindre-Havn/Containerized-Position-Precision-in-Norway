@@ -73,8 +73,8 @@ def visualCheck(dataframe, observation_lnglat, observation_cartesian, observatio
     LGDF = pd.DataFrame(columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
     nb = 0
 
-    phi = observation_lnglat[1]
-    lam =  observation_lnglat[0]
+    phi = observation_lnglat[1]*np.pi/180
+    lam =  observation_lnglat[0]*np.pi/180
     T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
             [-np.sin(lam), np.cos(lam), 0],
             [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])
@@ -133,7 +133,7 @@ def runData(gnss_list, elevationstring, t, epoch, observation_lngLat):
         elevation_cutoff, observer_height = find_elevation_cutoff(dem_data, src, observation_EN, 5,elevation_mask)
     #print(f'elevation_cutoffs: {elevation_cutoffs}')
     elevation_cutoffs = elevation_cutoff.copy()
-    observation_cartesian = Cartesian(observation_lngLat[1], observation_lngLat[0], observer_height)
+    observation_cartesian = Cartesian(observation_lngLat[1] * np.pi/180, observation_lngLat[0]* np.pi/180, observer_height)
     # Stopp tidtaking
     end_time = time.time()
 
@@ -191,8 +191,8 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
     visual_satellites = []
 
     satellite_names = pd.DataFrame(columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
-    phi = observation_lngLat[1]
-    lam =  observation_lngLat[0]
+    phi = observation_lngLat[1]*np.pi/180
+    lam =  observation_lngLat[0]*np.pi/180
     T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
             [-np.sin(lam), np.cos(lam), 0],
             [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])
@@ -223,13 +223,13 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
 
     return visual_satellites
 
-def visualCheck_3(satellites, observer_cartesian, observer,observation_lngLat, elevation_mask, dem_data, src):
+def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, elevation_mask, dem_data, src):
         #print('in visual check')
     
     visual_satellites = []
 
-    phi = observation_lngLat[1]
-    lam =  observation_lngLat[0]
+    phi = observation_lngLat[1] *np.pi/180
+    lam =  observation_lngLat[0] *np.pi/180
     T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
             [-np.sin(lam), np.cos(lam), 0],
             [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])
@@ -291,7 +291,8 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, observation_lngLat
         dem_data = src.read(1)  
 
         observer_height = dem_data[src.index(observation_EN[0], observation_EN[1])]
-        observation_cartesian = Cartesian(observation_lngLat[1], observation_lngLat[0], observer_height)
+        print(f'observer: {observation_lngLat}, {observer_height}')
+        observation_cartesian = Cartesian(observation_lngLat[1]* np.pi/180, observation_lngLat[0]* np.pi/180, observer_height)
         observation_end = [observation_EN[0], observation_EN[1], observer_height]
         #create a list that contains the seconds for every halfhour in the epoch when epoch is hours
         final_list = []
