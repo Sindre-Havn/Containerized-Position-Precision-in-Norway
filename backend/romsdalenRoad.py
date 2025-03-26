@@ -1,3 +1,4 @@
+import numpy as np
 from pyproj import Transformer
 import requests
 import requests
@@ -10,16 +11,20 @@ import nvdbapiv3
 
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
+
 def linestring_to_coordinates(linestring):
+    # Bruker NumPy for effektiv parsing
     wkt_string = linestring.replace("LINESTRING Z(", "").replace(")", "")
-    points = [tuple(map(float, p.split())) for p in wkt_string.split(", ")]  # Parse E, N values 
-    converted_points = [[transformer.transform(e, n)[0], transformer.transform(e, n)[1]] for e, n,h in points]
-    return converted_points
+    points = np.array([list(map(float, p.split())) for p in wkt_string.split(", ")])
+    
+    # Batch-transformasjon for å unngå for-løkker
+    transformed_points = np.column_stack(transformer.transform(points[:, 0], points[:, 1]))
+    return transformed_points.tolist()
 
 def convert_coordinates(wgs84_coords):
-
-    converted_points = [[transformerToEN.transform(lng, lat)[0], transformerToEN.transform(lng, lat)[1]] for lng,lat in wgs84_coords]
-    return converted_points
+    coords = np.array(wgs84_coords)
+    transformed_points = np.column_stack(transformerToEN.transform(coords[:, 0], coords[:, 1]))
+    return transformed_points.tolist()
 
 def connect_road(total_road):
     road_segments = total_road.copy()
@@ -91,25 +96,32 @@ def calculate_travel_time(road_segments, avstand):
 
 def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     fartsgrenser = nvdbapiv3.nvdbFagdata(105)
-    fartsgrenser.filter({'vegsystemreferanse':vegsystemreferanse})
-    url =f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start={startpoint[0]},{startpoint[1]}&slutt={sluttpoint[0]},{sluttpoint[1]}&maks_avstand=1000&omkrets=10&konnekteringslenker=true&detaljerte_lenker=false&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse={vegsystemreferanse}'
-    print(url)
+    fartsgrenser.filter({'vegsystemreferanse': vegsystemreferanse})
+
+    url = (
+        f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute'
+        f'?start={startpoint[0]},{startpoint[1]}'
+        f'&slutt={sluttpoint[0]},{sluttpoint[1]}'
+        f'&maks_avstand=1000&omkrets=10&konnekteringslenker=true'
+        f'&detaljerte_lenker=false&behold_trafikantgruppe=false'
+        f'&pretty=true&kortform=false&vegsystemreferanse={vegsystemreferanse}'
+    )
+
     headers = {
         "Accept": "application/json",
         "X-Client": "Masteroppgave-vegnett"
     }
-    
+
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        return []  # Returnerer tom liste hvis feil i forespørselen
-    #print("road data:",response.json())
+        return []
+    
     data = response.json()
     segmenter = data.get('vegnettsrutesegmenter', [])
 
     startveg = segmenter[0]
 
-    df = pd.DataFrame(fartsgrenser.to_records())
-    df = df[(df['typeVeg'] == 'Enkel bilveg')]
+    df = pd.DataFrame(fartsgrenser.to_records()).query("typeVeg == 'Enkel bilveg'")
     i = 0
     retning = 'MED'
     #finne ut om start og sluttpunkt i er i retning med vegen eller mot
@@ -133,7 +145,7 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
                 
                 #if veglenke['vegsystemreferanse']['strekning']['retning'] == :
                 if retning == 'MOT':
-                    converted = converted[::-1]
+                    converted.reverse()
 
                 
                 geojson_feature_wgs = {
@@ -162,22 +174,7 @@ def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     connected_wgs = connect_road(total_vegsegment_wgs84)
     return connected_utm, connected_wgs
 
-def truncate_road_segment(road_segments, start_point):
-    """
-    Truncate the road segment from the start point by finding the closest point on the segment.
-    """
-    truncated_segments = []
-    start_point_geom = Point(start_point)
 
-    for segment in road_segments:
-        line = LineString(segment["geometry"]["coordinates"])
-        closest_point = line.interpolate(line.project(start_point_geom))  # Find the closest point on the line
-        truncated_line = LineString([closest_point] + list(line.coords))  # Truncate the line from the closest point
-        segment["geometry"]["coordinates"] = list(truncated_line.coords)
-        truncated_segments.append(segment)
-        break  # Only truncate the first segment
-
-    return truncated_segments
 
 start = [136149.75, 6941757.94]
 slutt = [193547.58,6896803.47]
