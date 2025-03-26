@@ -6,6 +6,8 @@ import { OpenStreetMapProvider, GeoSearchControl } from 'leaflet-geosearch';
 import L from 'leaflet';
 import customMarkerIcon from '../assets/pngwing.png';
 import endstopIcons from '../assets/marker.png';
+import A from '../assets/A.png';
+import B from '../assets/B.png';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import {startPointState, endPointState, distanceState, roadState,pointsState, vegReferanseState} from '../states/states';
 import '../css/map.css';
@@ -20,16 +22,23 @@ proj4.defs("EPSG:32633", "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs");
 // Fix Leaflet's default marker icon issue
 const customIcon = new L.Icon({
     iconUrl: customMarkerIcon,
-    iconSize: [32, 32], // Adjust size as needed
-    iconAnchor: [16, 32], // Center the icon
+    iconSize: [15, 15], // Adjust size as needed
+    iconAnchor: [8, 17], // Center the icon
     popupAnchor: [0, -32], // Adjust popup position
   });
 const endstopCustomIcon = new L.Icon({
-    iconUrl: endstopIcons,
-    iconSize: [32, 32], // Adjust size as needed
+    iconUrl: B,
+    iconSize: [22, 30], // Adjust size as needed
     iconAnchor: [16, 32], // Center the icon
     popupAnchor: [0, -32], // Adjust popup position
   });
+const startstopCustomIcon = new L.Icon({
+    iconUrl: A,
+    iconSize: [22, 30], // Adjust size as needed
+    iconAnchor: [16, 32], // Center the icon
+    popupAnchor: [0, -32], // Adjust popup position
+  });
+const endstopMarkersicon = [startstopCustomIcon, endstopCustomIcon]
 const colors = [
     "red", "green", "blue", "pink", "purple", "cyan",
     "yellow", "orange", "aquamarine", "lime", "indigo", "hotpink",
@@ -164,7 +173,7 @@ const NavMap = () => {
       />
       <ClickableMap markers={endstopMarkers} setMarkers={setEndstopMarkers} />
       {endstopMarkers && endstopMarkers.map((position, index) => (
-        <Marker key={index} position={position} icon={endstopCustomIcon}>
+        <Marker key={index} position={position} icon={endstopMarkersicon[index]}>
           <Popup>Click to remove</Popup>
         </Marker>
       ))}
@@ -178,7 +187,6 @@ const NavMap = () => {
         ))
       )}
       {markers && (markers.map((point, index) => (
-          
           <Marker key={index} position={[point.geometry.coordinates[1],point.geometry.coordinates[0] ]} icon={customIcon}>
             <Popup>Position : {point.geometry.coordinates[0]},  {point.geometry.coordinates[1]}</Popup>
           </Marker>

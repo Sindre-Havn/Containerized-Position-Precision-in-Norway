@@ -47,20 +47,47 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
 
     # Hent høyder fra DEM
     heights = dem_data[rows, cols]
+
+    distances = np.linspace(1, max_distance, len(heights))
+    target_elevations = np.rad2deg(np.arctan((heights - observer[2]) / distances))
+
+    if np.any((target_elevations > elevation_satellite) | (elevation_satellite < elevation_mask)):
+        return False  # Sikt blokkert
+    
+    return True  # Satellitten er synlig
+    
+def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite):
+
+    degree = azimuth_to_unit_circle(azimuth_satellite)
+    line = LineString([
+            (observer[0] + d * np.cos(np.deg2rad(degree)), observer[1] + d * np.sin(np.deg2rad(degree)))
+            for d in np.arange(1, max_distance, 5)
+        ])
+    coords = np.array(line.coords)
+
+    rows = []
+    cols = []
+    for x, y in coords:
+        try:
+            row, col = src.index(x, y)
+            rows.append(row)
+            cols.append(col)
+        except IndexError:
+            break  # Hvis vi går utenfor rasteret, antar vi at sikten ikke er blokkert
+
+    rows = np.array(rows)
+    cols = np.array(cols)
+
+    # Hent høyder fra DEM
+    heights = dem_data[rows, cols]
     #print(f'høyder: {heights}') 
     # Beregn elevasjonsvinkel fra hvert punkt
     distances = np.linspace(1, max_distance, len(heights))
     target_elevations = np.rad2deg(np.arctan((heights - observer[2]) / distances))
-    # print(f'distanser: {distances}')
-    # print(f'elevasjoner: {target_elevations}')
-    return max(target_elevations)
-    # # Sjekk om noen punkter blokkerer sikten
-    # if np.any((target_elevations > elevation_satellite) or (elevation_satellite < elevation_mask)):
-    #     return False  # Sikt blokkert
-    
-    # return True  # Satellitten er synlig
-    
-
+    if max(target_elevations) < elevation_mask:
+        return elevation_mask
+    else:
+        return max(target_elevations)
 #bruker trekanter
 def find_elevation_cutoff(dem_data, src,observer, max_distance, elevation_mask):
     observer_height, heights_and_points = find_highest_elevation_triangle(dem_data,src, observer,max_distance, elevation_mask)

@@ -81,7 +81,8 @@ const Visualization = () => {
     const elevationAngle = useAtomValue(elevationState);
     const time =useAtomValue(timeState);
     const epoch = useAtomValue(epochState);
-    const startPoint = useAtomValue(startPointState);
+    const points = useAtomValue(pointsState);
+
     const labels = Array.from({ length: 2 * epoch +1}, (_, i) => 
       new Date(time.getTime() + i * 30 * 60 * 1000).toISOString().slice(11, 16)
     );
@@ -92,7 +93,8 @@ const Visualization = () => {
       if (!updateData) return; 
     
       const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
-      const [lat, lng] = proj4("EPSG:32633","EPSG:4326", [startPoint[0], startPoint[1]]);
+      const firstPoint = points[0].geometry.coordinates;
+
       fetch('http://127.0.0.1:5000/satellites', {
         headers: {
           'Accept': 'application/json',
@@ -104,7 +106,7 @@ const Visualization = () => {
           elevationAngle: elevationAngle.toString(),
           epoch: epoch.toString(),
           GNSS: filteredGNSS,
-          point: [lat, lng],
+          point: [firstPoint[0], firstPoint[1]],
         }),
         mode: 'cors'
       })

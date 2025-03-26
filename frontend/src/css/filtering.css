@@ -151,6 +151,8 @@ h3 {
 .searchButton {
   background-color: #008cba;
   border: none;
+  min-width: 150px;
+  min-height: 40px;
   border-radius: 5px;
   color: white;
   padding: 12px 30px;
@@ -172,8 +174,15 @@ h3 {
 
 .searchButton.loading {
   position: relative;
-  color: transparent; /* Hide text during loading */
+  color: transparent;
+  padding: 0; /* Remove padding to ensure spinner aligns properly */
+  min-width: 150px; /* Maintain button size */
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centers spinner perfectly */
 }
+
 
 .searchButton.loading:after {
   content: "";
