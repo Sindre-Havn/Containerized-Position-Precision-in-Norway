@@ -188,7 +188,7 @@ const NavMap = () => {
       )}
       {markers && (markers.map((point, index) => (
           <Marker key={index} position={[point.geometry.coordinates[1],point.geometry.coordinates[0] ]} icon={customIcon}>
-            <Popup>Position : {point.geometry.coordinates[0]},  {point.geometry.coordinates[1]}</Popup>
+            <Popup> Distance: {point.properties.distance_from_start}m</Popup>
           </Marker>
           ))
         )

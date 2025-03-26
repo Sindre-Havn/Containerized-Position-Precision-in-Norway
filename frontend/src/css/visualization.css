@@ -1,3 +1,7 @@
+.loading_tekst{
+  text-align: center;
+  margin:20px;
+}
 .satellite-table {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Columns will auto-fill the space */

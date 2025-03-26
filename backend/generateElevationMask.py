@@ -3,12 +3,12 @@ import math
 from shapely import LineString
 from romsdalenRaster import find_highest_elevation_triangle, calculate_distance
 import numpy as np
-import rasterio
 
 
-romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
-                     [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
-                     [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
+
+# romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
+#                      [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
+#                      [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
 
 
 def azimuth_to_unit_circle(azimuth):

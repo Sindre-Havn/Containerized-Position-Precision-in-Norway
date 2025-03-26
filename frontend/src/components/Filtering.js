@@ -41,7 +41,10 @@ const FilterComponent = () => {
     setHours(event.target.value);
   };
   return (
-    <><h3>Filter Options</h3>
+    <>
+    <div className="filter-header">
+      <h2>Filter Options</h2>
+    </div>
     <div className="filter-container">
       
       <div className="filter-comps">
