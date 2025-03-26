@@ -1,11 +1,9 @@
-
-
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
-from computebaner import  get_gnss, getDayNumber, runData, runData_check_sight
+from computebaner import  get_gnss, getDayNumber, runData_check_sight
 from computeDOP import best, find_dop_on_point
 from flask_cors import CORS
-from datetime import datetime, time
+from datetime import datetime
 from romsdalenRoad import calculate_travel_time, get_road_api
 import rasterio
 # Set up basic configuration for logging
@@ -125,17 +123,6 @@ def dopValues():
     response = Response(stream_with_context(generate()), content_type='text/event-stream')
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response
-
-
-@app.route('/submit-filter', methods=['POST'])
-def submit_time():
-    data = request.json  
-    start_time = data.get('startTime')
-    end_time = data.get('endTime')
-    elevation_angle = data.get('elevationAngle')
-    gnss = data.get('GNSS')
-    stored_data = runData(gnss, elevation_angle, start_time, end_time)  # Long-running function
-    return jsonify({'message': 'Data received successfully'}), 200
 
 
 if __name__ == '__main__':
