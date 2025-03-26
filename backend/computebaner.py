@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
 from pyproj import Transformer
-
 from sortDataNew import sortData
 from datetime import datetime, timedelta
 from satellitePositions import get_satellite_positions
-from generateElevationMask import check_satellite_sight, check_satellite_sight_2, find_elevation_cutoff
+from generateElevationMask import check_satellite_sight, check_satellite_sight_2
 from common_variables import wgs
 import rasterio
 
@@ -68,107 +67,107 @@ def get_gnss(daynumber,year):
     return gnss_mapping
 
 #same as above but it return the values that are nececary for visualizing
-def visualCheck(dataframe, observation_lnglat, observation_cartesian, observation_en, elevation_cutoffs, elevation_mask):
-    #print('in visual check')
-    LGDF = pd.DataFrame(columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
-    nb = 0
+# def visualCheck(dataframe, observation_lnglat, observation_cartesian, observation_en, elevation_cutoffs, elevation_mask):
+#     #print('in visual check')
+#     LGDF = pd.DataFrame(columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
+#     nb = 0
 
-    phi = observation_lnglat[1]*np.pi/180
-    lam =  observation_lnglat[0]*np.pi/180
-    T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
-            [-np.sin(lam), np.cos(lam), 0],
-            [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])
+#     phi = observation_lnglat[1]*np.pi/180
+#     lam =  observation_lnglat[0]*np.pi/180
+#     T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
+#             [-np.sin(lam), np.cos(lam), 0],
+#             [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])
 
-    # print('in visual check')
-    # print(f'elevation_cutoffs: {len(elevation_cutoffs)}')
+#     # print('in visual check')
+#     # print(f'elevation_cutoffs: {len(elevation_cutoffs)}')
 
-    for index, row in dataframe.iterrows():
-        deltaCTRS = np.array([row["X"]-observation_cartesian[0],
-                            row["Y"]-observation_cartesian[1],
-                            row["Z"]-observation_cartesian[2]])
+#     for index, row in dataframe.iterrows():
+#         deltaCTRS = np.array([row["X"]-observation_cartesian[0],
+#                             row["Y"]-observation_cartesian[1],
+#                             row["Z"]-observation_cartesian[2]])
         
-        xyzLG = T @ deltaCTRS.T
-        xyzLG = np.array(xyzLG).flatten() 
-        #calculate angles
-        Ss = (xyzLG[0]**2 + xyzLG[1]**2 + xyzLG[2]**2)**(0.5)
-        Sh = (xyzLG[0]**2 + xyzLG[1]**2 )**(0.5)
-        azimuth = np.arctan2(xyzLG[1],xyzLG[0]) *180/np.pi
-        zenith = np.arccos(xyzLG[2]/Ss)* 180/np.pi
-        elevation = 90- abs(zenith)
+#         xyzLG = T @ deltaCTRS.T
+#         xyzLG = np.array(xyzLG).flatten() 
+#         #calculate angles
+#         Ss = (xyzLG[0]**2 + xyzLG[1]**2 + xyzLG[2]**2)**(0.5)
+#         Sh = (xyzLG[0]**2 + xyzLG[1]**2 )**(0.5)
+#         azimuth = np.arctan2(xyzLG[1],xyzLG[0]) *180/np.pi
+#         zenith = np.arccos(xyzLG[2]/Ss)* 180/np.pi
+#         elevation = 90- abs(zenith)
 
-        if azimuth < 0:
-            azimuth = 360 + azimuth
+#         if azimuth < 0:
+#             azimuth = 360 + azimuth
 
-        #print(f'azimuth: {int(round(azimuth) %360)}')
-        index = int(round(azimuth)) % 360
-        minElev = elevation_cutoffs[index] 
-        if isinstance(minElev, (list, np.ndarray)): # her må det fikses- finner ikke grunnen til at noen verdier er arrays
-            minElev = minElev[0]  
-        minElev = float(minElev)  
-        if  (elevation > elevation_mask) and (elevation > minElev):
+#         #print(f'azimuth: {int(round(azimuth) %360)}')
+#         index = int(round(azimuth)) % 360
+#         minElev = elevation_cutoffs[index] 
+#         if isinstance(minElev, (list, np.ndarray)): # her må det fikses- finner ikke grunnen til at noen verdier er arrays
+#             minElev = minElev[0]  
+#         minElev = float(minElev)  
+#         if  (elevation > elevation_mask) and (elevation > minElev):
 
-            LGDF.loc[len(LGDF)] = [row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith]
-        #print(f"{nb} /{length}")
-        nb +=1
-    return LGDF
-
-
-def runData(gnss_list, elevationstring, t, epoch, observation_lngLat):
-
-    print('in runData')
-
-    import time
-
-    # Start tidtaking
-    start_time = time.time()
-
-    # Kjør funksjonen
-    elevation_mask = float(elevationstring)
-
-    print(f'observation_lngLat: {observation_lngLat}')
-    observation_EN = transformerToEN.transform(observation_lngLat[0], observation_lngLat[1])
-
-    with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
-        dem_data = src.read(1)  
-        elevation_cutoff, observer_height = find_elevation_cutoff(dem_data, src, observation_EN, 5,elevation_mask)
-    #print(f'elevation_cutoffs: {elevation_cutoffs}')
-    elevation_cutoffs = elevation_cutoff.copy()
-    observation_cartesian = Cartesian(observation_lngLat[1] * np.pi/180, observation_lngLat[0]* np.pi/180, observer_height)
-    # Stopp tidtaking
-    end_time = time.time()
-
-    # Beregn og skriv ut kjøretiden
-    elapsed_time = end_time - start_time
-    print(f"Kjøretid finn elevation: {elapsed_time:.2f} sekunder")
+#             LGDF.loc[len(LGDF)] = [row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith]
+#         #print(f"{nb} /{length}")
+#         nb +=1
+#     return LGDF
 
 
-    given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
-    daynumber = getDayNumber(given_date)
-    gnss_mapping = get_gnss(daynumber,given_date.year )
+# def runData(gnss_list, elevationstring, t, epoch, observation_lngLat):
+
+#     print('in runData')
+
+#     import time
+
+#     # Start tidtaking
+#     start_time = time.time()
+
+#     # Kjør funksjonen
+#     elevation_mask = float(elevationstring)
+
+#     print(f'observation_lngLat: {observation_lngLat}')
+#     observation_EN = transformerToEN.transform(observation_lngLat[0], observation_lngLat[1])
+
+#     with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+#         dem_data = src.read(1)  
+#         elevation_cutoff, observer_height = find_elevation_cutoff(dem_data, src, observation_EN, 5,elevation_mask)
+#     #print(f'elevation_cutoffs: {elevation_cutoffs}')
+#     elevation_cutoffs = elevation_cutoff.copy()
+#     observation_cartesian = Cartesian(observation_lngLat[1] * np.pi/180, observation_lngLat[0]* np.pi/180, observer_height)
+#     # Stopp tidtaking
+#     end_time = time.time()
+
+#     # Beregn og skriv ut kjøretiden
+#     elapsed_time = end_time - start_time
+#     print(f"Kjøretid finn elevation: {elapsed_time:.2f} sekunder")
+
+
+#     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
+#     daynumber = getDayNumber(given_date)
+#     gnss_mapping = get_gnss(daynumber,given_date.year )
 
  
-    #create a list that contains the seconds for every halfhour in the epoch when epoch is hours
-    final_list = []
-    final_listdf = []
-    print('finds visual satellites')
-    for i in range(0, int(epoch)*2 + 1):
-        # print(f"{i}/{int(epoch)*2 + 1}")
-        time2 = pd.to_datetime(t)+ pd.Timedelta(minutes=i*30)
-        #LGDF_dict = []
-        LGDF_df = []
-        for gnss in gnss_list:
-            # print(gnss)
+#     #create a list that contains the seconds for every halfhour in the epoch when epoch is hours
+#     final_list = []
+#     final_listdf = []
+#     print('finds visual satellites')
+#     for i in range(0, int(epoch)*2 + 1):
+#         # print(f"{i}/{int(epoch)*2 + 1}")
+#         time2 = pd.to_datetime(t)+ pd.Timedelta(minutes=i*30)
+#         #LGDF_dict = []
+#         LGDF_df = []
+#         for gnss in gnss_list:
+#             # print(gnss)
             
-            positions = get_satellite_positions(gnss_mapping[gnss],gnss,time2)
+#             positions = get_satellite_positions(gnss_mapping[gnss],gnss,time2)
            
-            data = visualCheck(positions,observation_lngLat,observation_cartesian, observation_EN, elevation_cutoffs, elevation_mask)
+#             data = visualCheck(positions,observation_lngLat,observation_cartesian, observation_EN, elevation_cutoffs, elevation_mask)
  
-            if not data.empty:
-                #LGDF_dict += [data.to_dict()]  
-                LGDF_df += [data]
-        final_list.append([df.to_dict() for df in LGDF_df])
-        final_listdf.append(LGDF_df)
-    return final_list, final_listdf, elevation_cutoffs,observation_cartesian
+#             if not data.empty:
+#                 #LGDF_dict += [data.to_dict()]  
+#                 LGDF_df += [data]
+#         final_list.append([df.to_dict() for df in LGDF_df])
+#         final_listdf.append(LGDF_df)
+#     return final_list, final_listdf, elevation_cutoffs,observation_cartesian
 
 
 
@@ -184,10 +183,9 @@ def runData(gnss_list, elevationstring, t, epoch, observation_lngLat):
 # print(list[0])
 
 
-
+#denne blir brukt for dop langs vegen fordi den returnerer liste sistedenfor DF
 def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevation_mask, dem_data, src,step):
-        #print('in visual check')
-    
+
     visual_satellites = []
 
     satellite_names = pd.DataFrame(columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
@@ -223,8 +221,27 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
 
     return visual_satellites
 
+def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, observer, elevation_angle, dem_data,src,step):
+
+    print('in satellites_at_point_2')
+
+    elevation_mask = float(elevation_angle)
+    observation_lngLat = transformer.transform(observer[0], observer[1])
+
+    final_list = []
+
+    for gnss in gnss_list:
+        #fra satellitePositions.py
+        satellites = get_satellite_positions(gnss_mapping[gnss],gnss,given_date)
+        #her oppe
+        visual_satellites = visualCheck_2(satellites, obs_cartesian, observer,observation_lngLat, elevation_mask, dem_data,src,step)
+        final_list = final_list + visual_satellites
+    
+    return final_list
+
+
+#Denne blir brukt til skyplot
 def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, elevation_mask, dem_data, src):
-        #print('in visual check')
     
     visual_satellites = []
 
@@ -255,24 +272,6 @@ def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, 
 
     df = pd.DataFrame(visual_satellites, columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
     return df
-
-def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, observer, elevation_angle, dem_data,src,step):
-
-    print('in satellites_at_point_2')
-
-    elevation_mask = float(elevation_angle)
-    observation_lngLat = transformer.transform(observer[0], observer[1])
-
-    final_list = []
-
-    for gnss in gnss_list:
-        #fra satellitePositions.py
-        satellites = get_satellite_positions(gnss_mapping[gnss],gnss,given_date)
-        #her oppe
-        visual_satellites = visualCheck_2(satellites, obs_cartesian, observer,observation_lngLat, elevation_mask, dem_data,src,step)
-        final_list = final_list + visual_satellites
-    
-    return final_list
 
 
 def runData_check_sight(gnss_list, elevationstring, t, epoch, observation_lngLat):
@@ -320,7 +319,7 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, observation_lngLat
         for i in range(0,360,1):
             top = check_satellite_sight_2(observation_end,dem_data,src, 5000, elevation_mask, i)
             elevationCutoffs.append(top)
-    print('satellites skyplot:',final_listdf[0])
+    #print('satellites skyplot:',final_listdf[0])
     
     return final_list, final_listdf,elevationCutoffs,observation_cartesian
 

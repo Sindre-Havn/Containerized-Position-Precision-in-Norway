@@ -1,14 +1,8 @@
 import math
 import pandas as pd
 import numpy as np
-import re
-import ahrs
 from datetime import timedelta
-#common functions
-
-GM = 3.986005*10**14
-we = 7.2921151467 * 10**(-5) 
-c = 299792458
+from common_variables import GM,we
 
 
 def TK(t):
@@ -58,28 +52,6 @@ def R1(theta):
 def R3(theta):
     return np.array([[np.cos(theta),np.sin(theta),0],[-np.sin(theta),np.cos(theta),0],[0,0,1]])
 
-
-
-def julian_date(year, month, day):
-    # Julian Date calculation
-    if month <= 2:
-        year -= 1
-        month += 12
-    A = math.floor(year / 100)
-    B = 2 - A + math.floor(A / 4)
-    JD = math.floor(365.25 * (year + 4716)) + math.floor(30.6001 * (month + 1)) + day + B - 1524.5
-    return JD
-
-def gmst_at_midnight(year, month, day):
-    J2000 = 2451545.0  # Julian Date of J2000 epoch
-    DAYS_PER_CENTURY = 36525.0 # Days in a Julian century
-    JD = julian_date(year, month, day)
-    T = (JD - J2000) / DAYS_PER_CENTURY
-    GMST = 100.46061837 + 36000.770053608 * T + 0.000387933 * T**2 - (T**3 / 38710000.0)
-    GMST = GMST % 360.0
-    GMST_rad = math.radians(GMST)
-    
-    return GMST_rad
 
 def get_closest_row(data, time):
     """Finds the closest row to the given time in a DataFrame."""

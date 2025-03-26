@@ -126,43 +126,6 @@ def dopValues():
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response
 
-# def dopValues():
-#     if request.method == 'OPTIONS':
-#         # Handle the preflight request with necessary headers
-#         response = jsonify({'status': 'Preflight request passed'})
-#         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-#         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-#         response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-#         return response, 200
-
-#     # Main POST request handling
-#     data = request.json  
-#     time1 = data.get('time').strip('Z')
-#     elevation_angle = data.get('elevationAngle')
-#     gnss = data.get('GNSS')
-#     points = data.get('points')
-    
-#     is_processing = True
-
-#     import time
-#     start = time.time()
-#     timeNow = datetime.strptime(time1, "%Y-%m-%dT%H:%M:%S.%f")
-#     dopvalues = find_dop_along_road(points, timeNow, gnss, int(elevation_angle))
-#     end = time.time()
-#     print(f"Kjøretid dop: {end-start} sekunder")
-
-#     is_processing = False
-
-    
-#     if not is_processing:
-#         response = jsonify({'message': 'Data processed successfully','DOP': dop_list})
-#         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-#         return response, 200
-#     else:
-#         response = jsonify({"data": "Data is not ready"})
-#         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-#         return response, 202
-
 
 @app.route('/submit-filter', methods=['POST'])
 def submit_time():
