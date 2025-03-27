@@ -71,8 +71,7 @@ const FilterComponent = () => {
           </div>
           <div>
             <div className='slider-header'>
-              <h4>Time Epoch</h4>
-              <span>{hours} h</span>
+              <p><b>Time Epoch</b> {hours} h</p>
             </div>
             <input
               type="range"
@@ -85,8 +84,7 @@ const FilterComponent = () => {
         </div>
         <div>
           <div className='slider-header'>
-            <h4>Elevation Angle</h4>
-            <p>{elevationAngle}°</p>
+            <p><b>Elevation Angle</b> {elevationAngle}°</p>
           </div>
           <input
             className='elevation-angle'
@@ -106,29 +104,11 @@ const FilterComponent = () => {
             value={vegsystemreferanse}
             onChange={(e) => setVegsystemreferanse(e.target.value)}
             placeholder="F.eks. EV136 ..."
+            className='road-input1'
           />
           
         </div>
-        <div>
-          <h4>Start Point E,N</h4>
-          <input
-            type="text"
-            value={startPoint}
-            onChange={(e) => setStartPoint(e.target.value)}
-            placeholder="Enter point E,N ..."
-          />
-          
-        </div>
-        <div>
-          <h4>End Point E,N</h4>
-          <input
-            type="text"
-            value={endPoint}
-            onChange={(e) => setEndPoint(e.target.value)}
-            placeholder="Enter point E,N..."
-          />
-        </div>
-    
+
         <div>
           <h4>Distance between measurings</h4>
           <input
@@ -136,12 +116,42 @@ const FilterComponent = () => {
             value={distance}
             onChange={(e) => setDistance(e.target.value)}
             placeholder="Enter distance..."
+            className='road-input2'
           />
         </div>
 
-        <button className={`searchButton ${updateRoad ? 'loading' : ''}`} onClick={handleUpdateRoad} disabled={updateRoad}>{updateRoad ? '' : 'Find Road'}</button>
+        <div>
+          <h4>Start Point (E,N)</h4>
+          <input
+            type="text"
+            value={startPoint}
+            onChange={(e) => setStartPoint(e.target.value)}
+            placeholder="Enter point E,N ..."
+            className='road-input3'
+          />
+          
+        </div>
+        <div>
+          <h4>End Point (E,N)</h4>
+          <input
+            type="text"
+            value={endPoint}
+            onChange={(e) => setEndPoint(e.target.value)}
+            placeholder="Enter point E,N..."
+            className='road-input3'
+          />
+        </div>
+    
+        <div className="road-button-container">
+          <button
+            className={`searchButton ${updateRoad ? 'loading' : ''}`}
+            onClick={handleUpdateRoad}
+            disabled={updateRoad}
+          >
+            {updateRoad ? '' : 'Find Road'}
+          </button>
+        </div>
       </div>
-      {/* <NavMap /> */}
     </div>
 </>
   );
