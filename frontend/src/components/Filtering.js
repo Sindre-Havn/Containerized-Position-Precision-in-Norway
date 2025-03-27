@@ -19,7 +19,7 @@ const FilterComponent = () => {
   const handleCheckboxChange = (e) => {
     setGnssNames({
       ...gnssNames,
-      [e.target.name]: e.target.checked,
+      [e.target.name]: !gnssNames[e.target.name],
     });
   };
 
@@ -49,6 +49,25 @@ const FilterComponent = () => {
       
       <div className="filter-comps">
         <div className="checkbox-group">
+          <h4 className="checkbox-title">GNSS Names</h4>
+          <div className="checkbox-options">
+            {Object.keys(gnssNames).map((name) => (
+              <div className="checkbox-wrapper" key={name}>
+                <input className="inp-cbx" id={name} name={name} type="checkbox" checked={gnssNames[name]} onChange={handleCheckboxChange} />
+                <label className="cbx" htmlFor={name}>
+                  <span>
+                    <svg width="12px" height="10px" viewBox="0 0 12 10">
+                      <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+                    </svg>
+                  </span>
+                  <span>{name}</span>
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* <div className="checkbox-group">
           <h4>GNSS Names</h4>
           {Object.keys(gnssNames).map((name) => (
             <label key={name}>
@@ -60,7 +79,7 @@ const FilterComponent = () => {
               {name}
             </label>
           ))}
-        </div>
+        </div> */}
         <div className="horizontal-group">
           <div>
             <h4>Time of Day (UTC)</h4>
@@ -98,7 +117,7 @@ const FilterComponent = () => {
       <div className="road-comps">
         {/* New Inputs */}
         <div>
-          <h4>Vegsystemreferanse</h4>
+          <h4 className="road-comps-header">Vegsystemreferanse</h4>
           <input
             type="text"
             value={vegsystemreferanse}
@@ -110,7 +129,7 @@ const FilterComponent = () => {
         </div>
 
         <div>
-          <h4>Distance between measurings</h4>
+          <h4 className="road-comps-header">Distance between measurings</h4>
           <input
             type="number"
             value={distance}
@@ -121,7 +140,7 @@ const FilterComponent = () => {
         </div>
 
         <div>
-          <h4>Start Point (E,N)</h4>
+          <h4 className="road-comps-header">Start Point (E,N)</h4>
           <input
             type="text"
             value={startPoint}
@@ -132,7 +151,7 @@ const FilterComponent = () => {
           
         </div>
         <div>
-          <h4>End Point (E,N)</h4>
+          <h4 className="road-comps-header">End Point (E,N)</h4>
           <input
             type="text"
             value={endPoint}

@@ -15,7 +15,7 @@ export const BarChartGraph = ({ data, labels }) => {
     labels: labels, // X-axis categories
     datasets: [
       {
-        label: 'Number of Satellites in View',
+        label: 'Satellites',
         backgroundColor: 'rgba(255, 99, 132, 0.5)', // Bar color
         borderColor: 'rgba(255, 99, 132, 1)', // Bar border color
         borderWidth: 1,
@@ -29,21 +29,63 @@ export const BarChartGraph = ({ data, labels }) => {
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          font: {
+            size: 14,           // 🔠 Størrelse på legend-tekst
+            weight: 'bold'      // evt: 'normal', '500', etc.
+          },
+          color: '#003344'          // 🎨 Farge på legend-tekst
+        }
+      },
+      title: {
+        display: true,
+        text: 'Number of Satellites in View',
+        font: {
+          size: 18,             // 🔠 Størrelse på tittel
+          weight: 'bold'
+        },
+        color: '#222'           // 🎨 Tittelfarge
       },
     },
     scales: {
       x: {
-        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Epoch Times',
+          font: {
+            size: 14
+          },
+          color: '#333'
+        },
+        ticks: {
+          color: '#333',
+          font: {
+            size: 12
+          }
+        }
       },
       y: {
         beginAtZero: true,
-      },
-    },
+        title: {
+          display: true,
+          text: 'Number of Satellites',
+          font: {
+            size: 14
+          },
+          color: '#333'
+        },
+        ticks: {
+          color: '#333',
+          font: {
+            size: 12
+          }
+        }
+      }
+    }
   };
 
   return (
   <div className="bar-chart-container">
-    <h4>Number of Satellites in View</h4>
     <Bar data={barChartData} options={options} /> 
   </div>
   );

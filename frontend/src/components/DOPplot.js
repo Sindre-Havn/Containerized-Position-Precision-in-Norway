@@ -175,15 +175,38 @@ export const DOPLineChart = () => {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top'
+        position: 'top',
+        labels: {
+          font: {
+            size: 14,           // 🔠 Størrelse på legend-tekst
+            weight: 'bold'      // evt: 'normal', '500', etc.
+          },
+          color: '#003344'          // 🎨 Farge på legend-tekst
+        }
       },
       title: {
         display: true,
-        text: 'DOP Values'
+        text: 'DOP Values Line Chart Along The road at Specified Points',
+        font: {
+          size: 18,             // 🔠 Størrelse på tittel
+          weight: 'bold'
+        },
+        color: '#222'           // 🎨 Tittelfarge
       },
       tooltip: {
+        backgroundColor: '#fff',
+        titleColor: '#333',
+        bodyColor: '#333',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
         callbacks: {
-          // Her legger vi til punktnummer
           title: function (tooltipItems) {
             const index = tooltipItems[0].dataIndex;
             return `Point ${index}`;
@@ -200,14 +223,39 @@ export const DOPLineChart = () => {
       x: {
         title: {
           display: true,
-          text: 'Distance in meters from the start'
+          text: 'Distance in meters from the start',
+          font: {
+            size: 14
+          },
+          color: '#333'
+        },
+        ticks: {
+          color: '#333',
+          font: {
+            size: 12
+          }
         }
       },
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'DOP Value',
+          font: {
+            size: 14
+          },
+          color: '#333'
+        },
+        ticks: {
+          color: '#333',
+          font: {
+            size: 12
+          }
+        }
       }
     }
   };
+  
 
 
   return (
@@ -217,43 +265,15 @@ export const DOPLineChart = () => {
         </div>
         {/* Loading Bar */}
         {isProcessing && (
-            <div style={{
-              width: '50%',
-              backgroundColor: '#eee',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              position: 'relative',
-              justifySelf: 'center',
-              marginBottom: '10px',
-              boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-            }}>
-            <div
-              style={{
-              width: `${progress}%`,
-              height: '10px',
-              backgroundColor: 'rgba(0, 128, 0, 0.5)',
-              transition: 'width 0.3s ease-in-out',
-            }}>
+            <div className='loadingbar'>
+            <div className='progress'
+              style={{width: `${progress}%`}}>
             </div>
-            <div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                color: '#333',
-                fontWeight: 'bold'
-            }}>
+            <div className='progress-text'>
               {progress}%
             </div>
             </div>
         )}
-      <h4>DOP Values Line Chart Along The road at Specified Points</h4>
       <Line data={chartData} options={options} /> {/* Use the 'Line' component here */}
     </div>
   );
