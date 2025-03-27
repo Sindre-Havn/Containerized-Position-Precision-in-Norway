@@ -267,6 +267,7 @@ def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, 
         if azimuth < 0:
             azimuth = 360 + azimuth
         #fra generateEvelationMask.py
+        
         if check_satellite_sight(observer, dem_data,src, 5000, elevation, elevation_mask,azimuth):
             visual_satellites.append([row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith])
 

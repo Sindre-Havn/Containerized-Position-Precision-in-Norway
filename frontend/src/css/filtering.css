@@ -7,12 +7,11 @@
   grid-template-rows: auto;
   column-gap: 10px;
   margin: 10px;
-  background-color: #f7f7f7;
+  background-color: #e3faff;
   padding: 10px;
   border-radius: 20px;
   text-align: center;
   height: 100%;
-  
 }
 h3 {
   margin-bottom: 20px;
@@ -26,83 +25,127 @@ h3 {
 .filter-container h4 {
   margin: 10px 0 5px;
 }
-/* .filter-comp{
+
+.checkbox-group {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  margin: 0 auto;
-  margin-top: 20px;
-  padding: 20px;
-  background-color: #f7f7f7;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 50%; /* Adjust to control component width */
- */
- .checkbox-group label {
-  display: flex;                  /* Legg label-innholdet i flex-row */
-  align-items: center;           /* Midtstill vertikalt i forhold til høyeste element */
+  margin: 10px 0;
+}
+
+.checkbox-title {
+  margin-bottom: 8px;
   font-size: 16px;
-  gap: 10px;                     /* Avstand mellom tekst og boks */
+  font-weight: bold;
+  color: #333;
+}
+
+.checkbox-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-top: 10px;
+  justify-content: center;
+}
+.checkbox-wrapper input[type="checkbox"] {
+  display: none;
+  visibility: hidden;
+
+}
+
+.checkbox-wrapper .cbx {
+  margin: auto;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
   cursor: pointer;
-  height: 24px;                  /* Sett fast høyde hvis ønsket */
+}
+
+.checkbox-wrapper .cbx span {
+  display: inline-block;
+  vertical-align: middle;
+  transform: translate3d(0, 0, 0);
+}
+.checkbox-wrapper .cbx span:first-child {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  transform: scale(1);
+  vertical-align: middle;
+  border: 2px solid #008cba;
+  transition: all 0.2s ease;
+}
+.checkbox-wrapper .cbx span:first-child svg {
+  position: absolute;
+  top: 3px;
+  left: 2px;
+  fill: none;
+  stroke: #FFFFFF;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16px;
+  stroke-dashoffset: 16px;
+  transition: all 0.3s ease;
+  transition-delay: 0.1s;
+  transform: translate3d(0, 0, 0);
+}
+.checkbox-wrapper .cbx span:first-child:before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  background: #008cba;
+  display: block;
+  transform: scale(0);
+  opacity: 1;
+  border-radius: 50%;
+}
+
+.checkbox-wrapper .cbx span:last-child {
+  padding-left: 8px;
+}
+.checkbox-wrapper .cbx:hover span:first-child {
+  border-color: #008cba;
+}
+
+.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child {
+  background: #008cba;
+  border-color: #008cba;
+  animation: wave-46 0.4s ease;
+}
+.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child svg {
+  stroke-dashoffset: 0;
+}
+.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child:before {
+  transform: scale(3.5);
+  opacity: 0;
+  transition: all 0.6s ease;
+}
+
+@keyframes wave-46 {
+  50% {
+    transform: scale(0.3);
+  }
+}
+
+
+/* .checkbox-group label {
+  display: flex;              
+  align-items: center;        
+  font-size: 16px;
+  gap: 10px;                  
+  cursor: pointer;
+  height: 24px;               
 }
 
 .checkbox-group input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  margin-left: 10px; /* Fjern eventuell ekstra margin som skyver boksen */
+  margin-left: 10px; 
   border: 2px solid #008cba;
   border-radius: 5px;
   position: relative;
   cursor: pointer;
-}
-
-
-
-
-/* .checkbox-group label {
-  display: inline-flex;
-  align-items: center;
-  font-size: 16px;
-  
-}
-
-.checkbox-group input[type="checkbox"] {
-  margin-left: 15px;
-  cursor: pointer;
-  border: 2px solid #008cba;
-  border-radius: 5px;
-  width: 15px;
-  height:15px;
-} */
-/* .checkbox-group input[type="checkbox"] {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #008cba;
-  border-radius: 6px;
-  background-color: #fff;
-  cursor: pointer;
-  position: relative;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.checkbox-group input[type="checkbox"]:checked {
-  background-color: #008cba;
-  border-color: #008cba;
-}
-
-.checkbox-group input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 6px;
-  width: 4px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
 } */
 
 .horizontal-group {
@@ -189,7 +232,6 @@ h3 {
   border: 2px solid #008cba;
   cursor: pointer;
 }
-
 .elevation-angle::-ms-thumb {
   width: 18px;
   height: 18px;
@@ -209,11 +251,15 @@ h3 {
   gap: 12px 16px; /* mindre avstand mellom kolonner og rader */
   margin: 20px auto;
   max-width: 600px;
-  background-color: #f7f7f7;
+  background-color: #e3faff;
   padding: 20px;
   border-radius: 20px;
   text-align: center;
   justify-items: center;
+}
+
+.road-comps-header{
+  margin-bottom: 10px;
 }
 
 .road-input1,

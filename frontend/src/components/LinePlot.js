@@ -108,23 +108,64 @@ export const LineChart = ({ data, labels, satellites }) => {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top'
+        position: 'top',
+        labels: {
+          font: {
+            size: 14,           // 🔠 Størrelse på legend-tekst
+            weight: 'bold'      // evt: 'normal', '500', etc.
+          },
+          color: '#003344'          // 🎨 Farge på legend-tekst
+        }
       },
       title: {
         display: true,
-        text: 'DOP Values'
-      }
+        text: 'DOP Values Line Chart for {formatSatTypes(satTypes)}',
+        font: {
+          size: 18,             // 🔠 Størrelse på tittel
+          weight: 'bold'
+        },
+        color: '#222'           // 🎨 Tittelfarge
+      },
     },
     scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Epoch Times',
+          font: {
+            size: 14
+          },
+          color: '#333'
+        },
+        ticks: {
+          color: '#333',
+          font: {
+            size: 12
+          }
+        }
+      },
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'DOP Value',
+          font: {
+            size: 14
+          },
+          color: '#333'
+        },
+        ticks: {
+          color: '#333',
+          font: {
+            size: 12
+          }
+        }
       }
     }
   };
 
   return (
     <div className="line-chart-container">
-      <h4>DOP Values Line Chart for {formatSatTypes(satTypes)}</h4>
       <Line data={chartData} options={options} /> {/* Use the 'Line' component here */}
     </div>
   );

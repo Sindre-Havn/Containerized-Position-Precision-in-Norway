@@ -1,13 +1,12 @@
 .bar-chart-container {
-    width: 95%; /* Set the width to 50% of the parent container */
-    /*margin: 20px auto;  Center the div horizontally */
-   
-    padding: 20px; /* Add some padding */
-    border: 1px solid #ddd; /* Light border around the chart */
-    border-radius: 10px; /* Rounded corners */
-    background-color: #f9f9f9; /* Light background color */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    text-align: center; /* Center text inside */
+  width: 97%; /* Set the width to 50% of the parent container */
+  margin: 10px; 
+  padding: 20px; /* Add padding around the chart */
+  border: 1px solid #008cba; /* Light border around the chart */
+  border-radius: 10px; /* Rounded corners */
+  background-color: #e3faff; /* Light background color */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  text-align: center; /* Center any text inside */
   }
   
   .bar-chart-container h4 {
