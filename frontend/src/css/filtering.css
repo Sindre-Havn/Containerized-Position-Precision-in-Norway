@@ -1,3 +1,6 @@
+.filter-header {
+  text-align: center;
+}
 .filter-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -36,18 +39,71 @@ h3 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 50%; /* Adjust to control component width */
  */
-
-.checkbox-group label {
-  display: inline-flex;
-  align-items: center;
-  margin: 5px 10px;
-  font-weight: 500;
+ .checkbox-group label {
+  display: flex;                  /* Legg label-innholdet i flex-row */
+  align-items: center;           /* Midtstill vertikalt i forhold til høyeste element */
+  font-size: 16px;
+  gap: 10px;                     /* Avstand mellom tekst og boks */
+  cursor: pointer;
+  height: 24px;                  /* Sett fast høyde hvis ønsket */
 }
 
 .checkbox-group input[type="checkbox"] {
-  margin-right: 8px;
+  width: 15px;
+  height: 15px;
+  margin-left: 10px; /* Fjern eventuell ekstra margin som skyver boksen */
+  border: 2px solid #008cba;
+  border-radius: 5px;
+  position: relative;
   cursor: pointer;
 }
+
+
+
+
+/* .checkbox-group label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
+  
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-left: 15px;
+  cursor: pointer;
+  border: 2px solid #008cba;
+  border-radius: 5px;
+  width: 15px;
+  height:15px;
+} */
+/* .checkbox-group input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #008cba;
+  border-radius: 6px;
+  background-color: #fff;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.checkbox-group input[type="checkbox"]:checked {
+  background-color: #008cba;
+  border-color: #008cba;
+}
+
+.checkbox-group input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 4px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+} */
 
 .horizontal-group {
   display: flex;
@@ -62,7 +118,7 @@ h3 {
   margin-right: 20px;
   padding: 8px;
   font-size: 14px;
-  border: 1px solid #ddd;
+  border: 2px solid #008cba;
   border-radius: 5px;
 }
 
@@ -147,6 +203,55 @@ h3 {
   align-items: center;
   gap: 10px;
 }
+.road-comps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 16px; /* mindre avstand mellom kolonner og rader */
+  margin: 20px auto;
+  max-width: 600px;
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 20px;
+  text-align: center;
+  justify-items: center;
+}
+
+.road-input1,
+.road-input2,
+.road-input3 {
+  padding: 6px;
+  border: 2px solid #008cba;
+  border-radius: 5px;
+  text-align: left;
+  font-size: 14px;
+  width: 100%;
+  max-width: 180px;
+  height: 30px;
+}
+
+.road-button-container {
+  grid-column: span 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+.searchButtonContainer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+.point-input {
+  padding: 6px;
+  margin-right: 10px;
+  border: 2px solid #008cba;;
+  border-radius: 5px;
+  text-align: right;
+  width: 120px;
+  height: 27px;
+}
+
 
 .searchButton {
   background-color: #008cba;
@@ -157,8 +262,9 @@ h3 {
   color: white;
   padding: 12px 30px;
   font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
-  margin-top: 20px;
+  margin: 20px;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
   justify-self: center;
   align-self: center;
@@ -193,8 +299,8 @@ h3 {
   height: 16px;
   animation: spin 0.8s linear infinite;
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 24%;
+  left: 43%;
   transform: translate(-50%, -50%);
 }
 

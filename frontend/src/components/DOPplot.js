@@ -109,48 +109,7 @@ export const DOPLineChart = () => {
           console.error('Error:', error);
       });
   }, [updateDOP]);
-    // useEffect(() => {
-    //     console.log('points :',points)
-    //     if (!updateDOP) return; 
 
-    //     const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
-
-    //     fetch('http://127.0.0.1:5000/dopvalues', {
-    //     headers: {
-    //         'Accept': 'application/json',
-    //         'Content-Type': 'application/json',
-    //     },
-    //     method: 'POST',
-    //     body: JSON.stringify({
-    //         time: time.toISOString(),
-    //         elevationAngle: elevationAngle.toString(),
-    //         epoch: epoch.toString(),
-    //         GNSS: filteredGNSS,
-    //         points: points,
-    //     }),
-    //     mode: 'cors'
-    //     })
-    //     .then(response => {
-    //         if (!response.ok) {
-    //         throw new Error('Network response was not ok');
-    //         }
-    //         return response.json(); 
-    //     })
-    //     .then(data => {
-    //         console.log("updated dop", data.DOP.map(arr => arr[0]));
-    //         const array_of_arrays = data.DOP.map(arr => arr[0]);
-    //         setDOP(array_of_arrays);
-    //         setUpdateDOP(false);
-    //     })
-    //     .catch(error => {
-    //         console.error('Fetch error:', error);
-    //         console.error('Error name:', error.name);
-    //         console.error('Error message:', error.message);
-    //     });
-        
-
-
-    //  }, [updateDOP]);
     
     const handleUpdateDOP = () => {
         setUpdateDOP(true);
@@ -221,13 +180,27 @@ export const DOPLineChart = () => {
       title: {
         display: true,
         text: 'DOP Values'
+      },
+      tooltip: {
+        callbacks: {
+          // Her legger vi til punktnummer
+          title: function (tooltipItems) {
+            const index = tooltipItems[0].dataIndex;
+            return `Point ${index}`;
+          },
+          label: function (tooltipItem) {
+            const datasetLabel = tooltipItem.dataset.label || '';
+            const value = tooltipItem.formattedValue;
+            return `${datasetLabel}: ${value}`;
+          }
+        }
       }
     },
     scales: {
       x: {
         title: {
           display: true,
-          text: 'Distance in meters from the start' 
+          text: 'Distance in meters from the start'
         }
       },
       y: {

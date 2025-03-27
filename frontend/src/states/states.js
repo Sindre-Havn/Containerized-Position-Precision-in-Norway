@@ -20,6 +20,8 @@ export const pointsState = atom([])
 
 export const updateDOPState = atom(false)
 
+export const chosenPointState = atom(0)
+
 export const gnssState = atom({
     GPS: true,
     GLONASS: true,

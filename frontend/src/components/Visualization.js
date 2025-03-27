@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai'
-import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState, startPointState} from '../states/states';
+import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState, startPointState, chosenPointState} from '../states/states';
 import { SatelliteMap } from './SkyPlot';
 import '../css/visualization.css';
 import { BarChartGraph } from './BoxPlot';
@@ -82,6 +82,7 @@ const Visualization = () => {
     const time =useAtomValue(timeState);
     const epoch = useAtomValue(epochState);
     const points = useAtomValue(pointsState);
+    const cosenPoint = useAtomValue(chosenPointState);
 
     const labels = Array.from({ length: 2 * epoch +1}, (_, i) => 
       new Date(time.getTime() + i * 30 * 60 * 1000).toISOString().slice(11, 16)
@@ -93,7 +94,7 @@ const Visualization = () => {
       if (!updateData) return; 
     
       const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
-      const firstPoint = points[0].geometry.coordinates;
+      const searchPoint = points[cosenPoint].geometry.coordinates;
 
       fetch('http://127.0.0.1:5000/satellites', {
         headers: {
@@ -106,7 +107,7 @@ const Visualization = () => {
           elevationAngle: elevationAngle.toString(),
           epoch: epoch.toString(),
           GNSS: filteredGNSS,
-          point: [firstPoint[0], firstPoint[1]],
+          point: searchPoint,
         }),
         mode: 'cors'
       })
@@ -134,7 +135,7 @@ const Visualization = () => {
     }, [updateData, time, elevationAngle, epoch, gnssNames, setUpdateData]);
     
   if (updateData) {
-    return <p>Loading data...</p>;
+    return <div className="loading_tekst"><p>Loading data...</p></div>;
   }
 
   if (error) {
@@ -142,7 +143,9 @@ const Visualization = () => {
   }
   return (
     !satellites || satellites.length === 0 ? (
-      <p>Click on the update button to fetch data</p>
+      <div className="loading_tekst">
+        <p>Click on the blue button to fetch data</p>
+      </div>
     ) : (
       <>
       {/* Skyplot and Table Row */}
