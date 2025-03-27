@@ -24,7 +24,7 @@ def sort_elevation_azimuth(elevation):
     return elevation_azimuth
 #sjekker linjer
 def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satellite, elevation_mask, azimuth_satellite):
-    start = time.time()
+    #start = time.time()
     x,y = observer[0], observer[1]
     az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
     max_height = 0
@@ -38,9 +38,7 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
         try:
             row = int((N_upper-y)/10)
             col = int((x-E_lower)/10)
-            #print(row,col,1)
             #row, col = src.index(x, y)
-            #print(row,col,2)
             height = dem_data[row, col]
             if height > max_height:
                 max_height = height
@@ -48,7 +46,7 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
         except IndexError:
             break
     target_elevation = np.rad2deg(np.arctan((max_height - observer[2]) / distance))
-    print(time.time()-start,'tida')
+    #print(time.time()-start,'tida')
 
     if ((target_elevation > elevation_satellite) | (elevation_satellite < elevation_mask)):
         return False  # Sikt blokkert
@@ -86,7 +84,7 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
     # return True  # Satellitten er synlig
     
 def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite):
-    start = time.time()
+    #start = time.time()
     degree = azimuth_to_unit_circle(azimuth_satellite)
     line = LineString([
             (observer[0] + d * np.cos(np.deg2rad(degree)), observer[1] + d * np.sin(np.deg2rad(degree)))
@@ -99,9 +97,9 @@ def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask,
     cols = []
     for x, y in coords:
         try:
-            row, col = src.index(x, y)
-            #row = int((N_upper-y)/10)
-            #col = int((x-E_lower)/10)
+            #row, col = src.index(x, y)
+            row = int((N_upper-y)/10)
+            col = int((x-E_lower)/10)
             rows.append(row)
             cols.append(col)
         except IndexError:
@@ -116,7 +114,7 @@ def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask,
     # Beregn elevasjonsvinkel fra hvert punkt
     distances = np.linspace(1, max_distance, len(heights))
     target_elevations = np.rad2deg(np.arctan((heights - observer[2]) / distances))
-    print(time.time()-start,'tida_2')
+    #print(time.time()-start,'tida_2')
     if max(target_elevations) < elevation_mask:
         return elevation_mask
     else:
