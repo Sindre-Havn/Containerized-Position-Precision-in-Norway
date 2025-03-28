@@ -4,7 +4,7 @@
     padding: 20px; /* Add padding around the chart */
     border: 1px solid #008cba; /* Light border around the chart */
     border-radius: 10px; /* Rounded corners */
-    background-color: #e3faff; /* Light background color */
+    background-color: #faf9f6; /* Light background color */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     text-align: center; /* Center any text inside */
   }
@@ -17,7 +17,7 @@
   
   .loadingbar {
     width: 50%;
-    background-color: #cfe9f0;
+    background-color: #F2EFE7;
     border-radius: 8px;
     overflow: hidden;
     position: relative;

@@ -111,20 +111,20 @@ export const LineChart = ({ data, labels, satellites }) => {
         position: 'top',
         labels: {
           font: {
-            size: 14,           // 🔠 Størrelse på legend-tekst
-            weight: 'bold'      // evt: 'normal', '500', etc.
+            size: 14,         
+            weight: 'bold'    
           },
-          color: '#003344'          // 🎨 Farge på legend-tekst
+          color: '#003344'          
         }
       },
       title: {
         display: true,
-        text: 'DOP Values Line Chart for {formatSatTypes(satTypes)}',
+        text:  `DOP Values Line Chart for ${formatSatTypes(satTypes)}`,
         font: {
-          size: 18,             // 🔠 Størrelse på tittel
+          size: 18,            
           weight: 'bold'
         },
-        color: '#222'           // 🎨 Tittelfarge
+        color: '#222'      
       },
     },
     scales: {
@@ -166,7 +166,7 @@ export const LineChart = ({ data, labels, satellites }) => {
 
   return (
     <div className="line-chart-container">
-      <Line data={chartData} options={options} /> {/* Use the 'Line' component here */}
+      <Line data={chartData} options={options} /> 
     </div>
   );
 };
