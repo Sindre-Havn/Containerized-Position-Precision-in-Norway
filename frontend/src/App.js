@@ -6,6 +6,7 @@ import NavMap from './components/MapComponent.js';
 import { useAtom } from 'jotai';
 import {updateDataState, chosenPointState} from './states/states';
 import './css/filtering.css';
+import './css/app.css';
 
 import { DOPLineChart } from './components/DOPplot.js';
 
@@ -20,7 +21,7 @@ function App() {
       }
 
     return (
-        <div>
+        <div className='App'>
             <NavBar />
             <FilterComponent />
             <NavMap/>

@@ -3,13 +3,15 @@
   margin:20px;
 }
 .satellite-table {
-  display: grid;
+  display: flex;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Columns will auto-fill the space */
   border: 1px solid #ccc;
   border-collapse: collapse; /* Ensure borders are not doubled */
+  border-radius: 4px;
   margin: 20px auto;
-  width: 35%; /* Center the table and control its width */
+
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+  background-color: #faf9f6; /* White background */
   text-align: center;
 }
 
@@ -31,15 +33,18 @@
 
 .chart-row {
   display: flex;
-  justify-content: center;
+  justify-self: center;
+  /* justify-content: space-between; */
   align-items: flex-start;
   width: 100%;
   margin: 20px 0;
+  min-height: 300px;
 }
 
 .chart-container {
   width: 45%; /* Each chart will take 45% of the width */
   margin: 10px;
+  justify-self: center;
 }
 
 .skyplot-table-container {
@@ -57,15 +62,16 @@
 }
 
 .satellite-column {
-  border: 1px solid #ddd;
   padding: 5px;
-  margin-bottom: 5px;
+  margin: 5px;
+  width: 100px;
 }
 
 .satellite-name {
   font-weight: bold;
   padding: 10px;
   color: #fff;
+  border-radius: 4px;
 }
 
 .satellite-number {

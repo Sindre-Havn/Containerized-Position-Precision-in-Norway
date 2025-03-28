@@ -16,8 +16,8 @@ export const BarChartGraph = ({ data, labels }) => {
     datasets: [
       {
         label: 'Satellites',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)', // Bar color
-        borderColor: 'rgba(255, 99, 132, 1)', // Bar border color
+        backgroundColor: 'rgba(22, 34, 251, 0.5)', // Bar color
+        borderColor: 'rgb(22, 34, 251)', // Bar border color
         borderWidth: 1,
         data: numberList, // Y-axis values
       },
