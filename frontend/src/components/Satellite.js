@@ -2,8 +2,6 @@
 import { Html } from '@react-three/drei';
 import React from 'react';
 
-
-
 export const colors = {
   G: '#32CD32',  
   R: '#FFD700',  
@@ -26,7 +24,6 @@ export const Satellite = ({ position, label }) => (
 );
 
 // Component for the interpolated satellite route
-
 
 export const SatelliteMovement = ({ position, label }) => (
   <mesh position={position}>

@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Line, Text } from '@react-three/drei';
 import { Satellite, colors } from './Satellite';
-import { CatmullRomCurve3,Vector3 } from 'three';
+import {Vector3 } from 'three';
 import '../css/skyplot.css';
 
 function sphericalToCartesian2D(r, azimuth, zenith, center) {
@@ -10,15 +10,9 @@ function sphericalToCartesian2D(r, azimuth, zenith, center) {
   azimuth = ((90-azimuth) * Math.PI) / 180 ;
   zenith = (zenith * Math.PI) / 180 ;
 
-  //const newRad = r* (90-zenith)/90; 
-
   // Calculate X and Y based on 2D plane
-  const x = r * Math.sin(zenith) * Math.cos(azimuth) + center[0];// * Math.sin(zenith)
-  const y = r * Math.sin(zenith) * Math.sin(azimuth) + center[1];// * Math.sin(zenith)
-
-  // const rotatedX = newRad * Math.cos(azimuth) + center[0];
-  // const rotatedY = newRad * Math.sin(azimuth) + center[1]; 
-
+  const x = r * Math.sin(zenith) * Math.cos(azimuth) + center[0];
+  const y = r * Math.sin(zenith) * Math.sin(azimuth) + center[1];
   return [x, y];
 }
 
@@ -74,13 +68,13 @@ const CircleOutline = ({ radius, position, color, lineWidth, text }) => {
 const Axes = ({ radius = 4.1, color = 'white', lineWidth = 2 }) => {
   // X-axis points
   const xAxisPoints = [
-    [-radius, 0, 0], // From -radius to +radius on the X axis
+    [-radius, 0, 0], 
     [radius, 0, 0],
   ];
 
   // Y-axis points
   const yAxisPoints = [
-    [0, -radius, 0], // From -radius to +radius on the Y axis
+    [0, -radius, 0], 
     [0, radius, 0],
   ];
 
@@ -129,6 +123,7 @@ const Axes = ({ radius = 4.1, color = 'white', lineWidth = 2 }) => {
     </>
   );
 };
+
 const TerrainCutoffLine = ({ points }) => {
   return (
     <Line
@@ -144,13 +139,13 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
   const center = [0, 0];
   const radius = 4;
   const cutOffRad = radius * Math.cos((cutOffElevation * Math.PI) / 180);
-  const elevations = [0, 20, 40, 60]; // Example: 0°, 40°, 70° elevations
-  const radii = elevations.map((elevation) => radius * Math.cos((elevation * Math.PI) / 180)); // radius * Math.cos((elevation * Math.PI) / 180)
+  const elevations = [0, 20, 40, 60]; // Example: 0°, 40°, 70° elevation circles
+  const radii = elevations.map((elevation) => radius * Math.cos((elevation * Math.PI) / 180)); 
   let satellitesGrouped = {};
   // eslint-disable-next-line
-  satellites.map((satellitesBefore, index) =>
-    satellitesBefore.map((satellites, innerIndex) => {
-      satellites.satellitesData.map((satellite) => {
+  satellites.forEach((satellitesBefore) =>
+    satellitesBefore.forEach((satellites) => {
+      satellites.satellitesData.forEach((satellite) => {
         const color = colors[satellite.satName[0]];
         const { azimuth, zenith } = satellite;
         const coords = sphericalToCartesian2D(radius, azimuth, zenith, center);
@@ -160,12 +155,13 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
           satellitesGrouped[satellite.satName].push([coords[0], coords[1], color]);
         }
       });
+      
     }))
   //console.log(satellitesGrouped);
   const tcf = terrainCutOff.map((elevation, index) => { 
     const zenith = 90-elevation;
     const coords = sphericalToCartesian2D(radius, index, zenith, center);
-    return new Vector3(coords[0], coords[1], 0);  // Convert to Vector3
+    return new Vector3(coords[0], coords[1], 0); 
   });
   return (
     <div className="skyplot-container">
@@ -173,7 +169,7 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
         <Axes/>
         <CircleOutline radius={cutOffRad} position={[0, 0, 0]} color={'black'}lineWidth={2} text = {cutOffElevation.toString() + '°' } />
         {radii.map((radius, index) => (
-          <CircleOutline key={index} radius={radius} position={[0, 0, 0]} color={'grey'} lineWidth={1} text = {elevations[index] != 0? (elevations[index].toString() + '°') : ''} />
+          <CircleOutline key={index} radius={radius} position={[0, 0, 0]} color={'grey'} lineWidth={1} text = {elevations[index] !== 0? (elevations[index].toString() + '°') : ''} />
         ))}
         
         {Object.keys(satellitesGrouped).map((satName) => {

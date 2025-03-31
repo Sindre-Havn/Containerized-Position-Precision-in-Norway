@@ -562,7 +562,6 @@ def sortData(daynumber, date):
 
             time = datetime(int(cleaned_forstelinje[0]),int(cleaned_forstelinje[1]), int(cleaned_forstelinje[2]), int(cleaned_forstelinje[3]), int(cleaned_forstelinje[4]), int(cleaned_forstelinje[5]))
             
-            # #output_folder = cleaned_forstelinje[0] +'-'+ cleaned_forstelinje[1] +'-'+ cleaned_forstelinje[2]
             SV = cleaned_forstelinje[6:]
 
             for i in range(len(SV)):

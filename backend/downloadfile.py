@@ -1,10 +1,9 @@
 import requests
 import gzip
 import os
-import json
-# day = 317
 folder = 'unzipped/'
 
+# Geth the Broadcast ephemeries file from the CDDIS server
 def lastned(day, year):
     print(day)
     filename = f'BRD400DLR_S_{year}{day}0000_01D_MN.rnx.gz'
@@ -14,7 +13,7 @@ def lastned(day, year):
     if not os.path.isfile(folder+filename[:-3]):
         r = requests.get(url)
         c = r.content
-        #print(f"request: {r}, content:{c}")
+      
         with open(filename, 'wb') as fd:
             fd.write(c)
 
@@ -32,7 +31,7 @@ def lastned(day, year):
         print('File Exists')
         return os.path.join(folder, filename[:-3]) 
 
-# lastned(day)
+
 
 
     

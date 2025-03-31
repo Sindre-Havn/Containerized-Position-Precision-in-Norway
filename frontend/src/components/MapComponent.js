@@ -5,7 +5,6 @@ import 'leaflet-geosearch/dist/geosearch.css';
 import { OpenStreetMapProvider, GeoSearchControl } from 'leaflet-geosearch';
 import L from 'leaflet';
 import customMarkerIcon from '../assets/pngwing.png';
-import endstopIcons from '../assets/marker.png';
 import A from '../assets/A.png';
 import B from '../assets/B.png';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
@@ -22,32 +21,25 @@ proj4.defs("EPSG:32633", "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs");
 // Fix Leaflet's default marker icon issue
 const customIcon = new L.Icon({
     iconUrl: customMarkerIcon,
-    iconSize: [15, 15], // Adjust size as needed
-    iconAnchor: [8, 17], // Center the icon
-    popupAnchor: [0, -32], // Adjust popup position
+    iconSize: [15, 15],
+    iconAnchor: [8, 17],
+    popupAnchor: [0, -32], 
   });
 const endstopCustomIcon = new L.Icon({
     iconUrl: B,
-    iconSize: [22, 30], // Adjust size as needed
-    iconAnchor: [16, 32], // Center the icon
-    popupAnchor: [0, -32], // Adjust popup position
+    iconSize: [22, 30],   
+    iconAnchor: [16, 32], 
+    popupAnchor: [0, -32],
   });
 const startstopCustomIcon = new L.Icon({
     iconUrl: A,
-    iconSize: [22, 30], // Adjust size as needed
-    iconAnchor: [16, 32], // Center the icon
-    popupAnchor: [0, -32], // Adjust popup position
+    iconSize: [22, 30],   
+    iconAnchor: [16, 32], 
+    popupAnchor: [0, -32],
   });
-const endstopMarkersicon = [startstopCustomIcon, endstopCustomIcon]
-const colors = [
-    "red", "green", "blue", "pink", "purple", "cyan",
-    "yellow", "orange", "aquamarine", "lime", "indigo", "hotpink",
-    "skyblue", "gold", "turquoise", "fuchsia", "violet", "tomato",
-    "royalblue", "orchid", "springgreen", "darkorange", "deepskyblue",
-    "peru", "chartreuse", "cornflowerblue"
-];
 
-const position = [62.4280096, 	7.9440244]; // Example coordinates
+
+const position = [62.4280096, 	7.9440244]; // Example coordinates 
 
 const SearchControl = () => {
   const map = useMap();
@@ -73,7 +65,7 @@ const SearchControl = () => {
   return null;
 };
 
-
+// funksjon for å kunne sette endestop markers
 const ClickableMap = ({ setStartMarker, setEndMarker, startMarker, endMarker }) => {
   const setStartPoint = useSetAtom(startPointState);
   const setEndPoint = useSetAtom(endPointState);
@@ -112,7 +104,6 @@ const NavMap = () => {
   const [markers, setMarkers] = useAtom(pointsState);
   const [geoJsonData, setGeoJsonData] = useState(null);
   
-  const [endstopMarkers, setEndstopMarkers] = useState([]);
   const [startMarker, setStartMarker] = useState(null);
   const [endMarker, setEndMarker] = useState(null);
 
@@ -154,22 +145,15 @@ const NavMap = () => {
         console.error('Error name road:', error.name);
         console.error('Error message road:', error.message);
       });
-  }, [geoJsonData, updateRoad, startPoint, endPoint, distance, setGeoJsonData, setUpdateRoad]);
+  }, [geoJsonData, updateRoad, startPoint, endPoint, distance, setGeoJsonData, setUpdateRoad, vegreferanse, setMarkers]);
   
   useEffect(() => {
     fetchRoadData();
   }, [fetchRoadData]);
-  // Function to remove a marker when clicked
-  // const handleMarkerClick = (index) => {
-  //   if (index === 0) {
-  //     setMarkers(markers.filter((_, i) => i !== index));
-  //   }
-  //   setMarkers(markers.filter((_, i) => i !== index));
-  // };
 
   return (
   <div className="map" >
-    <MapContainer center={position} zoom={13} style={{ height: '400px', width: '100%', borderRadius: '10px' }}>
+    <MapContainer center={position} zoom={9} style={{ height: '400px', width: '100%', borderRadius: '10px' }}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -215,7 +199,7 @@ const NavMap = () => {
         <GeoJSON
             key={index}
             data={data}
-            style={{ color: 'black', weight: 5, opacity: 1 }} // Tilpass farge & sti
+            style={{ color: 'black', weight: 5, opacity: 1 }}
           />
         ))
       )}

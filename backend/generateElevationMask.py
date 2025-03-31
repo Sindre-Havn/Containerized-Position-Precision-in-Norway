@@ -1,15 +1,5 @@
-import math
-
-from shapely import LineString
-from romsdalenRaster import find_highest_elevation_triangle, calculate_distance
+from romsdalenRaster import find_highest_elevation_triangle
 import numpy as np
-import rasterio
-import time
-
-# romsdalen_punkter = [[124388.06,6957735.68],[127961.24,6948183.94], 
-#                      [138548.08,6941022.55], [146207,6922500.21], [159073.8,6916291.06], 
-#                      [173885.23,6904139.84], [	183291.02,6902250.15], [193562.71, 6896761.87]]
-
 
 def azimuth_to_unit_circle(azimuth):
 
@@ -27,6 +17,7 @@ def sort_elevation_azimuth(elevation):
 def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satellite, elevation_mask, azimuth_satellite):
     #foreslått måte å finne lengthe nødvendige sjekking
     #max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
+
     x,y = observer[0], observer[1]
     az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
     step_size = 5
@@ -53,6 +44,49 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
             break
     
     return True  # Satellitten er synlig
+
+def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite):
+    
+    #foreslått måte å finne lengde nødvendige sjekking
+    #max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
+
+    x,y = observer[0], observer[1]
+    az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
+    max_elevation = 0
+    step_size = 5
+    E_lower = src.bounds[0]
+    N_upper = src.bounds[3]
+    
+    for d in range(1, int(max_distance/step_size)):
+        x += step_size * np.cos(az)
+        y += step_size * np.sin(az)
+        try:
+            row = int((N_upper-y)/10)
+            col = int((x-E_lower)/10)
+            #row, col = src.index(x, y)
+            height = dem_data[row, col]
+            target_elevation = np.rad2deg(np.arctan((height - observer[2]) / (d*step_size)))
+            if target_elevation > max_elevation:
+                max_elevation = target_elevation
+        except IndexError:
+            break
+    
+    if max_elevation > elevation_mask:
+        return max_elevation
+    else:
+        return elevation_mask
+    
+#bruker trekanter
+def find_elevation_cutoff(dem_data, src,observer, max_distance, elevation_mask):
+    observer_height, heights_and_points = find_highest_elevation_triangle(dem_data,src, observer,max_distance, elevation_mask)
+
+    elevation_azimuth = sort_elevation_azimuth(heights_and_points)
+    return elevation_azimuth, observer_height
+
+
+#gammel kode ish
+# N = 6948183.94
+# E = 127961.24
 # def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satellite, elevation_mask, azimuth_satellite):
 #     #start = time.time()
 #     x,y = observer[0], observer[1]
@@ -115,36 +149,7 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
     #     return False  # Sikt blokkert
     
     # return True  # Satellitten er synlig observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite
-def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite):
-    
-    #foreslått måte å finne lengde nødvendige sjekking
-    #max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
 
-    x,y = observer[0], observer[1]
-    az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
-    max_elevation = 0
-    step_size = 5
-    E_lower = src.bounds[0]
-    N_upper = src.bounds[3]
-    
-    for d in range(1, int(max_distance/step_size)):
-        x += step_size * np.cos(az)
-        y += step_size * np.sin(az)
-        try:
-            row = int((N_upper-y)/10)
-            col = int((x-E_lower)/10)
-            #row, col = src.index(x, y)
-            height = dem_data[row, col]
-            target_elevation = np.rad2deg(np.arctan((height - observer[2]) / (d*step_size)))
-            if target_elevation > max_elevation:
-                max_elevation = target_elevation
-        except IndexError:
-            break
-    
-    if max_elevation > elevation_mask:
-        return max_elevation
-    else:
-        return elevation_mask
     
 # def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite):
 #     #start = time.time()
@@ -217,14 +222,7 @@ def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask,
     
 
 #bruker trekanter
-def find_elevation_cutoff(dem_data, src,observer, max_distance, elevation_mask):
-    observer_height, heights_and_points = find_highest_elevation_triangle(dem_data,src, observer,max_distance, elevation_mask)
 
-    elevation_azimuth = sort_elevation_azimuth(heights_and_points)
-    return elevation_azimuth, observer_height
-
-N = 6948183.94
-E = 127961.24
 
 # d = int((2100 -68)/np.tan(np.deg2rad(10)))
 # print(d)
