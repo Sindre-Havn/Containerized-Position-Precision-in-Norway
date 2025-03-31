@@ -6,13 +6,13 @@ const PollingComponent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Function to check for the data
+  // Function to check if data is ready
   const pollData = () => {
     axios.get('http://127.0.0.1:5000/satellites')
       .then(response => {
         if (response.data && response.data.data) {
-          setData(response.data.data);  // Store the data when it is available
-          setLoading(false);  // Stop loading once data is available
+          setData(response.data.data);  
+          setLoading(false); 
         }
       })
       .catch(error => {
@@ -21,7 +21,7 @@ const PollingComponent = () => {
       });
   };
 
-  // Polling using useEffect
+ 
   useEffect(() => {
     const intervalId = setInterval(pollData, 3000);  // Poll every 3 seconds
 

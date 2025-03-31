@@ -6,8 +6,7 @@ from flask_cors import CORS
 from datetime import datetime
 from romsdalenRoad import calculate_travel_time, get_road_api
 import rasterio
-# Set up basic configuration for logging
-#logging.basicConfig(level=logging.INFO)
+
 
 distance = None
 points = None

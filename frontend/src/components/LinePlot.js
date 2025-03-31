@@ -35,7 +35,7 @@ function formatSatTypes(satTypes) {
     return `${others.join(', ')}, ${lastTwo[0]} and ${lastTwo[1]}`;
   }
 }
-
+// DOP values over epoch time
 export const LineChart = ({ data, labels, satellites }) => {
   const GDOP = data.map((array) => array[0]);
   const PDOP = data.map((array) => array[1]);
@@ -47,7 +47,7 @@ export const LineChart = ({ data, labels, satellites }) => {
   satellites[0].forEach((satelliteGroup) => {
     satTypes.push(satelliteGroup.type);
   });
-  // Single chart configuration with multiple datasets
+  // Instilllinger for linjene i linjediagrammet
   const chartData = {
     labels: labels,
     datasets: [
