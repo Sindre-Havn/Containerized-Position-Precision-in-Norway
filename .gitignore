@@ -3,5 +3,8 @@ backend/__pycache__/
 backend/unzipped/
 backend/DataFrames/
 .DS_Store
-backend/data/
+backend/data/bilinnsamling/
+backend/data/csv/
+backend/data/dom10/
+backend/data/DOM10_UTM33_20250117/
 backend/veglenkerEV136.json
