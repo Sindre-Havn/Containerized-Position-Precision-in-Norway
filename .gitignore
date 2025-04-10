@@ -3,5 +3,9 @@ backend/__pycache__/
 backend/unzipped/
 backend/DataFrames/
 .DS_Store
-backend/data/
+backend/data/bilinnsamling/
+backend/data/dom10/
+backend/data/DOM10_UTM33_20250117/
+backend/data/csv/
+backend/data/merged_raster_romsdalen_10.tif
 backend/veglenkerEV136.json

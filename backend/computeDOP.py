@@ -3,35 +3,36 @@ import numpy as np
 from pyproj import Transformer
 from computebaner import Cartesian, satellites_at_point_2
 from common_variables import phi,lam
-
+# Set up coordinate transformers between UTM and WGS84
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
 
-
+# Rotation matrix about Y-axis (used in coordinate transformation)
 def R2(theta):
     return np.array([[np.cos(theta),0,-np.sin(theta)],
                     [0,            1,           0],
                     [np.sin(theta),0,np.cos(theta)]])
-
+# Rotation matrix about Z-axis
 def R3(theta):
     return np.array([[np.cos(theta),np.sin(theta),0],
                     [-np.sin(theta),np.cos(theta),0],
                     [0,             0,             1]])
-
+# Mirror/reflection matrix
 def P2():
     return np.array([[1,0,0],[0,-1,0],[0,0,1]])
 
+# Calculate Euclidean distance between satellite and receiver
 def geometric_range(sat_pos, rec_pos):
     return np.sqrt((sat_pos[0] - rec_pos[0])**2 +
                    (sat_pos[1] - rec_pos[1])**2 +
                    (sat_pos[2] - rec_pos[2])**2)
-
+# Compute DOP values from satellite positions and receiver position
 def DOPvalues(satellites, recieverPos0):
     size = len(satellites)
     A = np.zeros((size, 4))  
     Qxx =np.zeros((4, 4)) 
     if(size >= 4):
-        #creates the A matrix
+        # Construct A matrix for least-squares
         i = 0
         for satellite in satellites:
             rho_i = geometric_range([satellite[2], satellite[3], satellite[4]], recieverPos0)
@@ -42,25 +43,27 @@ def DOPvalues(satellites, recieverPos0):
             A[i][3] = -1
             i +=1
         
-        AT = A.T
-        ATA = AT@A
-        Qxx = np.linalg.inv(ATA)
+        
+
+        # Compute covariance matrix Qxx
+        Qxx = np.linalg.inv(A.T @ A)
         Qxx_local = Qxx[0:3,0:3]
+        # Transform to local ENU coordinates
         T = P2()@R2(phi-np.pi/2)@R3(lam-np.pi)
         Qxx_local = T@Qxx_local@T.T
+        # Calculate DOP metrics
         GDOP = np.sqrt(Qxx[0][0] + Qxx[1][1] + Qxx[2][2] + Qxx[3][3])
         PDOP = np.sqrt(Qxx[0][0] + Qxx[1][1] + Qxx[2][2])
         TDOP = np.sqrt(Qxx[3][3])
         HDOP = np.sqrt(Qxx_local[0][0]+Qxx_local[1][1])
         VDOP = np.sqrt(Qxx_local[2][2])
     else:
-        GDOP = 0
-        PDOP = 0
-        TDOP = 0
-        HDOP = 0
-        VDOP = 0
+        # Not enough satellites
+        GDOP = PDOP = TDOP = HDOP = VDOP = 0
+    
     return GDOP,PDOP,TDOP,HDOP,VDOP
 
+# Wrapper to compute DOP values over a list of time steps
 def best(satellites, recieverPos0):
 
     final_DOP_values = []
@@ -77,7 +80,7 @@ def best(satellites, recieverPos0):
     print('final_DOP_values skyplot:', final_DOP_values[0])
     return final_DOP_values
 
-
+# DOP computation using XYZ-only satellite format
 def DOPvalues_2(satellites, recieverPos0):
     size = len(satellites)
     A = np.zeros((size, 4))  
@@ -113,7 +116,7 @@ def DOPvalues_2(satellites, recieverPos0):
         VDOP = 0
     return GDOP,PDOP,TDOP,HDOP,VDOP
 
-
+# Wrapper for DOPvalues_2 for single epoch
 def best_2(satellites, observer):
     final_DOP_values = []
     if(len(satellites) > 0):
@@ -125,25 +128,29 @@ def best_2(satellites, observer):
     return final_DOP_values
 
 
-
+# Main function to compute DOP at a specific point in time and location
 def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, step):
-
+    # Convert observation point to EN-coordinates and find height from DEM
     observation_point_latlng = point['geometry']['coordinates']
     observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])  
     observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
-
+    
+    # Convert to cartesian coordinates
     obs_cartesian = Cartesian(observation_point_latlng[1]* np.pi/180, observation_point_latlng[0]* np.pi/180, observation_height)
-
     observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
-
+    
+    # Offset time by current point's offset
     timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
+
+    # Get visible satellites
     #fra computebaner.py
     satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow,obs_cartesian, observer, elevation_angle, dem_data,src, step)
     
-    #finn så dop
+    # Compute DOP
     dopvalues = best_2(satellites, obs_cartesian)
     if step == 1:
         print('dop for road:',dopvalues)
+    
     return dopvalues
 
 

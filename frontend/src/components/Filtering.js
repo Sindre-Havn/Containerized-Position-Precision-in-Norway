@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import {elevationState, updateDataState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState} from '../states/states';
+import {elevationState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState} from '../states/states';
 import '../css/filtering.css';
 
 
@@ -24,9 +24,9 @@ const FilterComponent = () => {
   };
 
   const handleDateChange = (event) => {
-    const localTime = event.target.value; // Get the selected local time string
+    const localTime = event.target.value; 
     const utcTime = new Date(localTime + ":00.000Z"); // Append UTC format and create Date object
-    setTime(utcTime); // Update state with UTC date
+    setTime(utcTime); 
   };
 
   const handleElevationAngleChange = (e) => {
@@ -48,7 +48,6 @@ const FilterComponent = () => {
     <div className="filter-container">
       <div className="filter-comps">
         <div className="road-comps">
-          {/* New Inputs */}
           <div>
             <h4 className="road-comps-header">Vegsystemreferanse</h4>
             <input
@@ -62,12 +61,12 @@ const FilterComponent = () => {
           </div>
 
           <div>
-            <h4 className="road-comps-header">Distance between measurings</h4>
+            <h4 className="road-comps-header">Distance:</h4>
             <input
               type="number"
               value={distance}
               onChange={(e) => setDistance(e.target.value)}
-              placeholder="Enter distance..."
+              placeholder="Distance between measurings..."
               className='road-input2'
             />
           </div>
@@ -125,19 +124,6 @@ const FilterComponent = () => {
             </div>
           </div>
 
-          {/* <div className="checkbox-group">
-            <h4>GNSS Names</h4>
-            {Object.keys(gnssNames).map((name) => (
-              <label key={name}>
-                <input
-                  type="checkbox"
-                  name={name}
-                  checked={gnssNames[name]}
-                  onChange={handleCheckboxChange} />
-                {name}
-              </label>
-            ))}
-          </div> */}
           <div className="horizontal-group">
             <div>
               <h4>Time of Day (UTC)</h4>

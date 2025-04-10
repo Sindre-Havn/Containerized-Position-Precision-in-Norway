@@ -13,7 +13,7 @@ import { Line } from 'react-chartjs-2';
 import '../css/lineplot.css';
 import { useAtom, useAtomValue } from 'jotai';
 import { useState, useEffect } from 'react';
-import { gnssState, elevationState, timeState, epochState, pointsState, distanceState, updateDOPState } from '../states/states';
+import { gnssState, elevationState, timeState, epochState, pointsState, updateDOPState } from '../states/states';
 // Register the necessary components for line charts
 ChartJS.register(
   CategoryScale,
@@ -28,13 +28,6 @@ ChartJS.register(
 
 
 export const DOPLineChart = () => {
-
-
-    // time = data.get('time').strip('Z')
-    // elevation_angle = data.get('elevationAngle')
-    // gnss = data.get('GNSS')
-    // points = data.get('points')
-    // distance = data.get('distance')
     // eslint-disable-next-line no-unused-vars  
 
     const gnssNames = useAtomValue(gnssState);
@@ -44,7 +37,7 @@ export const DOPLineChart = () => {
     const points = useAtomValue(pointsState);
 
     const [updateDOP,setUpdateDOP] = useAtom(updateDOPState);
-    //const [DOP, setDOP] = useState([]);
+
     const[DOP,setDOP] = useState([]);
 
 
@@ -108,13 +101,13 @@ export const DOPLineChart = () => {
       .catch(error => {
           console.error('Error:', error);
       });
-  }, [updateDOP]);
+  }, [updateDOP, gnssNames, elevationAngle, time, epoch, points, setUpdateDOP]);
 
     
     const handleUpdateDOP = () => {
         setUpdateDOP(true);
       }
-  // Single chart configuration with multiple datasets
+  // Instillinger for de ulike linjene i linjediagrammet
   const chartData = {
     labels: labels,
     datasets: [
@@ -178,20 +171,20 @@ export const DOPLineChart = () => {
         position: 'top',
         labels: {
           font: {
-            size: 14,           // 🔠 Størrelse på legend-tekst
-            weight: 'bold'      // evt: 'normal', '500', etc.
+            size: 14,          
+            weight: 'bold'     
           },
-          color: '#003344'          // 🎨 Farge på legend-tekst
+          color: '#003344'     
         }
       },
       title: {
         display: true,
         text: 'DOP Values Line Chart Along The road at Specified Points',
         font: {
-          size: 18,             // 🔠 Størrelse på tittel
+          size: 18,            
           weight: 'bold'
         },
-        color: '#222'           // 🎨 Tittelfarge
+        color: '#222'          
       },
       tooltip: {
         backgroundColor: '#fff',
@@ -274,7 +267,8 @@ export const DOPLineChart = () => {
             </div>
             </div>
         )}
-      <Line data={chartData} options={options} /> {/* Use the 'Line' component here */}
+      {/* DOP line Chart Along Road */}
+      <Line data={chartData} options={options} />
     </div>
   );
 };
