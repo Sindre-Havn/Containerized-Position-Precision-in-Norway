@@ -16,7 +16,7 @@ def sort_elevation_azimuth(elevation):
 #sjekker linjer
 def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satellite, elevation_mask, azimuth_satellite):
     #foreslått måte å finne lengthe nødvendige sjekking
-    #max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
+    max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
 
     x,y = observer[0], observer[1]
     az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
@@ -28,7 +28,7 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
     if elevation_mask > elevation_satellite:
         return False
     
-    for d in range(1, int(max_distance/step_size)):
+    for d in range(1, int(max_dist/step_size)):
         x += step_size * np.cos(az)
         y += step_size * np.sin(az)
         try:
@@ -48,7 +48,7 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
 def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite):
     
     #foreslått måte å finne lengde nødvendige sjekking
-    #max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
+    max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
 
     x,y = observer[0], observer[1]
     az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
@@ -57,7 +57,7 @@ def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask,
     E_lower = src.bounds[0]
     N_upper = src.bounds[3]
     
-    for d in range(1, int(max_distance/step_size)):
+    for d in range(1, int(max_dist/step_size)):
         x += step_size * np.cos(az)
         y += step_size * np.sin(az)
         try:

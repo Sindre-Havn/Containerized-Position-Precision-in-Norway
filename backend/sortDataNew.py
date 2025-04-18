@@ -1,4 +1,3 @@
-
 import math
 import pandas as pd
 import numpy as np
@@ -18,6 +17,7 @@ from downloadfile import lastned
 # I: NavIC/IRNSS
 # S: SBAS payload
 columnsG = [
+    "type",
     "satelite_id",
     "Datetime",
     "C_rs",
@@ -90,6 +90,7 @@ def strToFloat(inputstring):
 def GPSdata(df,satellitt_id,time, values_list, SV,type):
     if type == 'LNAV':
         df.loc[len(df)]  = [
+            type,
             satellitt_id,
             time,
             values_list[1],
@@ -110,50 +111,52 @@ def GPSdata(df,satellitt_id,time, values_list, SV,type):
             values_list[16],
             values_list[24],
         ]
-    # if type == 'CNAV':
-    #     df.loc[len(df)]  = [
-    #         satellitt_id,
-    #         time,
-    #         values_list[1],
-    #         values_list[2],
-    #         values_list[3],
-    #         values_list[4],
-    #         values_list[5],
-    #         values_list[6],
-    #         values_list[7],
-    #         values_list[8],
-    #         values_list[9],
-    #         values_list[10],
-    #         values_list[11],
-    #         values_list[12],
-    #         values_list[13],
-    #         values_list[14],
-    #         values_list[15],
-    #         values_list[16],
-    #         values_list[28],
-    #     ]
-    # elif type == 'CNV2':
-    #     df.loc[len(df)]  = [
-    #         satellitt_id,
-    #         time,
-    #         values_list[1],
-    #         values_list[2],
-    #         values_list[3],
-    #         values_list[4],
-    #         values_list[5],
-    #         values_list[6],
-    #         values_list[7],
-    #         values_list[8],
-    #         values_list[9],
-    #         values_list[10],
-    #         values_list[11],
-    #         values_list[12],
-    #         values_list[13],
-    #         values_list[14],
-    #         values_list[15],
-    #         values_list[16],
-    #         values_list[30],
-    #     ]
+    if type == 'CNAV':
+        df.loc[len(df)]  = [
+            type,
+            satellitt_id,
+            time,
+            values_list[1],
+            values_list[2],
+            values_list[3],
+            values_list[4],
+            values_list[5],
+            values_list[6],
+            values_list[7],
+            values_list[8],
+            values_list[9],
+            values_list[10],
+            values_list[11],
+            values_list[12],
+            values_list[13],
+            values_list[14],
+            values_list[15],
+            values_list[16],
+            values_list[28],
+        ]
+    elif type == 'CNV2':
+        df.loc[len(df)]  = [
+            type,
+            satellitt_id,
+            time,
+            values_list[1],
+            values_list[2],
+            values_list[3],
+            values_list[4],
+            values_list[5],
+            values_list[6],
+            values_list[7],
+            values_list[8],
+            values_list[9],
+            values_list[10],
+            values_list[11],
+            values_list[12],
+            values_list[13],
+            values_list[14],
+            values_list[15],
+            values_list[16],
+            values_list[30],
+        ]
 def GLONASSdata(df,satellitt_id,time, values_list, SV,type):
     df.loc[len(df)] = [
         satellitt_id,
@@ -231,6 +234,7 @@ def Galileiodata(df,satellitt_id,time, values_list, SV,type):#type is the same
         values_list[24]
     ]
 columnsJ = [
+    "type",
     "satelite_id",
     "Datetime",
     "C_rs",
@@ -254,6 +258,7 @@ columnsJ = [
 def QZSSdata(df,satellitt_id,time, values_list, SV,type):
     if type == 'LNAV':
         df.loc[len(df)] = [
+            type,
             satellitt_id,
             time,
             values_list[1],
@@ -274,51 +279,54 @@ def QZSSdata(df,satellitt_id,time, values_list, SV,type):
             values_list[16],
             values_list[24],
         ]
-    # elif type == 'CNAV':
-    #     df.loc[len(df)] = [
-    #         satellitt_id,
-    #         time,
-    #         values_list[1],
-    #         values_list[2],
-    #         values_list[3],
-    #         values_list[4],
-    #         values_list[5],
-    #         values_list[6],
-    #         values_list[7],
-    #         values_list[8],
-    #         values_list[9],
-    #         values_list[10],
-    #         values_list[11],
-    #         values_list[12],
-    #         values_list[13],
-    #         values_list[14],
-    #         values_list[15],
-    #         values_list[16],
-    #         values_list[28],
-    #     ]
-    # elif type == 'CNV2':
-    #     df.loc[len(df)] = [
-    #         satellitt_id,
-    #         time,
-    #         values_list[1],
-    #         values_list[2],
-    #         values_list[3],
-    #         values_list[4],
-    #         values_list[5],
-    #         values_list[6],
-    #         values_list[7],
-    #         values_list[8],
-    #         values_list[9],
-    #         values_list[10],
-    #         values_list[11],
-    #         values_list[12],
-    #         values_list[13],
-    #         values_list[14],
-    #         values_list[15],
-    #         values_list[16],
-    #         values_list[30],
-    #     ]
+    elif type == 'CNAV':
+        df.loc[len(df)] = [
+            type,
+            satellitt_id,
+            time,
+            values_list[1],
+            values_list[2],
+            values_list[3],
+            values_list[4],
+            values_list[5],
+            values_list[6],
+            values_list[7],
+            values_list[8],
+            values_list[9],
+            values_list[10],
+            values_list[11],
+            values_list[12],
+            values_list[13],
+            values_list[14],
+            values_list[15],
+            values_list[16],
+            values_list[28],
+        ]
+    elif type == 'CNV2':
+        df.loc[len(df)] = [
+            type,
+            satellitt_id,
+            time,
+            values_list[1],
+            values_list[2],
+            values_list[3],
+            values_list[4],
+            values_list[5],
+            values_list[6],
+            values_list[7],
+            values_list[8],
+            values_list[9],
+            values_list[10],
+            values_list[11],
+            values_list[12],
+            values_list[13],
+            values_list[14],
+            values_list[15],
+            values_list[16],
+            values_list[30],
+        ]
 columnsC = [
+    "type",
     "satelite_id",
     "Datetime",
     "C_rs",
@@ -343,6 +351,7 @@ columnsC = [
 def BeiDoudata(df,satellitt_id,time, values_list, SV,type):
     if type == 'D1' or type == 'D2':
         df.loc[len(df)] = [
+            type,
             satellitt_id,
             time,
             values_list[1],
@@ -366,6 +375,7 @@ def BeiDoudata(df,satellitt_id,time, values_list, SV,type):
         ]
     elif type == 'CNV1' or type == 'CNV2':
         df.loc[len(df)] = [
+            type,
             satellitt_id,
             time,
             values_list[1],
@@ -388,6 +398,7 @@ def BeiDoudata(df,satellitt_id,time, values_list, SV,type):
         ]
     elif type == 'CNV3':
         df.loc[len(df)] = [
+            type,
             satellitt_id,
             time,
             values_list[1],
@@ -513,6 +524,19 @@ def SBASdata(df,satellitt_id,time, values_list, SV, type):
         values_list[11]
     ]
 
+def update_navigation_message_type(df):
+    """
+    Update the navigation message type for each satellite ID to the last type encountered.
+    """
+    result_list = []
+    for sat_id, sat_group in df.groupby('satelite_id'):
+        last_type = sat_group['type'].iloc[-1]
+        # Get the last type for each satellite ID
+        filtered = sat_group[sat_group['type'] == last_type]
+        result_list.append(filtered)
+        
+    new_df = pd.concat(result_list, ignore_index=True)
+    return new_df
 
 def sortData(daynumber, date):
 
@@ -590,7 +614,18 @@ def sortData(daynumber, date):
                 elif "E" in satellitt_id:
                     Galileiodata(structured_dataE,satellitt_id,time,values_list, SV, type)
 
+        #må filtrere for beidou, qzss og gps
+        #på beidou
+        
+
         print(f"Processing at {time}")
+
+        # After processing and before saving, update the navigation message type
+        structured_dataG = update_navigation_message_type(structured_dataG)
+        structured_dataJ = update_navigation_message_type(structured_dataJ)
+        structured_dataC = update_navigation_message_type(structured_dataC)
+ 
+
         output_folder = f"DataFrames/{date.year}/" + str(daynumber)
         os.makedirs(output_folder, exist_ok=True)
         file_pathG = os.path.join(output_folder, "structured_dataG.csv")
@@ -617,4 +652,4 @@ def sortData(daynumber, date):
 
 
     
-# sortData('320', datetime(2024, 11, 15, 0, 0))
+sortData('099', datetime(2025, 4, 9, 0, 0))
