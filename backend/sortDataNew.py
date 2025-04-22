@@ -617,7 +617,6 @@ def sortData(daynumber, date):
         #må filtrere for beidou, qzss og gps
         #på beidou
         
-
         print(f"Processing at {time}")
 
         # After processing and before saving, update the navigation message type
@@ -652,4 +651,4 @@ def sortData(daynumber, date):
 
 
     
-sortData('099', datetime(2025, 4, 9, 0, 0))
+#sortData('099', datetime(2025, 4, 9, 0, 0))

@@ -96,7 +96,7 @@ const ClickableMap = ({ setStartMarker, setEndMarker, startMarker, endMarker }) 
 };
 
 const NavMap = () => {
-  const vegreferanse = useAtomValue(vegReferanseState);
+  const [vegreferanse, setVegsystemreferanse ]= useAtom(vegReferanseState);
   const [startPoint, setStartPoint] = useAtom(startPointState);
   const [endPoint, setEndPoint] = useAtom(endPointState);
   const distance = useAtomValue(distanceState);
@@ -151,6 +151,16 @@ const NavMap = () => {
     fetchRoadData();
   }, [fetchRoadData]);
 
+  const handleClearRoad = (e) => {
+    setEndMarker(null);
+    setStartMarker(null);
+    setStartPoint([124657.85,	6957624.16]);
+    setEndPoint([193510.27,6896504.01]);
+    setMarkers([]);
+    setVegsystemreferanse('EV136');
+    setGeoJsonData(null);
+  };
+
   return (
   <div className="map" >
     <MapContainer center={position} zoom={9} style={{ height: '400px', width: '100%', borderRadius: '10px' }}>
@@ -203,15 +213,19 @@ const NavMap = () => {
           />
         ))
       )}
-      {markers && (markers.map((point, index) => (
+      {markers.length > 0 ?  (markers.map((point, index) => (
           <Marker key={index} position={[point.geometry.coordinates[1],point.geometry.coordinates[0] ]} icon={customIcon}>
             <Popup> Distance: {point.properties.distance_from_start}m</Popup>
           </Marker>
           ))
-        )
+        ):null
       }
-
     </MapContainer>
+    {markers.length > 0 ? 
+      (<button className="clear-road-button" onClick={handleClearRoad}>
+        Clear road
+      </button>):null
+    }
   </div>
   );
 };

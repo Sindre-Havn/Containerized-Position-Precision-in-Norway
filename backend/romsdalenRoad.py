@@ -127,7 +127,7 @@ def add_last_segment(sisteVegsegment_id, sisteVegsegment_nr, vegsystemreferanse,
         },
         "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
     }
-    print(neste_segment)
+    #print(neste_segment)
     return geojson_feature_utm, geojson_feature_wgs
 
 
@@ -135,16 +135,16 @@ def add_last_segment(sisteVegsegment_id, sisteVegsegment_nr, vegsystemreferanse,
 def get_road_api(startpoint,sluttpoint, vegsystemreferanse):
     fartsgrenser = nvdbapiv3.nvdbFagdata(105)
     fartsgrenser.filter({'vegsystemreferanse': vegsystemreferanse})
-
+    print('start,slutt', startpoint,sluttpoint)
     url = (
         f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute'
-        f'?start={startpoint[0]},{startpoint[1]}'
-        f'&slutt={sluttpoint[0]},{sluttpoint[1]}'
-        f'&maks_avstand=1000&omkrets=10&konnekteringslenker=true'
+        f'?start={round(startpoint[0],4)},{round(startpoint[1],4)}'
+        f'&slutt={round(sluttpoint[0],4)},{round(sluttpoint[1],4)}'
+        f'&maks_avstand=1000&omkrets=100&konnekteringslenker=true'
         f'&detaljerte_lenker=false&behold_trafikantgruppe=false'
         f'&pretty=true&kortform=false&vegsystemreferanse={vegsystemreferanse}'
     )
-
+    print('url', url)
     headers = {
         "Accept": "application/json",
         "X-Client": "Masteroppgave-vegnett"

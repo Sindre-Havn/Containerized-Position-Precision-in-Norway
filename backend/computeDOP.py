@@ -42,9 +42,6 @@ def DOPvalues(satellites, recieverPos0):
             A[i][2] = -((satellite[4] - recieverPos0[2] ) / rho_i)
             A[i][3] = -1
             i +=1
-        
-        
-
         # Compute covariance matrix Qxx
         Qxx = np.linalg.inv(A.T @ A)
         Qxx_local = Qxx[0:3,0:3]
