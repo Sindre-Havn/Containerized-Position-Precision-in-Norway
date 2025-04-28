@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 import numpy as np
 from pyproj import Transformer
-from computebaner import Cartesian, satellites_at_point_2
+from computebaner import Cartesian, get_gnss, getDayNumber, runData_check_sight, satellites_at_point_2
 from common_variables import phi,lam
+import rasterio
 # Set up coordinate transformers between UTM and WGS84
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
@@ -42,9 +43,6 @@ def DOPvalues(satellites, recieverPos0):
             A[i][2] = -((satellite[4] - recieverPos0[2] ) / rho_i)
             A[i][3] = -1
             i +=1
-        
-        
-
         # Compute covariance matrix Qxx
         Qxx = np.linalg.inv(A.T @ A)
         Qxx_local = Qxx[0:3,0:3]
@@ -153,33 +151,36 @@ def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_
     
     return dopvalues
 
-
+# Kunne du hjulpet meg med å dobbeltsjekke noe, kan du sjekke satellitter og dop på
+# Lat: 62.50734833
+# Lon: 7.6778351667
+# Tid og dato: 10:46:46 30/03/2025
 # gnss = ['GPS', 'GLONASS', 'Galileo', 'BeiDou', 'QZSS']
 # elevation_angle = '10'
 # point = {
 #     "type": "Feature",
 #     "geometry": {
 #         "type": "Point",
-#         "coordinates": [7.8394586, 62.4438625]
+#         "coordinates": [7.6778351667, 62.50734833]
 #     },
 #     "properties": {"name": "Point",'time_from_start': 0, "id": 1}
 # }
-# time = datetime.strptime( '2025-03-13T12:00:00.000', "%Y-%m-%dT%H:%M:%S.%f")
+# time = datetime.strptime( '2025-03-30T10:46:46.000', "%Y-%m-%dT%H:%M:%S.%f")
 # daynumber = getDayNumber(time)
 # gnss_mapping = get_gnss(daynumber, time.year)
 
-# with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
-#     dem_data = src.read(1)
-#     dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, 1)
+# # with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+# #     dem_data = src.read(1)
+# #     dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, 1)
 
-# print('dop for road:',dop_point)
-# #start punkt
-# list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, '2025-03-13T12:00:00.000', 1, point['geometry']['coordinates']) 
+# # print('dop for road:',dop_point)
+# # #start punkt
+# list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, '2025-03-30T10:46:46.000', 0, point['geometry']['coordinates']) 
 
 # DOPvalues = best(df, obs_cartesian)
 
-# print('satellites for pooint:', df[0])
-# print('dop for pooint', DOPvalues[0])
+# print('satellites for pooint:\n', df)
+# print('dop for pooint', DOPvalues)
 
 
 # point = {

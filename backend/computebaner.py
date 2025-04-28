@@ -177,7 +177,8 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, observation_lngLat
     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
     daynumber = getDayNumber(given_date)
     gnss_mapping = get_gnss(daynumber,given_date.year )
-    with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+    
+    with rasterio.open("data/merged_raster.tif") as src:
         dem_data = src.read(1)  
 
         observer_height = dem_data[src.index(observation_EN[0], observation_EN[1])]

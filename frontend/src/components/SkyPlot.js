@@ -141,7 +141,9 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
   const cutOffRad = radius * Math.cos((cutOffElevation * Math.PI) / 180);
   const elevations = [0, 20, 40, 60]; // Example: 0°, 40°, 70° elevation circles
   const radii = elevations.map((elevation) => radius * Math.cos((elevation * Math.PI) / 180)); 
-  let satellitesGrouped = {};
+  let satelllitesRoutes = {};
+  let satellitesNames = {};
+
   // eslint-disable-next-line
   satellites.forEach((satellitesBefore) =>
     satellitesBefore.forEach((satellites) => {
@@ -149,15 +151,25 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
         const color = colors[satellite.satName[0]];
         const { azimuth, zenith } = satellite;
         const coords = sphericalToCartesian2D(radius, azimuth, zenith, center);
-        if (!satellitesGrouped[satellite.satName]) {
-          satellitesGrouped[satellite.satName] = [[coords[0], coords[1], color]];
+        if (!satelllitesRoutes[satellite.satName]) {
+          satelllitesRoutes[satellite.satName] = [[coords[0], coords[1], color]];
         }else{
-          satellitesGrouped[satellite.satName].push([coords[0], coords[1], color]);
+          satelllitesRoutes[satellite.satName].push([coords[0], coords[1], color]);
         }
       });
       
     }))
-  //console.log(satellitesGrouped);
+  // eslint-disable-next-line
+  satellites.forEach((satellitesAll) =>{
+    satellitesAll.forEach((satelliteType) => {
+        satelliteType.satellitesData.forEach((satellite) => {
+          const coords = sphericalToCartesian2D(radius, satellite.azimuth, satellite.zenith, center);
+          satellitesNames[satellite.satName] = coords;
+        });
+      })
+  });
+  console.log("satellitesNames:", satellitesNames);
+  console.log("satelllitesRoutes:", satelllitesRoutes);
   const tcf = terrainCutOff.map((elevation, index) => { 
     const zenith = 90-elevation;
     const coords = sphericalToCartesian2D(radius, index, zenith, center);
@@ -172,24 +184,23 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
           <CircleOutline key={index} radius={radius} position={[0, 0, 0]} color={'grey'} lineWidth={1} text = {elevations[index] !== 0? (elevations[index].toString() + '°') : ''} />
         ))}
         
-        {Object.keys(satellitesGrouped).map((satName) => {
+        {Object.keys(satelllitesRoutes).map((satName) => {
           let color = "white"
-          const routePoints = satellitesGrouped[satName].map((satellite) => {
+          const routePoints = satelllitesRoutes[satName].map((satellite) => {
             color = satellite[2]
             return new Vector3(satellite[0], satellite[1], 0);
           })
 
           return (
             <SatelliteRoute
-              key={`2`}
+              key={satName}
               points={routePoints}
               color={color}
             />
           );
         })}
-      {Object.keys(satellitesGrouped).map((satName) => {
-          const sattelittes = satellitesGrouped[satName];
-          const sat = sattelittes[sattelittes.length - 1];
+      {Object.keys(satellitesNames).map((satName) => {
+          const sat = satellitesNames[satName];
           return <Satellite key={sat[0]} position={[sat[0], sat[1], 0]} label={satName} />;
         })}
         <TerrainCutoffLine points={tcf} />

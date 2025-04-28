@@ -72,9 +72,9 @@ const ClickableMap = ({ setStartMarker, setEndMarker, startMarker, endMarker }) 
 
   const convertToUTM = (latlng) => {
     const [easting, northing] = proj4("EPSG:4326", "EPSG:32633", [latlng.lng, latlng.lat]);
-    return [easting, northing];
+    return [parseFloat(easting.toFixed(4)), parseFloat(northing.toFixed(4))];
   };
-
+  
   useMapEvents({
     click(e) {
       const { latlng } = e;
@@ -96,7 +96,7 @@ const ClickableMap = ({ setStartMarker, setEndMarker, startMarker, endMarker }) 
 };
 
 const NavMap = () => {
-  const vegreferanse = useAtomValue(vegReferanseState);
+  const [vegreferanse, setVegsystemreferanse ]= useAtom(vegReferanseState);
   const [startPoint, setStartPoint] = useAtom(startPointState);
   const [endPoint, setEndPoint] = useAtom(endPointState);
   const distance = useAtomValue(distanceState);
@@ -106,6 +106,8 @@ const NavMap = () => {
   
   const [startMarker, setStartMarker] = useState(null);
   const [endMarker, setEndMarker] = useState(null);
+
+  //const [errorMessage, setErrorMessage] = useState('');
 
   const fetchRoadData = useCallback(() => {
     if (geoJsonData != null || !updateRoad) return;
@@ -127,13 +129,11 @@ const NavMap = () => {
       }),
       mode: 'cors',
     })
-      .then(response => {
+      .then(async (response) => {
+        const data = await response.json();   // <<=== LEST ALLTID JSON
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error(data.message || 'Network response was not ok');  // <<=== KAST etter å ha lest data
         }
-        return response.json();
-      })
-      .then(data => {
         console.log("road", data.road);
         console.log("points", data.points);
         setGeoJsonData(data.road);
@@ -144,12 +144,24 @@ const NavMap = () => {
         console.error('Fetch error road:', error);
         console.error('Error name road:', error.name);
         console.error('Error message road:', error.message);
+        setUpdateRoad(false);
+        alert(error.message);  // Nå får du faktisk den riktige meldingen fra Flask!
       });
   }, [geoJsonData, updateRoad, startPoint, endPoint, distance, setGeoJsonData, setUpdateRoad, vegreferanse, setMarkers]);
   
   useEffect(() => {
     fetchRoadData();
   }, [fetchRoadData]);
+
+  const handleClearRoad = (e) => {
+    setEndMarker(null);
+    setStartMarker(null);
+    setStartPoint([124657.85,	6957624.16]);
+    setEndPoint([193510.27,6896504.01]);
+    setMarkers([]);
+    setVegsystemreferanse('EV136');
+    setGeoJsonData(null);
+  };
 
   return (
   <div className="map" >
@@ -203,15 +215,23 @@ const NavMap = () => {
           />
         ))
       )}
-      {markers && (markers.map((point, index) => (
+      {markers.length > 0 ?  (markers.map((point, index) => (
           <Marker key={index} position={[point.geometry.coordinates[1],point.geometry.coordinates[0] ]} icon={customIcon}>
-            <Popup> Distance: {point.properties.distance_from_start}m</Popup>
+            <Popup>
+              Point {index}
+              <br />
+              Distance: {Math.round(point.properties.distance_from_start)} m
+            </Popup>
           </Marker>
           ))
-        )
+        ):null
       }
-
     </MapContainer>
+    {markers.length > 0 ? 
+      (<button className="clear-road-button" onClick={handleClearRoad}>
+        Clear road
+      </button>):null
+    }
   </div>
   );
 };
