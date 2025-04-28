@@ -72,9 +72,9 @@ const ClickableMap = ({ setStartMarker, setEndMarker, startMarker, endMarker }) 
 
   const convertToUTM = (latlng) => {
     const [easting, northing] = proj4("EPSG:4326", "EPSG:32633", [latlng.lng, latlng.lat]);
-    return [easting, northing];
+    return [parseFloat(easting.toFixed(4)), parseFloat(northing.toFixed(4))];
   };
-
+  
   useMapEvents({
     click(e) {
       const { latlng } = e;
@@ -107,6 +107,8 @@ const NavMap = () => {
   const [startMarker, setStartMarker] = useState(null);
   const [endMarker, setEndMarker] = useState(null);
 
+  //const [errorMessage, setErrorMessage] = useState('');
+
   const fetchRoadData = useCallback(() => {
     if (geoJsonData != null || !updateRoad) return;
   
@@ -127,13 +129,11 @@ const NavMap = () => {
       }),
       mode: 'cors',
     })
-      .then(response => {
+      .then(async (response) => {
+        const data = await response.json();   // <<=== LEST ALLTID JSON
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error(data.message || 'Network response was not ok');  // <<=== KAST etter å ha lest data
         }
-        return response.json();
-      })
-      .then(data => {
         console.log("road", data.road);
         console.log("points", data.points);
         setGeoJsonData(data.road);
@@ -144,6 +144,8 @@ const NavMap = () => {
         console.error('Fetch error road:', error);
         console.error('Error name road:', error.name);
         console.error('Error message road:', error.message);
+        setUpdateRoad(false);
+        alert(error.message);  // Nå får du faktisk den riktige meldingen fra Flask!
       });
   }, [geoJsonData, updateRoad, startPoint, endPoint, distance, setGeoJsonData, setUpdateRoad, vegreferanse, setMarkers]);
   
@@ -215,7 +217,11 @@ const NavMap = () => {
       )}
       {markers.length > 0 ?  (markers.map((point, index) => (
           <Marker key={index} position={[point.geometry.coordinates[1],point.geometry.coordinates[0] ]} icon={customIcon}>
-            <Popup> Distance: {point.properties.distance_from_start}m</Popup>
+            <Popup>
+              Point {index}
+              <br />
+              Distance: {Math.round(point.properties.distance_from_start)} m
+            </Popup>
           </Marker>
           ))
         ):null

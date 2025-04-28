@@ -111,52 +111,52 @@ def GPSdata(df,satellitt_id,time, values_list, SV,type):
             values_list[16],
             values_list[24],
         ]
-    if type == 'CNAV':
-        df.loc[len(df)]  = [
-            type,
-            satellitt_id,
-            time,
-            values_list[1],
-            values_list[2],
-            values_list[3],
-            values_list[4],
-            values_list[5],
-            values_list[6],
-            values_list[7],
-            values_list[8],
-            values_list[9],
-            values_list[10],
-            values_list[11],
-            values_list[12],
-            values_list[13],
-            values_list[14],
-            values_list[15],
-            values_list[16],
-            values_list[28],
-        ]
-    elif type == 'CNV2':
-        df.loc[len(df)]  = [
-            type,
-            satellitt_id,
-            time,
-            values_list[1],
-            values_list[2],
-            values_list[3],
-            values_list[4],
-            values_list[5],
-            values_list[6],
-            values_list[7],
-            values_list[8],
-            values_list[9],
-            values_list[10],
-            values_list[11],
-            values_list[12],
-            values_list[13],
-            values_list[14],
-            values_list[15],
-            values_list[16],
-            values_list[30],
-        ]
+    # if type == 'CNAV':
+    #     df.loc[len(df)]  = [
+    #         type,
+    #         satellitt_id,
+    #         time,
+    #         values_list[1],
+    #         values_list[2],
+    #         values_list[3],
+    #         values_list[4],
+    #         values_list[5],
+    #         values_list[6],
+    #         values_list[7],
+    #         values_list[8],
+    #         values_list[9],
+    #         values_list[10],
+    #         values_list[11],
+    #         values_list[12],
+    #         values_list[13],
+    #         values_list[14],
+    #         values_list[15],
+    #         values_list[16],
+    #         values_list[28],
+    #     ]
+    # elif type == 'CNV2':
+    #     df.loc[len(df)]  = [
+    #         type,
+    #         satellitt_id,
+    #         time,
+    #         values_list[1],
+    #         values_list[2],
+    #         values_list[3],
+    #         values_list[4],
+    #         values_list[5],
+    #         values_list[6],
+    #         values_list[7],
+    #         values_list[8],
+    #         values_list[9],
+    #         values_list[10],
+    #         values_list[11],
+    #         values_list[12],
+    #         values_list[13],
+    #         values_list[14],
+    #         values_list[15],
+    #         values_list[16],
+    #         values_list[30],
+    #     ]
 def GLONASSdata(df,satellitt_id,time, values_list, SV,type):
     df.loc[len(df)] = [
         satellitt_id,
@@ -620,7 +620,7 @@ def sortData(daynumber, date):
         print(f"Processing at {time}")
 
         # After processing and before saving, update the navigation message type
-        structured_dataG = update_navigation_message_type(structured_dataG)
+        #structured_dataG = update_navigation_message_type(structured_dataG)
         structured_dataJ = update_navigation_message_type(structured_dataJ)
         structured_dataC = update_navigation_message_type(structured_dataC)
  

@@ -50,35 +50,63 @@ def satellites():
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
         return response, 202
 
-@app.route('/road', methods=['POST','OPTIONS'])
+
+from flask import Flask, request, jsonify
+import traceback
+
+@app.route('/road', methods=['POST', 'OPTIONS'])
 def road():
     if request.method == 'OPTIONS':
-        # Handle the preflight request with necessary headers
+        # Handle the preflight request (CORS preflight)
         response = jsonify({'status': 'Preflight request passed'})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
         response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
         return response, 200
 
+    try:
+        vegReferanse = request.json.get('vegReferanse')
+        startPoint = request.json.get('startPoint')
+        endPoint = request.json.get('endPoint')
+        distance = request.json.get('distance')
 
-    is_processing = True
-    vegReferanse = request.json.get('vegReferanse')
-    startPoint = request.json.get('startPoint')
-    endPoint = request.json.get('endPoint')
-    #(request.json)
-    distance = request.json.get('distance')
-    road_utm,road_wgs =  get_road_api(startPoint, endPoint,vegReferanse)
-    points = calculate_travel_time(road_utm, float(distance))
-    is_processing = False
-    
-    if not is_processing:
+        # Validate input
+        if not vegReferanse or not startPoint or not endPoint or not distance:
+            response = jsonify({'error': 'Missing input parameters.', 'message': 'Please provide startPoint, endPoint, distance and vegReferanse.'})
+            response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+            return response, 400
+
+        # Get road data
+        road_utm, road_wgs = get_road_api(startPoint, endPoint, vegReferanse)
+
+        # Calculate points
+        points = calculate_travel_time(road_utm, float(distance))
+
         response = jsonify({'message': 'Data processed successfully', 'road': road_wgs, 'points': points})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 200
-    else:
-        response = jsonify({"data": "Data is not ready"})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-        return response, 202
+
+    except IndexError as e:
+        response = jsonify({
+            'error': 'No road data found for the given input.',
+            'details': str(e),
+            'message': 'The road couldn’t be found. Please check all the input parameters and be more specific with the start and end markers.'
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 400
+
+    except Exception as e:
+        # Log full error in backend
+        print(traceback.format_exc())
+        response = jsonify({
+            'error': 'An unexpected error occurred.',
+            'details': str(e),
+            'message': 'An unexpected error occurred. Please try again later.'
+        })
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        return response, 500
+
+    
     
 @app.route('/dopvalues', methods=['POST', 'OPTIONS'])
 def dopValues():
@@ -99,15 +127,15 @@ def dopValues():
     except Exception as e:
         return jsonify({"error": f"Invalid data format: {e}"}), 400
 
-    time = datetime.fromisoformat(time_str)
 
+    time = datetime.fromisoformat(time_str)
     dop_list = []
     daynumber = getDayNumber(time)
     gnss_mapping = get_gnss(daynumber, time.year)
     total_steps = len(points) + 1
 
     def generate():
-        with rasterio.open("data/merged_raster_romsdalen_10.tif") as src:
+        with rasterio.open("data/merged_raster.tif") as src:
             dem_data = src.read(1)
 
             for step, point in enumerate(points, start=1):
