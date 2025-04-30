@@ -40,6 +40,16 @@ const FilterComponent = () => {
   const handleHourChange = (event) => {
     setHours(event.target.value);
   };
+  const handleSetStartPoint = (event) => {
+    const input = event.target.value;
+    const coordinates = input.split(',').map(coord => parseFloat(coord.trim()));
+    setStartPoint(coordinates);
+  };
+  const handleSetEndPoint = (event) => {
+    const input = event.target.value;
+    const coordinates = input.split(',').map(coord => parseFloat(coord.trim()));
+    setEndPoint(coordinates);
+  };
   return (
     <>
     <div className="filter-header">
@@ -76,7 +86,7 @@ const FilterComponent = () => {
             <input
               type="text"
               value={startPoint}
-              onChange={(e) => setStartPoint(e.target.value)}
+              onChange={handleSetStartPoint}
               placeholder="Enter point E,N ..."
               className='road-input3'
             />
@@ -87,7 +97,7 @@ const FilterComponent = () => {
             <input
               type="text"
               value={endPoint}
-              onChange={(e) => setEndPoint(e.target.value)}
+              onChange={handleSetEndPoint}
               placeholder="Enter point E,N..."
               className='road-input3'
             />

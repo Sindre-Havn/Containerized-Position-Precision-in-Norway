@@ -27,7 +27,7 @@ const SatelliteRoute = ({ points, color }) => {
   );
 };
 
-const CircleOutline = ({ radius, position, color, lineWidth, text }) => {
+const CircleOutline = ({ radius,angles, factor, position, color, lineWidth, text, font }) => {
     const points = [];
     const textPoints = [];
 
@@ -35,7 +35,7 @@ const CircleOutline = ({ radius, position, color, lineWidth, text }) => {
     for (let i = 0; i <= 100; i++) {
       const angle = (i / 100) * Math.PI * 2;
       points.push([Math.cos(angle) * radius, Math.sin(angle) * radius, 0]);
-      textPoints.push([Math.cos(angle) * (radius*0.8), Math.sin(angle+45) * (radius*0.8), 0]);
+      textPoints.push([Math.cos(angle) * (radius*factor), Math.sin(angle+angles) * (radius*factor), 0]);
     }
 
     return (
@@ -56,7 +56,8 @@ const CircleOutline = ({ radius, position, color, lineWidth, text }) => {
         rotation={[0, 0, 0]} />
       <Text
         position={[textPoints[0][0],textPoints[0][1], textPoints[0][2]]} // Position of the Y-axis label
-        fontSize={0.15}
+        fontSize={0.25}
+        fontWeight={font}
         color="black"
       >
         {text}
@@ -88,14 +89,14 @@ const Axes = ({ radius = 4.1, color = 'white', lineWidth = 2 }) => {
       />
       <Text
         position={[radius + 0.25, 0, 0]} // Position of the X-axis label
-        fontSize={0.2}
+        fontSize={0.3}
         color="black"
       >
         90°
       </Text>
       <Text
         position={[-radius - 0.3, 0, 0]} // Position of the X-axis label
-        fontSize={0.2}
+        fontSize={0.3}
         color="black"
       >
         270°
@@ -108,14 +109,14 @@ const Axes = ({ radius = 4.1, color = 'white', lineWidth = 2 }) => {
       />
       <Text
         position={[0, radius + 0.1, 0]} // Position of the Y-axis label
-        fontSize={0.2}
+        fontSize={0.3}
         color="black"
       >
         0°
       </Text>
       <Text
         position={[0, -radius - 0.1, 0]} // Position of the Y-axis label
-        fontSize={0.2}
+        fontSize={0.3}
         color="black"
       >
         180°
@@ -179,9 +180,9 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
     <div className="skyplot-container">
       <Canvas className="skyplot-canvas" camera={{ position: [0, 0, 10], fov: 50 }}>
         <Axes/>
-        <CircleOutline radius={cutOffRad} position={[0, 0, 0]} color={'black'}lineWidth={2} text = {cutOffElevation.toString() + '°' } />
+        <CircleOutline key = {4} radius={cutOffRad} angles={20} factor={0.78} position={[0, 0, 0]} color={'black'}lineWidth={2} text = {cutOffElevation.toString() + '°' } font={'bold'}  />
         {radii.map((radius, index) => (
-          <CircleOutline key={index} radius={radius} position={[0, 0, 0]} color={'grey'} lineWidth={1} text = {elevations[index] !== 0? (elevations[index].toString() + '°') : ''} />
+          <CircleOutline key={index} radius={radius} angles={45} factor={0.7} position={[0, 0, 0]} color={'grey'} lineWidth={1} text = {elevations[index] !== 0? (elevations[index].toString() + '°') : ''} font={'light'} />
         ))}
         
         {Object.keys(satelllitesRoutes).map((satName) => {

@@ -10,7 +10,7 @@ import {
   Legend
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import '../css/lineplot.css';
+import '../css/DOPplot.css';
 import { useAtom, useAtomValue } from 'jotai';
 import { useState, useEffect } from 'react';
 import { gnssState, elevationState, timeState, epochState, pointsState, updateDOPState } from '../states/states';
@@ -171,7 +171,7 @@ export const DOPLineChart = () => {
         position: 'top',
         labels: {
           font: {
-            size: 14,          
+            size: 18,          
             weight: 'bold'     
           },
           color: '#003344'     
@@ -181,7 +181,7 @@ export const DOPLineChart = () => {
         display: true,
         text: 'DOP Values Line Chart Along The road at Specified Points',
         font: {
-          size: 18,            
+          size: 20,            
           weight: 'bold'
         },
         color: '#222'          
@@ -193,11 +193,11 @@ export const DOPLineChart = () => {
         borderColor: '#ccc',
         borderWidth: 1,
         titleFont: {
-          size: 14,
+          size: 18,
           weight: 'bold'
         },
         bodyFont: {
-          size: 13
+          size: 16
         },
         callbacks: {
           title: function (tooltipItems) {
@@ -218,14 +218,14 @@ export const DOPLineChart = () => {
           display: true,
           text: 'Distance in meters from the start',
           font: {
-            size: 14
+            size: 16
           },
           color: '#333'
         },
         ticks: {
           color: '#333',
           font: {
-            size: 12
+            size: 14
           }
         }
       },
@@ -235,14 +235,14 @@ export const DOPLineChart = () => {
           display: true,
           text: 'DOP Value',
           font: {
-            size: 14
+            size: 16
           },
           color: '#333'
         },
         ticks: {
           color: '#333',
           font: {
-            size: 12
+            size: 14
           }
         }
       }

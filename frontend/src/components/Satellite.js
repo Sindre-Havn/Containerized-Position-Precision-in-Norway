@@ -18,7 +18,19 @@ export const Satellite = ({ position, label }) => (
       <circleGeometry args={[0.1, 64]} />
       <meshBasicMaterial color={colors[label[0]]} />
       <Html distanceFactor={5}>
-        <div style={{ color: 'black', background: 'white', padding: '2px' ,fontSize:'25px'}}>{label}</div>
+        <div style={{
+          color: '#333',
+          background: '#f5f5f5',
+          padding: '2px 4px',             // litt bedre padding
+          borderRadius: '8px',
+          fontSize: '24px',               // gjort bittelitt mindre for bedre balanse
+          fontWeight: 500,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          display: 'inline-block',
+          border: `2px solid ${colors[label[0]]}`, // <-- her bruker vi border riktig
+        }}>
+          {label}
+        </div>
       </Html>
     </mesh>
 );
