@@ -151,10 +151,7 @@ def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_
     
     return dopvalues
 
-# Kunne du hjulpet meg med å dobbeltsjekke noe, kan du sjekke satellitter og dop på
-# Lat: 62.50734833
-# Lon: 7.6778351667
-# Tid og dato: 10:46:46 30/03/2025
+
 # gnss = ['GPS', 'GLONASS', 'Galileo', 'BeiDou', 'QZSS']
 # elevation_angle = '10'
 # point = {

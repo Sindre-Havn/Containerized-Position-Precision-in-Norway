@@ -32,7 +32,7 @@ export const BarChartGraph = ({ data, labels }) => {
         position: 'top',
         labels: {
           font: {
-            size: 14,         
+            size: 18,         
             weight: 'bold'    
           },
           color: '#003344'    
@@ -42,7 +42,7 @@ export const BarChartGraph = ({ data, labels }) => {
         display: true,
         text: 'Number of Satellites in View',
         font: {
-          size: 18,          
+          size: 20,          
           weight: 'bold'
         },
         color: '#222'              
@@ -54,14 +54,14 @@ export const BarChartGraph = ({ data, labels }) => {
           display: true,
           text: 'Epoch Times',
           font: {
-            size: 14
+            size: 18
           },
           color: '#333'
         },
         ticks: {
           color: '#333',
           font: {
-            size: 12
+            size: 15
           }
         }
       },
@@ -71,14 +71,14 @@ export const BarChartGraph = ({ data, labels }) => {
           display: true,
           text: 'Number of Satellites',
           font: {
-            size: 14
+            size: 18
           },
           color: '#333'
         },
         ticks: {
           color: '#333',
           font: {
-            size: 12
+            size: 15
           }
         }
       }

@@ -161,14 +161,14 @@ const Visualization = () => {
             const color = satelliteGroup.color;
             return (
               <div key={index} className="satellite-column">
-                <div className="satellite-name" style={{ backgroundColor: color }}>
+                <div className="satellite-name" style={{ backgroundColor: color, fontSize: '18px' }}>
                   {satType}
                 </div>
                 {satelliteGroup.satellitesData.map((satellite, satIndex) => {
                   const satName = satellite.satName;
                   return (
-                    <div key={satName} className="satellite-number">
-                      <p>{satName}</p>
+                    <div key={satName}  className="satellite-number">
+                      <p style={{ fontSize: '16px' }}>{satName}</p>
                     </div>
                   );
                 })}
@@ -180,14 +180,12 @@ const Visualization = () => {
 
       {/* Chart Row: Bar Chart and Line Chart */}
       <div className="chart-row">
-        {/* Bar Chart */}
-        <div className="chart-container">
+        <div className="chart-box">
           <BarChartGraph data={satellites} labels={labels} />
         </div>
 
-        {/* Line Chart */}
-        <div className="chart-container">
-          <LineChart data={DOP} labels={labels} satellites = {satellites} />
+        <div className="chart-box">
+          <LineChart data={DOP} labels={labels} satellites={satellites} />
         </div>
       </div>
     </>

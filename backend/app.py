@@ -130,6 +130,7 @@ def dopValues():
 
     time = datetime.fromisoformat(time_str)
     dop_list = []
+    PDOP_list = []
     daynumber = getDayNumber(time)
     gnss_mapping = get_gnss(daynumber, time.year)
     total_steps = len(points) + 1
@@ -141,6 +142,7 @@ def dopValues():
             for step, point in enumerate(points, start=1):
                 dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, step)
                 dop_list.append(dop_point)
+                PDOP_list.append(dop_point[0][1])
 
                 yield f"{int((step / total_steps) * 100)}\n\n"
 

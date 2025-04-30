@@ -111,7 +111,7 @@ export const LineChart = ({ data, labels, satellites }) => {
         position: 'top',
         labels: {
           font: {
-            size: 14,         
+            size: 16,         
             weight: 'bold'    
           },
           color: '#003344'          
@@ -121,7 +121,7 @@ export const LineChart = ({ data, labels, satellites }) => {
         display: true,
         text:  `DOP Values Line Chart for ${formatSatTypes(satTypes)}`,
         font: {
-          size: 18,            
+          size: 20,            
           weight: 'bold'
         },
         color: '#222'      
@@ -133,14 +133,14 @@ export const LineChart = ({ data, labels, satellites }) => {
           display: true,
           text: 'Epoch Times',
           font: {
-            size: 14
+            size: 18
           },
           color: '#333'
         },
         ticks: {
           color: '#333',
           font: {
-            size: 12
+            size: 15
           }
         }
       },
@@ -150,14 +150,14 @@ export const LineChart = ({ data, labels, satellites }) => {
           display: true,
           text: 'DOP Value',
           font: {
-            size: 14
+            size: 18
           },
           color: '#333'
         },
         ticks: {
           color: '#333',
           font: {
-            size: 12
+            size: 15
           }
         }
       }
@@ -165,7 +165,7 @@ export const LineChart = ({ data, labels, satellites }) => {
   };
 
   return (
-    <div className="line-chart-container">
+    <div className="point-line-chart-container">
       <Line data={chartData} options={options} /> 
     </div>
   );
