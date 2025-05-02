@@ -31,11 +31,12 @@ def satellites():
     elevation_angle = data.get('elevationAngle')
     gnss = data.get('GNSS')
     epoch = data.get('epoch')
+    frequency = int(data.get('epochFrequency'))
     point = data.get('point')
     #print(f'point: {point}')
     
     is_processing = True
-    list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch, point) 
+    list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch,frequency, point) 
     elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
     DOPvalues = best(df, obs_cartesian)
 
@@ -130,7 +131,7 @@ def dopValues():
 
     time = datetime.fromisoformat(time_str)
     dop_list = []
-    PDOP_list = []
+    #PDOP_list = []
     daynumber = getDayNumber(time)
     gnss_mapping = get_gnss(daynumber, time.year)
     total_steps = len(points) + 1
@@ -142,7 +143,7 @@ def dopValues():
             for step, point in enumerate(points, start=1):
                 dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, step)
                 dop_list.append(dop_point)
-                PDOP_list.append(dop_point[0][1])
+                #PDOP_list.append(dop_point[0][1])
 
                 yield f"{int((step / total_steps) * 100)}\n\n"
 

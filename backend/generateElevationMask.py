@@ -46,6 +46,7 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
     
     return True  # Satellitten er synlig
 
+
 def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask, azimuth_satellite):
     
     #foreslått måte å finne lengde nødvendige sjekking
@@ -76,6 +77,7 @@ def check_satellite_sight_2(observer,dem_data,src, max_distance, elevation_mask,
         return max_elevation
     else:
         return elevation_mask
+
     
 #bruker trekanter
 def find_elevation_cutoff(dem_data, src,observer, max_distance, elevation_mask):

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import numpy as np
 from pyproj import Transformer
 from computebaner import Cartesian, get_gnss, getDayNumber, runData_check_sight, satellites_at_point_2
-from common_variables import phi,lam
+from common_variables import phi,lam,c
 import rasterio
 # Set up coordinate transformers between UTM and WGS84
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
@@ -52,7 +52,7 @@ def DOPvalues(satellites, recieverPos0):
         # Calculate DOP metrics
         GDOP = np.sqrt(Qxx[0][0] + Qxx[1][1] + Qxx[2][2] + Qxx[3][3])
         PDOP = np.sqrt(Qxx[0][0] + Qxx[1][1] + Qxx[2][2])
-        TDOP = np.sqrt(Qxx[3][3])
+        TDOP = np.sqrt(Qxx[3][3]) 
         HDOP = np.sqrt(Qxx_local[0][0]+Qxx_local[1][1])
         VDOP = np.sqrt(Qxx_local[2][2])
     else:
@@ -73,6 +73,7 @@ def best(satellites, recieverPos0):
         if(len(satellites_array) > 0):
             GDOP, PDOP, TDOP,HDOP,VDOP = DOPvalues(satellites_array, recieverPos0)
             final_DOP_values.append([GDOP, PDOP, TDOP, HDOP, VDOP])
+            print(PDOP)
         else:
             final_DOP_values.append([0, 0, 0, 0, 0])
     print('final_DOP_values skyplot:', final_DOP_values[0])

@@ -8,7 +8,7 @@ import customMarkerIcon from '../assets/pngwing.png';
 import A from '../assets/A.png';
 import B from '../assets/B.png';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import {startPointState, endPointState, distanceState, roadState,pointsState, vegReferanseState} from '../states/states';
+import {startPointState, endPointState, distanceState, roadState,pointsState, vegReferanseState, geoJsonDataState} from '../states/states';
 import '../css/map.css';
 import proj4 from 'proj4';
 
@@ -102,7 +102,7 @@ const NavMap = () => {
   const distance = useAtomValue(distanceState);
   const [updateRoad,setUpdateRoad] = useAtom(roadState);
   const [markers, setMarkers] = useAtom(pointsState);
-  const [geoJsonData, setGeoJsonData] = useState(null);
+  const [geoJsonData, setGeoJsonData] = useAtom(geoJsonDataState);
   
   const [startMarker, setStartMarker] = useState(null);
   const [endMarker, setEndMarker] = useState(null);

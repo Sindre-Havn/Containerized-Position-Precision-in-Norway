@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import {elevationState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState} from '../states/states';
+import {elevationState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState,geoJsonDataState, epochFrequencyState} from '../states/states';
 import '../css/filtering.css';
 
 
@@ -15,6 +15,8 @@ const FilterComponent = () => {
   const [endPoint, setEndPoint] = useAtom(endPointState);
   const [distance, setDistance] = useAtom(distanceState);
   const [updateRoad,setUpdateRoad] = useAtom(roadState);
+  const [geoJsonData, setGeoJsonData] = useAtom(geoJsonDataState);
+  const [epochFrequency, setEpochFrequency] = useAtom(epochFrequencyState);
 
   const handleCheckboxChange = (e) => {
     setGnssNames({
@@ -35,6 +37,10 @@ const FilterComponent = () => {
 
 
   const handleUpdateRoad = () => {
+    // setEndMarker(null);
+    // setStartMarker(null);
+    // setMarkers([]);
+    setGeoJsonData(null);
     setUpdateRoad(true);
   }
   const handleHourChange = (event) => {
@@ -142,7 +148,22 @@ const FilterComponent = () => {
                 value={time.toISOString().slice(0, 16)}
                 onChange={handleDateChange} />
             </div>
-            <div>
+            <div className='elevation-angle'> 
+              <div className='slider-header'>
+                <p><b>Elevation Angle</b> {elevationAngle}°</p>
+              </div>
+              <input
+                className='elevation-angle-slider'
+                type="range"
+                min="10"
+                max="90"
+                value={elevationAngle}
+                onChange={handleElevationAngleChange} />
+            </div>
+
+          </div>
+          <div className="horizontal-group2">
+            <div className='epoch-angle'> 
               <div className='slider-header'>
                 <p><b>Time Epoch</b> {hours} h</p>
               </div>
@@ -152,20 +173,19 @@ const FilterComponent = () => {
                 max="48"
                 value={hours}
                 onChange={handleHourChange} />
-
             </div>
-          </div>
-          <div className='elevation-angle'> 
-            <div className='slider-header'>
-              <p><b>Elevation Angle</b> {elevationAngle}°</p>
+            <div className='time-resolution'>
+              <div className='slider-header'>
+                <p><b>Calculation Interval</b> every {epochFrequency} min</p>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="60"
+                step="10"
+                value={epochFrequency}
+                onChange={(e) => setEpochFrequency(parseInt(e.target.value))} />
             </div>
-            <input
-              className='elevation-angle-slider'
-              type="range"
-              min="10"
-              max="90"
-              value={elevationAngle}
-              onChange={handleElevationAngleChange} />
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ export const updateDataState = atom(false)
 export const timeState = atom(new Date())
 
 export const epochState = atom(1)
+export const epochFrequencyState = atom(30)
 export const elevationState = atom(10)
 
 export const endPointsState = atom([])
@@ -17,6 +18,8 @@ export const distanceState = atom(10)
 export const roadState = atom(false)
 
 export const pointsState = atom([])
+
+export const geoJsonDataState = atom(null)
 
 export const updateDOPState = atom(false)
 

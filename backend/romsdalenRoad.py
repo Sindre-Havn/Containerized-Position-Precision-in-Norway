@@ -105,7 +105,7 @@ def add_last_segment(sisteVegsegment_id, sisteVegsegment_nr, vegsystemreferanse,
 
 
     fartsgrense_row = fartsgrense_df[fartsgrense_df['veglenkesekvensid'] == neste_segment['veglenkesekvensid']]['Fartsgrense']
-    fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else None
+    fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else 50.0
 
     converted = linestring_to_coordinates(neste_segment['geometri'])
     
@@ -149,7 +149,7 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
             f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute'
             f'?start={startpoint[0]},{startpoint[1]}'
             f'&slutt={sluttpoint[0]},{sluttpoint[1]}'
-            f'&maks_avstand=1000&omkrets=100&konnekteringslenker=true'
+            f'&maks_avstand=1000&omkrets=10&konnekteringslenker=true'
             f'&detaljerte_lenker=false&behold_trafikantgruppe=false'
             f'&pretty=true&kortform=false&vegsystemreferanse={vegsystemreferanse}'
         )
@@ -186,7 +186,7 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
         for veglenke in segmenter:
             if veglenke['typeVeg_sosi'] == 'enkelBilveg':
                 fartsgrense_row = df[df['veglenkesekvensid'] == veglenke['veglenkesekvensid']]['Fartsgrense']
-                fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else None
+                fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else 50.0
                 converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
 
                 if retning == 'MOT':

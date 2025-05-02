@@ -1,5 +1,5 @@
 .line-chart-container {
-    width: 97%; /* Set the width to 50% of the parent container */
+    width: 97%; 
     margin: 10px; 
     padding: 20px; /* Add padding around the chart */
     border: 1px solid #008cba; /* Light border around the chart */
