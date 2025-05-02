@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai'
-import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState, startPointState, chosenPointState} from '../states/states';
+import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState, startPointState, chosenPointState,epochFrequencyState} from '../states/states';
 import { SatelliteMap } from './SkyPlot';
 import '../css/visualization.css';
 import { BarChartGraph } from './BoxPlot';
@@ -79,13 +79,14 @@ const Visualization = () => {
     const [updateData,setUpdateData] = useAtom(updateDataState);
     const gnssNames = useAtomValue(gnssState);
     const elevationAngle = useAtomValue(elevationState);
+    const epochFrequency = useAtomValue(epochFrequencyState);
     const time =useAtomValue(timeState);
     const epoch = useAtomValue(epochState);
     const points = useAtomValue(pointsState);
     const cosenPoint = useAtomValue(chosenPointState);
 
     const labels = Array.from({ length: 2 * epoch +1}, (_, i) => 
-      new Date(time.getTime() + i * 30 * 60 * 1000).toISOString().slice(11, 16)
+      new Date(time.getTime() + i * epochFrequency * 60 * 1000).toISOString().slice(11, 16)
     );
     const [DOP, setDOP] = useState([[0,0,0]]);
     const [elevation_masks, setElevationMasks] = useState([]);
@@ -106,6 +107,7 @@ const Visualization = () => {
           time: time.toISOString(),
           elevationAngle: elevationAngle.toString(),
           epoch: epoch.toString(),
+          epochFrequency: epochFrequency.toString(),
           GNSS: filteredGNSS,
           point: searchPoint,
         }),

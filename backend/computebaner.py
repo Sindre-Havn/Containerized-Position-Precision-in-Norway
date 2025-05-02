@@ -165,7 +165,7 @@ def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, 
 # Wrapper-funksjon som brukes av frontend for å hente visuelle satellitter
 # Returnerer både DataFrame og dictionary-format
 
-def runData_check_sight(gnss_list, elevationstring, t, epoch, observation_lngLat):
+def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observation_lngLat):
 
     print('in runData_check_sight')
 
@@ -185,12 +185,14 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, observation_lngLat
         print(f'observer: {observation_lngLat}, {observer_height}')
         observation_cartesian = Cartesian(observation_lngLat[1]* np.pi/180, observation_lngLat[0]* np.pi/180, observer_height)
         observation_end = [observation_EN[0], observation_EN[1], observer_height]
+
         final_list = []
         final_listdf = []
         print('finds visual satellites')
-        for i in range(0, int(epoch)*2 + 1):
+        calculations = int(epoch)* int((60/frequency))
+        for i in range(0, calculations):
          
-            time2 = pd.to_datetime(t)+ pd.Timedelta(minutes=i*30)
+            time2 = pd.to_datetime(t)+ pd.Timedelta(minutes=i*frequency)
         
             LGDF_df = []
             for gnss in gnss_list:

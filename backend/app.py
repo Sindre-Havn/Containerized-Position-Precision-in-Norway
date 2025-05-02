@@ -31,11 +31,12 @@ def satellites():
     elevation_angle = data.get('elevationAngle')
     gnss = data.get('GNSS')
     epoch = data.get('epoch')
+    frequency = int(data.get('epochFrequency'))
     point = data.get('point')
     #print(f'point: {point}')
     
     is_processing = True
-    list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch, point) 
+    list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch,frequency, point) 
     elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
     DOPvalues = best(df, obs_cartesian)
 
