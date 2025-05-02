@@ -18,6 +18,8 @@ export const roadState = atom(false)
 
 export const pointsState = atom([])
 
+export const geoJsonDataState = atom(null)
+
 export const updateDOPState = atom(false)
 
 export const chosenPointState = atom(0)

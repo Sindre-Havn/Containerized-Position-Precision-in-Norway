@@ -156,7 +156,7 @@ const Visualization = () => {
         </div>
       {/* Satellite Table */}
         <div className="satellite-table">
-          {satellites[satellites.length - 1].map((satelliteGroup, index) => {
+          {satellites[0].map((satelliteGroup, index) => {
             const satType = satelliteGroup.type;
             const color = satelliteGroup.color;
             return (

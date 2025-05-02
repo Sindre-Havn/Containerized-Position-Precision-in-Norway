@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import {elevationState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState} from '../states/states';
+import {elevationState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState,geoJsonDataState} from '../states/states';
 import '../css/filtering.css';
 
 
@@ -15,6 +15,7 @@ const FilterComponent = () => {
   const [endPoint, setEndPoint] = useAtom(endPointState);
   const [distance, setDistance] = useAtom(distanceState);
   const [updateRoad,setUpdateRoad] = useAtom(roadState);
+  const [geoJsonData, setGeoJsonData] = useAtom(geoJsonDataState);
 
   const handleCheckboxChange = (e) => {
     setGnssNames({
@@ -35,6 +36,10 @@ const FilterComponent = () => {
 
 
   const handleUpdateRoad = () => {
+    // setEndMarker(null);
+    // setStartMarker(null);
+    // setMarkers([]);
+    setGeoJsonData(null);
     setUpdateRoad(true);
   }
   const handleHourChange = (event) => {

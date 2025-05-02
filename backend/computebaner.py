@@ -204,7 +204,7 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, observation_lngLat
             
             final_list.append([df.to_dict() for df in LGDF_df])
             final_listdf.append(LGDF_df)
-
+       
         elevationCutoffs = []
         for i in range(0,360,1):
             top = check_satellite_sight_2(observation_end,dem_data,src, 5000, elevation_mask, i)
