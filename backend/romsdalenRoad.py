@@ -1,3 +1,5 @@
+import json
+import math
 import os
 import numpy as np
 from pyproj import Transformer
@@ -27,6 +29,17 @@ def convert_coordinates(wgs84_coords):
     transformed_points = np.column_stack(transformerToEN.transform(coords[:, 0], coords[:, 1]))
     return transformed_points.tolist()
 
+def calculate_travel_direction(p1, p2):
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+    angle_rad = math.atan2(dx, dy)
+    angle_deg = math.degrees(angle_rad)
+    return (angle_deg + 360) % 360
+
+def calculate_distance(p1, p2):
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+    return abs(math.sqrt(dx**2 + dy**2))
 # Connect all road segments and insert missing connectors if needed
 def connect_road(total_road):
     road_segments = total_road.copy()
@@ -66,8 +79,9 @@ def calculate_travel_time(road_segments, avstand):
         distance = remaining_distance  
         while distance < length:
             point = line.interpolate(distance) 
+            next_point = line.interpolate(distance + 1)
             point_latlng = transformer.transform(point.x, point.y)
-            
+            azimuth = calculate_travel_direction([point.x,point.y], [next_point.x, next_point.y])
             travel_time = (distance) / fartsgrense
             
             points_geojson.append({
@@ -78,7 +92,8 @@ def calculate_travel_time(road_segments, avstand):
                 },
                 "properties": {
                     "distance_from_start": total_distance + distance,
-                    "time_from_start": total_time + travel_time
+                    "time_from_start": total_time + travel_time,
+                    "azimuth": azimuth,
                 }
             })
 
@@ -169,16 +184,15 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
         if not segmenter:
             raise IndexError("No road segments found for the given input. Most likely you have to be more specific with the start and end point. Check that you have the correcr Road reference system.")
 
-        startveg = segmenter[0]
-
         df = pd.DataFrame(fartsgrenser.to_records()).query("typeVeg == 'Enkel bilveg'")
-
-        i = 0
         retning = 'MED'
-        if 'sluttnode' in startveg:
-            retning = 'MED'
-        if 'startnode' in startveg:
-            retning = 'MOT'
+        i = 0
+        if len(segmenter) > 1:
+            startveg = segmenter[0]
+            # if 'sluttnode' in startveg:
+            #     retning = 'MED'
+            if 'startnode' in startveg:
+                retning = 'MOT'
 
         total_vegsegment_wgs84 = []
         total_vegsegment_utm = []
@@ -188,7 +202,16 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
                 fartsgrense_row = df[df['veglenkesekvensid'] == veglenke['veglenkesekvensid']]['Fartsgrense']
                 fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else 50.0
                 converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
-
+                if len(segmenter) == 1:
+                    #må finne om vegsegmentet har retning mot eller med satrt og sluttnode
+                    startpointfirst_coord = converted[0]
+                    startpointLatLng = transformer.transform(startpoint[0], startpoint[1])
+                    endpointLatLng = transformer.transform(sluttpoint[0], sluttpoint[1])
+                    dist_start = calculate_distance(startpointfirst_coord, startpointLatLng)
+                    dist_end = calculate_distance(startpointfirst_coord, endpointLatLng)
+                    if dist_start > dist_end:
+                        retning = 'MOT'
+             
                 if retning == 'MOT':
                     converted.reverse()
 
@@ -228,6 +251,12 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
 
         connected_utm = connect_road(total_vegsegment_utm)
         connected_wgs = connect_road(total_vegsegment_wgs84)
+        with open("data/road.geojson", "w") as f:
+            geojson_object = {
+                "type": "FeatureCollection",
+                "features": connected_wgs
+            }
+            json.dump(geojson_object, f, indent=4)
 
         # Delete merged raster if exists
         print('lager raster')
