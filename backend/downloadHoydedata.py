@@ -67,7 +67,7 @@ import rasterio
 
 #for større rastere
 def createNewRaster(startPoint,endPoint):
-    folder_path = "data/dom10/landsdekkende/"
+    folder_path = "data/dtm10/landsdekkende/"
 
     # Find all .tif files in the folder
     tif_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(".tif")]
