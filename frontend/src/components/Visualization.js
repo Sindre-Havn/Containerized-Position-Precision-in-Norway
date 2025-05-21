@@ -137,7 +137,12 @@ const Visualization = () => {
     }, [updateData, time, elevationAngle, epoch, gnssNames, setUpdateData]);
     
   if (updateData) {
-    return <div className="loading_tekst"><p>Loading data...</p></div>;
+    return <div className="loading_tekst">    
+      <p>
+        Loading data...<br />
+        This can take some time, depending on the calculation interval and length of epoch.
+      </p>
+    </div>;
   }
 
   if (error) {

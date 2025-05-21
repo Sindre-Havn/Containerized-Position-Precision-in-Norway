@@ -1,5 +1,6 @@
 # Estimation of DOP Along Norwegian Roads, Taking in Terrain as a Factor
 
+Første gang man Cloner prosjektet må man også følge stegene under Laste ned høydedata og Laste ned ephemeris fra CDDIS. Når dette er på plass, skal det funke å starte prosjekte slik som under starte backend og starte frontend.
 
 ## Systemkrav
 
@@ -74,6 +75,36 @@ npm install
 ```bash
  npm start
 ```
+## Laste ned høydedata
+
+
+Dette prosjektet er satt opp til å bruke **landsdekkende høydedata (DTM 10m)** fra [hoydedata.no](https://hoydedata.no/LaserInnsyn2/). Følg stegene nedenfor for å laste ned og bruke datasettet:
+
+### Trinn for nedlasting:
+
+1. Gå til: [https://hoydedata.no/LaserInnsyn2](https://hoydedata.no/LaserInnsyn2/)
+2. Klikk på **meny-ikonet** (øverst til venstre).
+3. Velg **Eksport**.
+4. Velg type eksport:
+   - **Landsdekkende** (anbefalt og forventet av koden)
+   - Du kan også velge **lokal eksport** hvis du tilpasser koden selv.
+5. I eksportpanelet:
+   - Velg **Nasjonal høydemodell (DTM)**.
+   - Velg **Oppløsning: 10 meter**.
+     - *NB: Koden er laget for 10 m-data. Ved 1 m må du endre terrengberegningssteget i `find_dop_on_point()` fra 5 m til lavere.*
+   - Velg **UTM Sone 33**.
+6. Klikk **Klargjør eksport**, fyll inn e-postadresse og last ned filen når den kommer.
+
+---
+
+### Når datasettet er lastet ned:
+
+1. Pakk ut `.zip`-filen du får tilsendt.
+2. Flytt hele mappen til prosjektets mappe:
+   ```bash
+   backend/data/dtm10/
+
+
 
 
 ## Laste ned ephemeris fra CDDIS

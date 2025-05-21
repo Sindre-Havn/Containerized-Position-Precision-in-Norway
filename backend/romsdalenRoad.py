@@ -191,8 +191,9 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
             startveg = segmenter[0]
             # if 'sluttnode' in startveg:
             #     retning = 'MED'
-            if 'startnode' in startveg:
+            if 'sluttnode' in startveg:
                 retning = 'MOT'
+                segmenter.reverse()
 
         total_vegsegment_wgs84 = []
         total_vegsegment_utm = []
@@ -251,12 +252,6 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
 
         connected_utm = connect_road(total_vegsegment_utm)
         connected_wgs = connect_road(total_vegsegment_wgs84)
-        with open("data/road.geojson", "w") as f:
-            geojson_object = {
-                "type": "FeatureCollection",
-                "features": connected_wgs
-            }
-            json.dump(geojson_object, f, indent=4)
 
         # Delete merged raster if exists
         print('lager raster')

@@ -11,6 +11,7 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import {startPointState, endPointState, distanceState, roadState,pointsState, vegReferanseState, geoJsonDataState} from '../states/states';
 import '../css/map.css';
 import proj4 from 'proj4';
+import FitMapToGeoJson from '../components/FitMapToGeoJson';
 
 // Define WGS84 (latitude/longitude) and UTM Zone 33 (Easting/Northing)
 proj4.defs("EPSG:4326", "+proj=longlat +datum=WGS84 +no_defs");
@@ -226,6 +227,7 @@ const NavMap = () => {
           ))
         ):null
       }
+      <FitMapToGeoJson geoJsonData={geoJsonData} />
     </MapContainer>
     {markers.length > 0 ? 
       (<button className="clear-road-button" onClick={handleClearRoad}>
