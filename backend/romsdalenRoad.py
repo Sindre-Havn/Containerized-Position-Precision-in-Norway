@@ -185,15 +185,17 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
             raise IndexError("No road segments found for the given input. Most likely you have to be more specific with the start and end point. Check that you have the correcr Road reference system.")
 
         df = pd.DataFrame(fartsgrenser.to_records()).query("typeVeg == 'Enkel bilveg'")
-        retning = 'MED'
+
         i = 0
         if len(segmenter) > 1:
+            print('mer enn 1 vegsegment')
             startveg = segmenter[0]
-            # if 'sluttnode' in startveg:
-            #     retning = 'MED'
             if 'sluttnode' in startveg:
-                retning = 'MOT'
+               
                 segmenter.reverse()
+
+                
+
 
         total_vegsegment_wgs84 = []
         total_vegsegment_utm = []
@@ -203,6 +205,7 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
                 fartsgrense_row = df[df['veglenkesekvensid'] == veglenke['veglenkesekvensid']]['Fartsgrense']
                 fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else 50.0
                 converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
+                retning = veglenke['vegsystemreferanse']['strekning']['retning']
                 if len(segmenter) == 1:
                     #må finne om vegsegmentet har retning mot eller med satrt og sluttnode
                     startpointfirst_coord = converted[0]
@@ -212,7 +215,6 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
                     dist_end = calculate_distance(startpointfirst_coord, endpointLatLng)
                     if dist_start > dist_end:
                         retning = 'MOT'
-             
                 if retning == 'MOT':
                     converted.reverse()
 
@@ -235,20 +237,20 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
 
         sistesegment = segmenter[-1]
         print('i sistesegment')
+        if vegsystemreferanse == 'EV136':
+            geojson_feature_utm, geojson_feature_wgs = add_last_segment(
+                sistesegment['veglenkesekvensid'],
+                sistesegment['veglenkenummer'],
+                vegsystemreferanse,
+                df,
+                retning,
+                i
+            )
 
-        geojson_feature_utm, geojson_feature_wgs = add_last_segment(
-            sistesegment['veglenkesekvensid'],
-            sistesegment['veglenkenummer'],
-            vegsystemreferanse,
-            df,
-            retning,
-            i
-        )
+            print('utav siste segment')
 
-        print('utav siste segment')
-
-        total_vegsegment_utm.append(geojson_feature_utm)
-        total_vegsegment_wgs84.append(geojson_feature_wgs)
+            total_vegsegment_utm.append(geojson_feature_utm)
+            total_vegsegment_wgs84.append(geojson_feature_wgs)
 
         connected_utm = connect_road(total_vegsegment_utm)
         connected_wgs = connect_road(total_vegsegment_wgs84)
