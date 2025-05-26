@@ -16,17 +16,18 @@ from flask import jsonify
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
 
-# Convert WKT LINESTRING Z to coordinate array in WGS84
+# Convert WKT LINESTRING Z to coordinate array in UTM33
 def linestring_to_coordinates(linestring):
     wkt_string = linestring.replace("LINESTRING Z(", "").replace(")", "")
     points = np.array([list(map(float, p.split())) for p in wkt_string.split(", ")])
-    transformed_points = np.column_stack(transformer.transform(points[:, 0], points[:, 1]))
-    return transformed_points.tolist()
+    points_without_height =[ [coord[0], coord[1]] for coord in points]
+    
+    return points_without_height
 
-# Convert WGS84 coordinates to UTM
-def convert_coordinates(wgs84_coords):
-    coords = np.array(wgs84_coords)
-    transformed_points = np.column_stack(transformerToEN.transform(coords[:, 0], coords[:, 1]))
+# Convert UTM coordinates to WGS84 coordinates
+def convert_coordinates(utm_coords):
+    coords = np.array(utm_coords)
+    transformed_points = np.column_stack(transformer.transform(coords[:, 0], coords[:, 1]))
     return transformed_points.tolist()
 
 def calculate_travel_direction(p1, p2):
@@ -40,6 +41,14 @@ def calculate_distance(p1, p2):
     dx = p2[0] - p1[0]
     dy = p2[1] - p1[1]
     return abs(math.sqrt(dx**2 + dy**2))
+
+def checkDirection(startpointRoad,startpoinSegment, endpointSegment ):
+    distStart = calculate_distance(startpointRoad, startpoinSegment)
+    distEnd = calculate_distance(startpointRoad, endpointSegment)
+    if distStart > distEnd:
+        return 'MOT'
+    else:
+        return 'MED'
 # Connect all road segments and insert missing connectors if needed
 def connect_road(total_road):
     road_segments = total_road.copy()
@@ -47,6 +56,7 @@ def connect_road(total_road):
     for i in range(1,len(road_segments)-1):
         prev_segment_end_point = road_segments[i-1]["geometry"]["coordinates"][-1]
         start_point = road_segments[i]["geometry"]["coordinates"][0]
+        #print('start, prev', start_point, prev_segment_end_point)
         fartsgrense = road_segments[i]["properties"]["fartsgrense"]
         if prev_segment_end_point != start_point:
             geojson_feature = {
@@ -107,9 +117,11 @@ def calculate_travel_time(road_segments, avstand):
 
 # Fetch one additional road segment beyond the given end
 def add_last_segment(sisteVegsegment_id, sisteVegsegment_nr, vegsystemreferanse, fartsgrense_df, retning, i):
+    rett = " ".join(vegsystemreferanse.split()[:2])
     vegnett = nvdbapiv3.nvdbVegnett()
-    vegnett.filter({'vegsystemreferanse': vegsystemreferanse})
+    vegnett.filter({'vegsystemreferanse': rett})
     vegdata = vegnett.to_records()
+    print('length', len(vegdata))
     vegdata_df = pd.DataFrame(vegdata)
     dette_segmentet = vegdata_df[
         (vegdata_df['veglenkesekvensid'] == sisteVegsegment_id) & 
@@ -122,26 +134,27 @@ def add_last_segment(sisteVegsegment_id, sisteVegsegment_nr, vegsystemreferanse,
     fartsgrense_row = fartsgrense_df[fartsgrense_df['veglenkesekvensid'] == neste_segment['veglenkesekvensid']]['Fartsgrense']
     fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else 50.0
 
-    converted = linestring_to_coordinates(neste_segment['geometri'])
+    utm_coordinates = linestring_to_coordinates(neste_segment['geometri'])
     
     if retning == 'MOT':
-        converted.reverse()
+        utm_coordinates.reverse()
 
+    wgs_coordinates = convert_coordinates(utm_coordinates)
     geojson_feature_wgs = {
         "type": "Feature",
         "geometry": {
             "type": "LineString",
-            "coordinates": converted
+            "coordinates": wgs_coordinates
         },
         "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
     }
 
-    utm_converted = convert_coordinates(converted)
+
     geojson_feature_utm = {
         "type": "Feature",
         "geometry": {
             "type": "LineString",
-            "coordinates": utm_converted
+            "coordinates": utm_coordinates
         },
         "properties": {"name": "RoadSegment ", "id": i, "fartsgrense":fartsgrense}
     }
@@ -150,8 +163,6 @@ def add_last_segment(sisteVegsegment_id, sisteVegsegment_nr, vegsystemreferanse,
 
 
 # Main function to fetch road geometry and properties from NVDB API
-
-
 def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
     try:
         # Fetch speed limits
@@ -186,75 +197,6 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
 
         df = pd.DataFrame(fartsgrenser.to_records()).query("typeVeg == 'Enkel bilveg'")
 
-        i = 0
-        if len(segmenter) > 1:
-            print('mer enn 1 vegsegment')
-            startveg = segmenter[0]
-            if 'sluttnode' in startveg:
-               
-                segmenter.reverse()
-
-                
-
-
-        total_vegsegment_wgs84 = []
-        total_vegsegment_utm = []
-
-        for veglenke in segmenter:
-            if veglenke['typeVeg_sosi'] == 'enkelBilveg':
-                fartsgrense_row = df[df['veglenkesekvensid'] == veglenke['veglenkesekvensid']]['Fartsgrense']
-                fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else 50.0
-                converted = linestring_to_coordinates(veglenke['geometri']['wkt'])
-                retning = veglenke['vegsystemreferanse']['strekning']['retning']
-                if len(segmenter) == 1:
-                    #må finne om vegsegmentet har retning mot eller med satrt og sluttnode
-                    startpointfirst_coord = converted[0]
-                    startpointLatLng = transformer.transform(startpoint[0], startpoint[1])
-                    endpointLatLng = transformer.transform(sluttpoint[0], sluttpoint[1])
-                    dist_start = calculate_distance(startpointfirst_coord, startpointLatLng)
-                    dist_end = calculate_distance(startpointfirst_coord, endpointLatLng)
-                    if dist_start > dist_end:
-                        retning = 'MOT'
-                if retning == 'MOT':
-                    converted.reverse()
-
-                geojson_feature_wgs = {
-                    "type": "Feature",
-                    "geometry": {"type": "LineString", "coordinates": converted},
-                    "properties": {"name": "RoadSegment", "id": i, "fartsgrense": fartsgrense}
-                }
-
-                utm_converted = convert_coordinates(converted)
-                geojson_feature_utm = {
-                    "type": "Feature",
-                    "geometry": {"type": "LineString", "coordinates": utm_converted},
-                    "properties": {"name": "RoadSegment", "id": i, "fartsgrense": fartsgrense}
-                }
-
-                total_vegsegment_wgs84.append(geojson_feature_wgs)
-                total_vegsegment_utm.append(geojson_feature_utm)
-                i += 1
-
-        sistesegment = segmenter[-1]
-        print('i sistesegment')
-        if vegsystemreferanse == 'EV136':
-            geojson_feature_utm, geojson_feature_wgs = add_last_segment(
-                sistesegment['veglenkesekvensid'],
-                sistesegment['veglenkenummer'],
-                vegsystemreferanse,
-                df,
-                retning,
-                i
-            )
-
-            print('utav siste segment')
-
-            total_vegsegment_utm.append(geojson_feature_utm)
-            total_vegsegment_wgs84.append(geojson_feature_wgs)
-
-        connected_utm = connect_road(total_vegsegment_utm)
-        connected_wgs = connect_road(total_vegsegment_wgs84)
-
         # Delete merged raster if exists
         print('lager raster')
         if os.path.exists("data/merged_raster.tif"):
@@ -262,18 +204,87 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
         createNewRaster(startpoint, sluttpoint)
         print('utav lager raster')
 
-        return connected_utm, connected_wgs
+        return segmenter, df, vegsystemreferanse
 
     except Exception as e:
         print(f"Error in get_road_api: {e}")
         raise  # let Flask catch and handle this
 
+def connect_total_road_segments(road_segments,fartsgrense_df, vegsystemreferanse, startpoint, sluttpoint):
+    i = 0
+    total_vegsegment_wgs84 = []
+    total_vegsegment_utm = []
+
+    for veglenke in road_segments:
+        if veglenke['typeVeg_sosi'] == 'enkelBilveg':
+            fartsgrense_row = fartsgrense_df[fartsgrense_df['veglenkesekvensid'] == veglenke['veglenkesekvensid']]['Fartsgrense']
+            fartsgrense = float(fartsgrense_row.iloc[0]) if not fartsgrense_row.empty else 50.0
+            utm_coordinates = linestring_to_coordinates(veglenke['geometri']['wkt'])
+            
+            retningIveg = veglenke['vegsystemreferanse']['strekning']['retning']
+            retning = checkDirection(startpoint,utm_coordinates[0], utm_coordinates[-1])
+
+            print(retning, retningIveg)
+            
+            if retning == 'MOT':
+                utm_coordinates.reverse()
+            wgs_coordinates = convert_coordinates(utm_coordinates)
+            print('startPoint in segment', utm_coordinates[0])
+            geojson_feature_wgs = {
+                "type": "Feature",
+                "geometry": {"type": "LineString", "coordinates": wgs_coordinates},
+                "properties": {"name": "RoadSegment", "id": i, "fartsgrense": fartsgrense}
+            }
+
+            
+            geojson_feature_utm = {
+                "type": "Feature",
+                "geometry": {"type": "LineString", "coordinates": utm_coordinates},
+                "properties": {"name": "RoadSegment", "id": i, "fartsgrense": fartsgrense}
+            }
+
+            total_vegsegment_wgs84.append(geojson_feature_wgs)
+            total_vegsegment_utm.append(geojson_feature_utm)
+            i += 1
+    #sjekekr rekkefølgen på vegsegmenter
+    segments_direction = checkDirection(startpoint, total_vegsegment_utm[0]['geometry']['coordinates'][0], total_vegsegment_utm[-1]['geometry']['coordinates'][-1])
+    
+    if segments_direction == 'MOT':
+        total_vegsegment_utm.reverse()
+        total_vegsegment_wgs84.reverse()
+
+    sistesegment = road_segments[-1]
+    print('i sistesegment', sistesegment)
+    
+    geojson_feature_utm, geojson_feature_wgs = add_last_segment(
+        sistesegment['veglenkesekvensid'],
+        sistesegment['veglenkenummer'],
+        sistesegment['vegsystemreferanse']['kortform'],
+        fartsgrense_df,
+        retning,
+        i
+    )
+
+    print('utav siste segment')
+
+    total_vegsegment_utm.append(geojson_feature_utm)
+    total_vegsegment_wgs84.append(geojson_feature_wgs)
+
+    connected_utm = connect_road(total_vegsegment_utm)
+    connected_wgs = connect_road(total_vegsegment_wgs84)
+
+    print('første segment', connected_utm[0]['geometry']['coordinates'][0])
+
+    return connected_utm,connected_wgs
 
 # eksempel url
 # https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute?start=131363.978346842,6943393.145821838&slutt=136419.9895830073,6941862.632362077&maks_avstand=1000&omkrets=10&konnekteringslenker=true&detaljerte_lenker=true&behold_trafikantgruppe=false&pretty=true&kortform=false&vegsystemreferanse=EV136
 #test 
 # https://nvdbapiles-v3.utv.atlas.vegvesen.no/vegnett?detaljnivå=Kjørefelt&vegsystemreferanse=EV136&segmentstart=131363.978346842,6943393.145821838&segmentslutt=136419.9895830073,6941862.632362077
-
+# vegnett = nvdbapiv3.nvdbVegnett()
+# vegnett.filter({'vegsystemreferanse': 'EV6 S54D1'})
+# vegnett_liste = vegnett.to_records()
+# print('vegnett',len(vegnett_liste))
 
 # start=[131363.978346842,6943393.145821838]
 # slutt=[136419.9895830073,6941862.632362077]

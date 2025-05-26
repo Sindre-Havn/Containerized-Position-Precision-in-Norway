@@ -4,7 +4,7 @@ from computebaner import  get_gnss, getDayNumber, runData_check_sight
 from computeDOP import best, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
-from romsdalenRoad import calculate_travel_time, get_road_api
+from romsdalenRoad import calculate_travel_time, connect_total_road_segments, get_road_api
 import rasterio
 
 
@@ -78,7 +78,8 @@ def road():
             return response, 400
 
         # Get road data
-        road_utm, road_wgs = get_road_api(startPoint, endPoint, vegReferanse)
+        segmenter, df, vegsystemreferanse= get_road_api(startPoint, endPoint, vegReferanse)
+        road_utm, road_wgs = connect_total_road_segments(segmenter,df, vegsystemreferanse, startPoint, endPoint)
 
         # Calculate points
         points = calculate_travel_time(road_utm, float(distance))
