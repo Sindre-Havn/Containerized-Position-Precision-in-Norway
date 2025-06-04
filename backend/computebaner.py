@@ -189,7 +189,7 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observat
         final_list = []
         final_listdf = []
         print('finds visual satellites')
-        calculations = int(epoch)* int((60/frequency))
+        calculations = int(epoch)* int((60/frequency))+1
         for i in range(0, calculations):
          
             time2 = pd.to_datetime(t)+ pd.Timedelta(minutes=i*frequency)
