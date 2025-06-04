@@ -1,6 +1,11 @@
 # Estimation of DOP Along Norwegian Roads, Taking in Terrain as a Factor
 
-Første gang man Cloner prosjektet må man også følge stegene under Laste ned høydedata og Laste ned ephemeris fra CDDIS. Når dette er på plass, skal det funke å starte prosjekte slik som under starte backend og starte frontend.
+Første gang man Cloner prosjektet må man også følge stegene under Laste ned høydedata og Laste ned ephemeris fra CDDIS. Når dette er på plass, skal det funke å starte prosjektet slik som forklart under Starte backend og Starte frontend.
+
+### Web App
+Prosjektet blir også hostet på denne linken, noe treigere enn det det vil være å kjøre det på egen maskin.
+
+[https://master-2025.vercel.app](https://master-2025.vercel.app/)
 
 ## Systemkrav
 
