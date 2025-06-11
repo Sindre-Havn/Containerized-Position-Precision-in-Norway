@@ -253,7 +253,7 @@ export const DOPLineChart = () => {
 
   return (
     <div className="line-chart-container">
-        <div>
+        <div className="searchButtonContainer">
             <button className={`searchButton ${updateDOP ? 'loading' : ''}`} onClick={handleUpdateDOP} disabled={updateDOP}>{updateDOP ? '' : 'Find DOP Line Chart'}</button>
         </div>
         {/* Loading Bar */}
