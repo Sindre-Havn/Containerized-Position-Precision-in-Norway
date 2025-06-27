@@ -10,6 +10,7 @@ from downloadHoydedata import createNewRaster
 import nvdbapiv3 
 from flask import jsonify
 
+from time import perf_counter_ns
 
 
 # Set up coordinate transformers between UTM and WGS84
@@ -121,7 +122,7 @@ def add_last_segment(sisteVegsegment_id, sisteVegsegment_nr, vegsystemreferanse,
     vegnett = nvdbapiv3.nvdbVegnett()
     vegnett.filter({'vegsystemreferanse': rett})
     vegdata = vegnett.to_records()
-    print('length', len(vegdata))
+    #print('length', len(vegdata))
     vegdata_df = pd.DataFrame(vegdata)
     dette_segmentet = vegdata_df[
         (vegdata_df['veglenkesekvensid'] == sisteVegsegment_id) & 
@@ -169,7 +170,7 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
         fartsgrenser = nvdbapiv3.nvdbFagdata(105)
         fartsgrenser.filter({'vegsystemreferanse': vegsystemreferanse})
 
-        print('start, slutt', startpoint, sluttpoint)
+        #print('start, slutt', startpoint, sluttpoint)
 
         url = (
             f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute'
@@ -179,7 +180,7 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
             f'&detaljerte_lenker=false&behold_trafikantgruppe=false'
             f'&pretty=true&kortform=false&vegsystemreferanse={vegsystemreferanse}'
         )
-        print('url', url)
+        #print('url', url)
 
         headers = {
             "Accept": "application/json",
@@ -198,16 +199,18 @@ def get_road_api(startpoint, sluttpoint, vegsystemreferanse):
         df = pd.DataFrame(fartsgrenser.to_records()).query("typeVeg == 'Enkel bilveg'")
 
         # Delete merged raster if exists
-        print('lager raster')
+        #print('lager raster')
         if os.path.exists("data/merged_raster.tif"):
             os.remove("data/merged_raster.tif")
+        start = perf_counter_ns()
         createNewRaster(startpoint, sluttpoint)
-        print('utav lager raster')
+        print("timing createNewRaster (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+        #print('utav lager raster')
 
         return segmenter, df, vegsystemreferanse
 
     except Exception as e:
-        print(f"Error in get_road_api: {e}")
+        #print(f"Error in get_road_api: {e}")
         raise  # let Flask catch and handle this
 
 def connect_total_road_segments(road_segments,fartsgrense_df, vegsystemreferanse, startpoint, sluttpoint):
@@ -224,12 +227,12 @@ def connect_total_road_segments(road_segments,fartsgrense_df, vegsystemreferanse
             retningIveg = veglenke['vegsystemreferanse']['strekning']['retning']
             retning = checkDirection(startpoint,utm_coordinates[0], utm_coordinates[-1])
 
-            print(retning, retningIveg)
+            #print(retning, retningIveg)
             
             if retning == 'MOT':
                 utm_coordinates.reverse()
             wgs_coordinates = convert_coordinates(utm_coordinates)
-            print('startPoint in segment', utm_coordinates[0])
+            #print('startPoint in segment', utm_coordinates[0])
             geojson_feature_wgs = {
                 "type": "Feature",
                 "geometry": {"type": "LineString", "coordinates": wgs_coordinates},
@@ -254,7 +257,7 @@ def connect_total_road_segments(road_segments,fartsgrense_df, vegsystemreferanse
         total_vegsegment_wgs84.reverse()
 
     sistesegment = road_segments[-1]
-    print('i sistesegment', sistesegment)
+    #print('i sistesegment', sistesegment)
     
     geojson_feature_utm, geojson_feature_wgs = add_last_segment(
         sistesegment['veglenkesekvensid'],
@@ -265,7 +268,7 @@ def connect_total_road_segments(road_segments,fartsgrense_df, vegsystemreferanse
         i
     )
 
-    print('utav siste segment')
+    #print('utav siste segment')
 
     total_vegsegment_utm.append(geojson_feature_utm)
     total_vegsegment_wgs84.append(geojson_feature_wgs)
@@ -273,7 +276,7 @@ def connect_total_road_segments(road_segments,fartsgrense_df, vegsystemreferanse
     connected_utm = connect_road(total_vegsegment_utm)
     connected_wgs = connect_road(total_vegsegment_wgs84)
 
-    print('første segment', connected_utm[0]['geometry']['coordinates'][0])
+    #print('første segment', connected_utm[0]['geometry']['coordinates'][0])
 
     return connected_utm,connected_wgs
 

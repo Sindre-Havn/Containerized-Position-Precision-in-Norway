@@ -7,6 +7,7 @@ from datetime import datetime
 from romsdalenRoad import calculate_travel_time, connect_total_road_segments, get_road_api
 import rasterio
 
+from time import perf_counter_ns
 
 distance = None
 points = None
@@ -17,6 +18,7 @@ CORS(app, resources={r"/dopvalues": {"origins": "http://localhost:3000"}})
 
 @app.route('/satellites', methods=['POST', 'OPTIONS'])
 def satellites():
+    start_satellites = perf_counter_ns()
     if request.method == 'OPTIONS':
         # Handle the preflight request with necessary headers
         response = jsonify({'status': 'Preflight request passed'})
@@ -36,12 +38,14 @@ def satellites():
     #print(f'point: {point}')
     
     is_processing = True
+    start = perf_counter_ns()
     list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch,frequency, point) 
+    print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
     DOPvalues = best(df, obs_cartesian)
 
     is_processing = False
-    
+    print("timing satellites (ms):\t", round((perf_counter_ns()-start_satellites)/1_000_000,3))
     if not is_processing:
         response = jsonify({'message': 'Data processed successfully', 'data': list, 'DOP': DOPvalues,   'elevation_cutoffs': elevation_strings})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
@@ -66,6 +70,7 @@ def road():
         return response, 200
 
     try:
+        start_road = perf_counter_ns()
         vegReferanse = request.json.get('vegReferanse')
         startPoint = request.json.get('startPoint')
         endPoint = request.json.get('endPoint')
@@ -79,13 +84,18 @@ def road():
 
         # Get road data
         segmenter, df, vegsystemreferanse= get_road_api(startPoint, endPoint, vegReferanse)
+        start = perf_counter_ns()
         road_utm, road_wgs = connect_total_road_segments(segmenter,df, vegsystemreferanse, startPoint, endPoint)
+        print("timing connect_total_road_segments (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
         # Calculate points
+        start = perf_counter_ns()
         points = calculate_travel_time(road_utm, float(distance))
+        print("timing calculate_travel_time (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
         response = jsonify({'message': 'Data processed successfully', 'road': road_wgs, 'points': points})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        print("timing road (ms):\t", round((perf_counter_ns()-start_road)/1_000_000,3))
         return response, 200
 
     except IndexError as e:
@@ -108,8 +118,6 @@ def road():
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
         return response, 500
 
-    
-    
 @app.route('/dopvalues', methods=['POST', 'OPTIONS'])
 def dopValues():
     if request.method == 'OPTIONS':
@@ -129,26 +137,33 @@ def dopValues():
     except Exception as e:
         return jsonify({"error": f"Invalid data format: {e}"}), 400
 
-
+    start_dopValues = perf_counter_ns()
     time = datetime.fromisoformat(time_str)
     dop_list = []
     #PDOP_list = []
+    start = perf_counter_ns()
     daynumber = getDayNumber(time)
+    print("timing getDaynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     gnss_mapping = get_gnss(daynumber, time.year)
     total_steps = len(points) + 1
 
     def generate():
+        start = perf_counter_ns()
         with rasterio.open("data/merged_raster.tif") as src:
             dem_data = src.read(1)
 
             for step, point in enumerate(points, start=1):
+                #start = perf_counter_ns()
                 dop_point = find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, step)
+                #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
                 dop_list.append(dop_point)
                 #PDOP_list.append(dop_point[0][1])
 
                 yield f"{int((step / total_steps) * 100)}\n\n"
 
         # Når prosessen er ferdig
+        print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+        print("timing dopValues (ms):\t", round((perf_counter_ns()-start_dopValues)/1_000_000,3))
         yield f"{json.dumps(dop_list)}\n\n"
 
     response = Response(stream_with_context(generate()), content_type='text/event-stream')

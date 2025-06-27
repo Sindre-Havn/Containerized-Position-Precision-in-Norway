@@ -5,6 +5,8 @@ import rasterio
 from rasterio.merge import merge
 import rasterio
 
+from time import perf_counter_ns
+
 # First, download the elevation data from hoydedata.no for the area you want to work with
 # Place the downloaded folder inside your project
 
@@ -122,8 +124,8 @@ def createNewRaster(startPoint,endPoint):
     right = left + (pixel_width * width_in_pixels)
     bottom = top + (pixel_height * height_in_pixels)
 
-    print(f"Lower left corner (bottom-left): ({left}, {bottom})")
-    print(f"Upper right corner (top-right): ({right}, {top})")
+    #print(f"Lower left corner (bottom-left): ({left}, {bottom})")
+    #print(f"Upper right corner (top-right): ({right}, {top})")
 
 
 #createNewRaster([446098.28,7371410.12],	[475901.49, 7365141.92])

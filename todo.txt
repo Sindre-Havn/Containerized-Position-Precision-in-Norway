@@ -1,0 +1,48 @@
+Improve file names:
+- downloadfile.py ==> dowload_ephemeris.py
+
+Improve function names:
+- lastned() ==> dowload_ephemeris  #last ned is too vague
+- The function getDayNumber is a missleading name since it calls on sortData and
+  does so much more than it should gven its name. Should only get day.
+
+Improve documentation:
+- Found out the folder backend/unzipped/ should contain the proper .gz ephemeris unzipped.
+- Following the README for downloading ephemeris data using dowloadfile.py did not work.
+  When downloadfile.py was ran, only got the html for the loggin page as return, not the .rnx.gz files.
+  It may be needed to logg permanently in (stay signed in) on earthdata. If that is the case it should be better documented.
+  Need to improve documentation and troubleshoot downloadfile.py
+  The loggin-page respons from earthdata can be seen in delete_this__is_bad_respons_html_from_dowloadfile.html
+
+Improve readability:
+- Rewrite dowloadfile.py so it uses guard block instead.
+
+Make config file for storing things like angle_resolution for skyplots.
+It is currently hardcoded to 1 in computebaner.py, in line 
+ "for i in range(0,360,1):"
+
+Remove camel case and use snakecase as standard.
+
+Remove unused/commented out code and modules.
+
+Fix or remove tests.
+
+This repo is written in a mix of Norwegian and English language.
+Will standardise English in the repo, and reserve Norwegian
+for the API's that needs it.
+
+Currently the whole module (as seen in benchmarking.pdf) takes over 25 min to run on average....
+If production code is written in python it should at least be optimized.
+Can we get bellow 5 min? o_O
+
+The benchmarking was performed with default settings. The paremeters was:
+ Vegsytemsreferanse = EV136
+ Distance = 1000
+ GNSS Names = [GPS, GLONASS, Galileo, Beidou, QZSS]
+ Start Point (E,N) = 124657.85,6957624.16
+ End Point (E,N)   = 193510.27,6896504.01
+ Time of Day (UTC) = 06/26/2025, (Clock varying from 12-16)
+ Elevation Angle = 10 degree
+ Time epoch = 1 h
+ Calculation Interval = every 30 min
+ Search Satellites at Point Nr = 0

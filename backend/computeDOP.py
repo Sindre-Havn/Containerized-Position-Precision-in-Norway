@@ -4,6 +4,9 @@ from pyproj import Transformer
 from computebaner import Cartesian, get_gnss, getDayNumber, runData_check_sight, satellites_at_point_2
 from common_variables import phi,lam,c
 import rasterio
+
+from time import perf_counter_ns
+
 # Set up coordinate transformers between UTM and WGS84
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
@@ -73,10 +76,10 @@ def best(satellites, recieverPos0):
         if(len(satellites_array) > 0):
             GDOP, PDOP, TDOP,HDOP,VDOP = DOPvalues(satellites_array, recieverPos0)
             final_DOP_values.append([GDOP, PDOP, TDOP, HDOP, VDOP])
-            print(PDOP)
+            #print(PDOP)
         else:
             final_DOP_values.append([0, 0, 0, 0, 0])
-    print('final_DOP_values skyplot:', final_DOP_values[0])
+    #print('final_DOP_values skyplot:', final_DOP_values[0])
     return final_DOP_values
 
 # DOP computation using XYZ-only satellite format
@@ -143,12 +146,14 @@ def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_
 
     # Get visible satellites
     #fra computebaner.py
+    #start = perf_counter_ns()
     satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow,obs_cartesian, observer, elevation_angle, dem_data,src, step)
+    #print("timing satellites_at_point_2 (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
     # Compute DOP
     dopvalues = best_2(satellites, obs_cartesian)
-    if step == 1:
-        print('dop for road:',dopvalues)
+    #if step == 1:
+    #    print('dop for road:',dopvalues)
     
     return dopvalues
 

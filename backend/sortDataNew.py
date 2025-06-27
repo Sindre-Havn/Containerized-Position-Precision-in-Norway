@@ -9,6 +9,8 @@ import gzip
 import shutil
 from downloadfile import lastned
 
+from time import perf_counter_ns
+
 # G: GPS
 # R: GLONASS
 # E: Galileo
@@ -541,7 +543,7 @@ def update_navigation_message_type(df):
 def sortData(daynumber, date):
 
     if os.path.exists(f"DataFrames/{date.year}/{daynumber}/structured_dataG.csv"):
-        print(f"Data on day {daynumber} already sorted")
+        #print(f"Data on day {daynumber} already sorted")
         return
     else:
         filename = f'unzipped/BRD400DLR_S_{date.year}{daynumber}0000_01D_MN.rnx'
@@ -558,7 +560,7 @@ def sortData(daynumber, date):
         structured_dataS = pd.DataFrame(columns = columnsS)
         content = []
         with open(filename, "r") as file:
-            print(f"Reading file {filename}")
+            #print(f"Reading file {filename}")
             content = file.read()
 
         split_index = content.index("END OF HEADER")
@@ -566,7 +568,7 @@ def sortData(daynumber, date):
         data_part = content[split_index+13:] #satelitt informasjon
 
         satellitt_data = re.split(r'\s*> EPH\s*', data_part)
-        print(len(satellitt_data))
+        #print(len(satellitt_data))
         for i in range(1,len(satellitt_data)-1):
             lines = satellitt_data[i].strip().splitlines()
             satellitt_id = lines[0].split(' ')[0] 
@@ -617,12 +619,15 @@ def sortData(daynumber, date):
         #må filtrere for beidou, qzss og gps
         #på beidou
         
-        print(f"Processing at {time}")
+        #print(f"Processing at {time}")
 
         # After processing and before saving, update the navigation message type
         #structured_dataG = update_navigation_message_type(structured_dataG)
+        
+        start = perf_counter_ns()
         structured_dataJ = update_navigation_message_type(structured_dataJ)
         structured_dataC = update_navigation_message_type(structured_dataC)
+        print("timing update_navigation_message_type x2 (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
  
 
         output_folder = f"DataFrames/{date.year}/" + str(daynumber)

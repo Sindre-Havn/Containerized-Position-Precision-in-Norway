@@ -8,6 +8,8 @@ from generateElevationMask import check_satellite_sight, check_satellite_sight_2
 from common_variables import wgs
 import rasterio
 
+from time import perf_counter_ns
+
 # Set up coordinate transformers
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
@@ -43,7 +45,7 @@ def CartesianToGeodetic(X, Y, Z, a, b):
 
 # Get day number of year from date, adjust if today
 def getDayNumber(date):
-    print('in getDayNumber', date)
+    #print('in getDayNumber', date)
     start_date = datetime(date.year, 1, 1)
     days_difference = (date - start_date).days + 1
     if date.date() == datetime.now().date():
@@ -51,12 +53,15 @@ def getDayNumber(date):
         date = date - timedelta(days=1)
 
     daynumber = f"{days_difference:03d}"
+    
+    start = perf_counter_ns()
     sortData(daynumber, date)
+    print("timing sortData (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     return daynumber
 
 # Load structured GNSS data for a specific day/year
 def get_gnss(daynumber,year):
-    print('in gnss_mapping')
+    #print('in gnss_mapping')
     gnss_mapping = {
         'GPS': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataG.csv"),
         'GLONASS': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataR.csv"),
@@ -101,15 +106,15 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
         if check_satellite_sight(observer, dem_data,src, 5000, elevation, elevation_mask, azimuth):
             visual_satellites.append([row["X"],row["Y"],row["Z"]])
             satellite_names.loc[len(satellite_names)] = [row["satelite_id"],row['time'],row["X"],row["Y"],row["Z"], azimuth,zenith]
-    if step == 1:
-        print(f'visual_satellites road calc: {satellite_names}')     
+    #if step == 1:
+    #    print(f'visual_satellites road calc: {satellite_names}')     
 
     return visual_satellites
 
 
 def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, observer, elevation_angle, dem_data,src,step):
 
-    print('in satellites_at_point_2')
+    #print('in satellites_at_point_2')
 
     elevation_mask = float(elevation_angle)
     observation_lngLat = transformer.transform(observer[0], observer[1])
@@ -167,7 +172,7 @@ def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, 
 
 def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observation_lngLat):
 
-    print('in runData_check_sight')
+    #print('in runData_check_sight')
 
 
     elevation_mask = float(elevationstring)
@@ -175,20 +180,22 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observat
     
     observation_EN = transformerToEN.transform(observation_lngLat[0], observation_lngLat[1])
     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
+    start = perf_counter_ns()
     daynumber = getDayNumber(given_date)
+    print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     gnss_mapping = get_gnss(daynumber,given_date.year )
     
     with rasterio.open("data/merged_raster.tif") as src:
         dem_data = src.read(1)  
 
         observer_height = dem_data[src.index(observation_EN[0], observation_EN[1])]
-        print(f'observer: {observation_lngLat}, {observer_height}')
+        #print(f'observer: {observation_lngLat}, {observer_height}')
         observation_cartesian = Cartesian(observation_lngLat[1]* np.pi/180, observation_lngLat[0]* np.pi/180, observer_height)
         observation_end = [observation_EN[0], observation_EN[1], observer_height]
 
         final_list = []
         final_listdf = []
-        print('finds visual satellites')
+        #print('finds visual satellites')
         calculations = int(epoch)* int((60/frequency))+1
         for i in range(0, calculations):
          
