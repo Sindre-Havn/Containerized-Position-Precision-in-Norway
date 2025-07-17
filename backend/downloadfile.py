@@ -6,7 +6,7 @@ from pathlib import Path
 # Geth the Broadcast ephemeries file from the CDDIS server
 def lastned(day, year):
     folder = Path('unzipped/')
-    filename = f'BRD400DLR_S_{year}{day}0000_01D_MN.rnx.gz'
+    filename = Path(f'BRD400DLR_S_{year}{day}0000_01D_MN.rnx.gz')
     if Path(folder / filename.stem).is_file():
         #print('File Exists')
         return folder / filename.stem
