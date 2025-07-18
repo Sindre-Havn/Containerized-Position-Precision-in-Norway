@@ -129,17 +129,34 @@ def best_2(satellites, observer):
 
     return final_DOP_values
 
+def create_observers(src: rasterio.io.DatasetReader, dem_data, points) -> np.ndarray[3, np.float32]:
+    """
+    Return lat, long, heigth for every point. Coordinates in Easting/Norting.
+    """
+    # Convert observation point to EN-coordinates and find height from DEM
+    observers = np.empty((len(points),3), dtype=np.float32)
+    observers_cartesian = np.empty((len(points),3), dtype=np.float32)
+    transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
+    for step in range(len(points)):
+        observation_point_latlng = points[step]['geometry']['coordinates']
+        observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])  
+        observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
+        #print('observation_height', observation_height, type(observation_height))
+        
+        # Convert to cartesian coordinates
+        obs_cartesian = Cartesian(observation_point_latlng[1]* np.pi/180, observation_point_latlng[0]* np.pi/180, observation_height)
+        observers_cartesian[step,:] = obs_cartesian
+        observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
+        observers[step,:] = observer
+    return observers, observers_cartesian
+
+
+
 
 # Main function to compute DOP at a specific point in time and location
-def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, step):
-    # Convert observation point to EN-coordinates and find height from DEM
-    observation_point_latlng = point['geometry']['coordinates']
-    observation_point_EN = transformerToEN.transform(observation_point_latlng[0], observation_point_latlng[1])  
-    observation_height = dem_data[src.index(observation_point_EN[0], observation_point_EN[1])]
-    
-    # Convert to cartesian coordinates
-    obs_cartesian = Cartesian(observation_point_latlng[1]* np.pi/180, observation_point_latlng[0]* np.pi/180, observation_height)
-    observer = [observation_point_EN[0], observation_point_EN[1], observation_height]
+#def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_angle, step):
+#    pass
+def find_dop_on_point(dem_data, gnss_mapping, gnss, time, point, observer, obs_cartesian, elevation_angle, E_lower, N_upper,step):
     
     # Offset time by current point's offset
     timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
@@ -147,7 +164,7 @@ def find_dop_on_point(dem_data, src, gnss_mapping, gnss, time, point, elevation_
     # Get visible satellites
     #fra computebaner.py
     #start = perf_counter_ns()
-    satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow,obs_cartesian, observer, elevation_angle, dem_data,src, step)
+    satellites = satellites_at_point_2(gnss_mapping,gnss, timeNow,obs_cartesian, observer, elevation_angle, dem_data,E_lower, N_upper, step)
     #print("timing satellites_at_point_2 (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
     # Compute DOP

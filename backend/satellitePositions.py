@@ -137,28 +137,28 @@ def get_satellite_positions(data,gnss,time):
 
 #testing
 
+if __name__ == '__main__':
 
+    def get_satellite_positiontest(data,gnss,time):
+        data['Datetime'] = pd.to_datetime(data['Datetime'])
+        dataGrouped = data.groupby("satelite_id")
+        time = pd.to_datetime(time)
+        positions = pd.DataFrame(columns = ["satelite_id","TOW", "X", "Y", "Z" ])
+        if(gnss == "GPS") or (gnss == "Galileo"):
+            for key, group in dataGrouped:
+                if(cartesianA_list(group, time) != []):
+                    positions.loc[len(positions)] = cartesianA_list(group, time)
+        elif(gnss == "GLONASS") or (gnss == "SBAS"):
+            for key, group in dataGrouped:
+                if(cartesianC_list(group, time) != []):
+                    positions.loc[len(positions)] = cartesianC_list(group, time)
+        elif(gnss == "BeiDou") or (gnss == "QZSS") or (gnss == "IRNSS"):
+            for key, group in dataGrouped:
+                if(cartesianB_list(group, time) != []):
+                    positions.loc[len(positions)] = cartesianB_list(group, time)
+        return positions
 
-# def get_satellite_positiontest(data,gnss,time):
-#     data['Datetime'] = pd.to_datetime(data['Datetime'])
-#     dataGrouped = data.groupby("satelite_id")
-#     time = pd.to_datetime(time)
-#     positions = pd.DataFrame(columns = ["satelite_id","TOW", "X", "Y", "Z" ])
-#     if(gnss == "GPS") or (gnss == "Galileo"):
-#         for key, group in dataGrouped:
-#             if(cartesianA_list(group, time) != []):
-#                 positions.loc[len(positions)] = cartesianA_list(group, time)
-#     elif(gnss == "GLONASS") or (gnss == "SBAS"):
-#         for key, group in dataGrouped:
-#             if(cartesianC_list(group, time) != []):
-#                 positions.loc[len(positions)] = cartesianC_list(group, time)
-#     elif(gnss == "BeiDou") or (gnss == "QZSS") or (gnss == "IRNSS"):
-#         for key, group in dataGrouped:
-#             if(cartesianB_list(group, time) != []):
-#                 positions.loc[len(positions)] = cartesianB_list(group, time)
-#     return positions
-
-# GLONASSData = pd.read_csv('DataFrames/289/structured_dataR.csv')
-# r01 = GLONASSData.loc[GLONASSData['satelite_id'] == 'R01']
-# r01['Datetime'] = pd.to_datetime(r01['Datetime'] )
-# cartesianC_list(r01, pd.to_datetime("2024-10-15T12:12:02.000"), True)
+        GLONASSData = pd.read_csv('DataFrames/289/structured_dataR.csv')
+        r01 = GLONASSData.loc[GLONASSData['satelite_id'] == 'R01']
+        r01['Datetime'] = pd.to_datetime(r01['Datetime'] )
+        cartesianC_list(r01, pd.to_datetime("2024-10-15T12:12:02.000"), True)

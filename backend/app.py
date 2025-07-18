@@ -6,6 +6,8 @@ from flask_cors import CORS
 from datetime import datetime
 from romsdalenRoad import calculate_travel_time, connect_total_road_segments, get_road_api
 import rasterio
+import config
+import concurrency
 
 from time import perf_counter_ns
 import multiprocessing
@@ -46,7 +48,11 @@ def satellites():
     
     is_processing = True
     start = perf_counter_ns()
-    list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch,frequency, point) 
+    list, df, elevation_cutoffs, obs_cartesian = None, None, None, None
+    if config.USE_CONCURRENCY_FOR_SATELLITE:
+        list, df,elevation_cutoffs, obs_cartesian  = concurrency.runData_check_sight_concurrently(gnss, elevation_angle, time, epoch,frequency, point)
+    else:
+        list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch,frequency, point) 
     print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
     DOPvalues = best(df, obs_cartesian)
@@ -127,10 +133,6 @@ def road():
         return response, 500
     
 
-def prin(points):
-    for i in points:
-        yield int(i)
-
 @app.route('/dopvalues', methods=['POST', 'OPTIONS'])
 def dopValues():
     if request.method == 'OPTIONS':
@@ -159,84 +161,44 @@ def dopValues():
     print("timing getDaynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     gnss_mapping = get_gnss(daynumber, time.year)
     total_steps = len(points) + 1
-    
-    """
-    def generate():
-        start = perf_counter_ns()
-        find_dop_on_point_partial = functools.partial(find_dop_on_point,
-                                                        gnss_mapping=gnss_mapping, time=time, elevation_angle=elevation_angle)
-        def inner_generate(points):
-            print("Entered INNER")
-            with rasterio.open("data/merged_raster.tif") as src:
-                dem_data = src.read(1)
-                print(gnss_mapping, time, elevation_angle, points, dem_data, src, type(dem_data), type(src))
-                print("ENTER INNER")
-                for step, point in enumerate(points, start=1):
-                    print(step)
-                    #start = perf_counter_ns()
-                    dop_point = find_dop_on_point_partial(point=point, step=step, dem_data=dem_data, src=src)
-                    #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-                    dop_list.append(dop_point)
-                    #PDOP_list.append(dop_point[0][1])
-                    yield f"{int((step / total_steps) * 100)}\n\n"
-        
-        
 
-        print("BEFORE MULTI PROCESS")
-        #args = (dem_data, src, gnss_mapping, gnss, time, points[1:], elevation_angle, steps)
-        items = [1,2,3]
-        if __name__ == '__main__':
-            with multiprocessing.Pool(processes=max(1,multiprocessing.cpu_count()-1)) as pool: #multiprocessing.Pool(processes=max(1,multiprocessing.cpu_count()-1), maxtasksperchild=1) as pool:
-                print(pool)
-                for result_generator in pool.imap(prin, items): # find_dop_on_point_partial, points
-                    yield from result_generator
-        #p = multiprocessing.Process(target=inner_generate, args=args)
-        #p.start()
-
-        # Når prosessen er ferdig
-        print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-        print("timing dopValues (ms):\t", round((perf_counter_ns()-start_dopValues)/1_000_000,3))
-        yield f"{json.dumps(dop_list)}\n\n"
-    """
-    
-    def generate():
-        start = perf_counter_ns()
-        with rasterio.open("data/merged_raster.tif") as src:
+    # Prepare data
+    dem_data, observers, observers_cartesian, E_lower, N_upper = None, None, None, None, None
+    with rasterio.open("data/merged_raster.tif") as src:
             dem_data = src.read(1)
 
             observers, observers_cartesian = create_observers(src, dem_data, points)
             
             E_lower = src.bounds[0]
             N_upper = src.bounds[3]
-            print(dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper)
-            pickle_data = [dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper]
-            with open('multiprocessing_test.pkl', 'wb') as out:
-                idx = 0
-                for d in pickle_data:
-                    print(idx)
-                    idx += 1
-                    pickle.dump(d, out ,pickle.HIGHEST_PROTOCOL)
-            input()
-            
-            for step in range(1,len(points)):
-                #start = perf_counter_ns()
-                dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, time, points[step], observers[step], observers_cartesian[step], elevation_angle, step, E_lower, N_upper)
-                #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-                dop_list.append(dop_point)
-                #PDOP_list.append(dop_point[0][1])
+    data = (dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper)
 
-                yield f"{int((step / total_steps) * 100)}\n\n"
+    def generate():
+        start = perf_counter_ns()
+        for step in range(1,len(points)):
+            #start = perf_counter_ns()
+            dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, time, points[step], observers[step], observers_cartesian[step], elevation_angle, step, E_lower, N_upper)
+            #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+            dop_list.append(dop_point)
+            #PDOP_list.append(dop_point[0][1])
+
+            yield f"{int((step / total_steps) * 100)}\n\n"
 
         # Når prosessen er ferdig
         print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
         print("timing dopValues (ms):\t", round((perf_counter_ns()-start_dopValues)/1_000_000,3))
         yield f"{json.dumps(dop_list)}\n\n"
-
-    response = Response(stream_with_context(generate()), content_type='text/event-stream')
+    
+    generator = None
+    if config.USE_CONCURRENCY_FOR_DOPVALUES:
+        generator = concurrency.get_dopvalues_concurrently(data)
+    else:
+        generator = generate()
+    response = Response(stream_with_context(generator), content_type='text/event-stream')
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response
 
 
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", port=5000, debug=True, threaded=False, processes=10)
+    app.run(host="127.0.0.1", port=5000, debug=True, threaded=False)
 

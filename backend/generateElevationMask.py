@@ -14,7 +14,7 @@ def sort_elevation_azimuth(elevation):
     return elevation_azimuth
 
 #sjekker linjer
-def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satellite, elevation_mask, azimuth_satellite):
+def check_satellite_sight(observer,dem_data,E_lower, N_upper, max_distance, elevation_satellite, elevation_mask, azimuth_satellite):
     #foreslått måte å finne lengthe nødvendige sjekking
     
     max_dist = int((dem_data.max() -observer[2])/np.tan(np.deg2rad(elevation_mask)))
@@ -22,8 +22,6 @@ def check_satellite_sight(observer,dem_data,src, max_distance, elevation_satelli
     x,y = observer[0], observer[1]
     az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
     step_size = 5
-    E_lower = src.bounds[0]
-    N_upper = src.bounds[3]
     
     #Viss satelliten uansett er under elevation mask grader
     if elevation_mask > elevation_satellite:

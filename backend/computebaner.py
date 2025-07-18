@@ -9,6 +9,8 @@ from common_variables import wgs
 import rasterio
 
 from time import perf_counter_ns
+from itertools import repeat
+from functools import partial
 
 # Set up coordinate transformers
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
@@ -74,7 +76,7 @@ def get_gnss(daynumber,year):
     return gnss_mapping
 
 # Used for calculating visual satellite positions along road segments
-def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevation_mask, dem_data, src,step):
+def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevation_mask, dem_data, E_lower, N_upper,step):
 
     visual_satellites = []
 
@@ -103,7 +105,7 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
             azimuth = 360 + azimuth
         #fra generateEvelationMask.py
 
-        if check_satellite_sight(observer, dem_data,src, 5000, elevation, elevation_mask, azimuth):
+        if check_satellite_sight(observer, dem_data,E_lower, N_upper, 5000, elevation, elevation_mask, azimuth):
             visual_satellites.append([row["X"],row["Y"],row["Z"]])
             satellite_names.loc[len(satellite_names)] = [row["satelite_id"],row['time'],row["X"],row["Y"],row["Z"], azimuth,zenith]
     #if step == 1:
@@ -112,7 +114,7 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
     return visual_satellites
 
 
-def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, observer, elevation_angle, dem_data,src,step):
+def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, observer, elevation_angle, dem_data,E_lower, N_upper,step):
 
     #print('in satellites_at_point_2')
 
@@ -125,7 +127,7 @@ def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, obser
         #fra satellitePositions.py
         satellites = get_satellite_positions(gnss_mapping[gnss],gnss,given_date)
 
-        visual_satellites = visualCheck_2(satellites, obs_cartesian, observer,observation_lngLat, elevation_mask, dem_data,src,step)
+        visual_satellites = visualCheck_2(satellites, obs_cartesian, observer,observation_lngLat, elevation_mask, dem_data,E_lower, N_upper,step)
         final_list = final_list + visual_satellites
     
     return final_list
@@ -133,7 +135,7 @@ def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, obser
 
 # Check visible satellites for one point in time
 # Used for visualization of skyplot
-def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, elevation_mask, dem_data, src):
+def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, elevation_mask, dem_data, E_lower, N_upper):
     
     visual_satellites = []
 
@@ -160,7 +162,7 @@ def visualCheck_3(satellites, observer_cartesian, observer, observation_lngLat, 
             azimuth = 360 + azimuth
         #fra generateEvelationMask.py
     
-        if check_satellite_sight(observer, dem_data,src, 5000, elevation, elevation_mask,azimuth):
+        if check_satellite_sight(observer, dem_data, E_lower, N_upper, 5000, elevation, elevation_mask,azimuth):
             visual_satellites.append([row["satelite_id"],row["time"],row["X"],row["Y"],row["Z"], azimuth,zenith])
 
     df = pd.DataFrame(visual_satellites, columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
@@ -188,6 +190,8 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observat
     with rasterio.open("data/merged_raster.tif") as src:
         dem_data = src.read(1)  
 
+        E_lower = src.bounds[0]
+        N_upper = src.bounds[3]
         observer_height = dem_data[src.index(observation_EN[0], observation_EN[1])]
         #print(f'observer: {observation_lngLat}, {observer_height}')
         observation_cartesian = Cartesian(observation_lngLat[1]* np.pi/180, observation_lngLat[0]* np.pi/180, observer_height)
@@ -197,6 +201,7 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observat
         final_listdf = []
         #print('finds visual satellites')
         calculations = int(epoch)* int((60/frequency))+1
+        print('calcs', calculations)
         for i in range(0, calculations):
          
             time2 = pd.to_datetime(t)+ pd.Timedelta(minutes=i*frequency)
@@ -206,18 +211,24 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observat
 
                 positions = get_satellite_positions(gnss_mapping[gnss],gnss,time2)
             
-                data = visualCheck_3(positions, observation_cartesian,observation_end, observation_lngLat, elevation_mask, dem_data, src)
+                data = visualCheck_3(positions, observation_cartesian,observation_end, observation_lngLat, elevation_mask, dem_data, E_lower, N_upper)
                 
                 if not data.empty:
                     LGDF_df += [data]
             
             final_list.append([df.to_dict() for df in LGDF_df])
             final_listdf.append(LGDF_df)
-       
-        elevationCutoffs = []
-        for i in range(0,360,1):
-            top = check_satellite_sight_2(observation_end,dem_data,src, 5000, elevation_mask, i)
-            elevationCutoffs.append(top)
+        print('final_list', type(final_list), type(final_list[0]), len(final_list), len(final_list[0]))
+        print('final_listdf', type(final_listdf), type(final_listdf[0]), len(final_listdf), len(final_listdf[0]))
+        #partial_check_satellite_sight_2 = partial(check_satellite_sight_2, observation_end, dem_data, src, 5000, elevation_mask)
+        #elevationCutoffs = list(map(partial_check_satellite_sight_2, range(0,360,1)))
+        elevationCutoffs = list(map(check_satellite_sight_2, repeat(observation_end), repeat(dem_data), repeat(src), repeat(5000), repeat(elevation_mask), range(0,360,1)))
+        #elevationCutoffs = map(check_satellite_sight_2, observation_end,dem_data,src, 5000, elevation_mask, range(0,360,1))
+        # elevationCutoffs = []
+        # for i in range(0,360,1):
+        #     top = check_satellite_sight_2(observation_end,dem_data,src, 5000, elevation_mask, i)
+        #     elevationCutoffs.append(top)
+        #elevationCutoffs = [check_satellite_sight_2(observation_end,dem_data,src, 5000, elevation_mask, i) for i in range(0,360,1)]
 
     
     return final_list, final_listdf,elevationCutoffs,observation_cartesian
