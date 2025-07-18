@@ -114,9 +114,9 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
     return visual_satellites
 
 
-def satellites_at_point_2(gnss_mapping,gnss_list,given_date,obs_cartesian, observer, elevation_angle, dem_data,E_lower, N_upper,step):
+def satellites_visible_from_point(gnss_mapping,gnss_list,given_date,obs_cartesian, observer, elevation_angle, dem_data,E_lower, N_upper,step):
 
-    #print('in satellites_at_point_2')
+    #print('in satellites_visible_from_point')
 
     elevation_mask = float(elevation_angle)
     observation_lngLat = transformer.transform(observer[0], observer[1])
@@ -202,7 +202,7 @@ def runData_check_sight(gnss_list, elevationstring, t, epoch, frequency,observat
         #print('finds visual satellites')
         calculations = int(epoch)* int((60/frequency))+1
         print('calcs', calculations)
-        for i in range(0, calculations):
+        for i in range(calculations):
          
             time2 = pd.to_datetime(t)+ pd.Timedelta(minutes=i*frequency)
         

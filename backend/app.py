@@ -1,7 +1,7 @@
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
 from computebaner import  get_gnss, getDayNumber, runData_check_sight
-from computeDOP import best, find_dop_on_point
+from computeDOP import DOP_at_epochs, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
 from romsdalenRoad import calculate_travel_time, connect_total_road_segments, get_road_api
@@ -55,7 +55,7 @@ def satellites():
         list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch,frequency, point) 
     print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
-    DOPvalues = best(df, obs_cartesian)
+    DOPvalues = DOP_at_epochs(df, obs_cartesian)
 
     is_processing = False
     print("timing satellites (ms):\t", round((perf_counter_ns()-start_satellites)/1_000_000,3))
