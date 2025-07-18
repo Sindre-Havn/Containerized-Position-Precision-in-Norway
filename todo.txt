@@ -1,8 +1,4 @@
-Improve file names:
-- downloadfile.py ==> dowload_ephemeris.py
-
 Improve function names:
-- lastned() ==> dowload_ephemeris  #last ned is too vague
 - The function getDayNumber is a missleading name since it calls on sortData and
   does so much more than it should gven its name. Should only get day.
 
@@ -13,9 +9,6 @@ Improve documentation:
   It may be needed to logg permanently in (stay signed in) on earthdata. If that is the case it should be better documented.
   Need to improve documentation and troubleshoot downloadfile.py
   The loggin-page respons from earthdata can be seen in delete_this__is_bad_respons_html_from_dowloadfile.html
-
-Improve readability:
-- Rewrite dowloadfile.py so it uses guard block instead.
 
 Make config file for storing things like angle_resolution for skyplots.
 It is currently hardcoded to 1 in computebaner.py, in line 
@@ -46,3 +39,11 @@ The benchmarking was performed with default settings. The paremeters was:
  Time epoch = 1 h
  Calculation Interval = every 30 min
  Search Satellites at Point Nr = 0
+
+Comment about "Search Satellites at Point Nr:" on website:
+When inserting "Time Epoch = 10h" and "Calculation Interval = 10 min"
+into the sliding bars on the website, only 21 epoch show on the graphs,
+even though 61 epochs are expected. This should be communicated to the user.
+
+Improve file names:
+- downloadfile.py ==> dowload_ephemeris.py

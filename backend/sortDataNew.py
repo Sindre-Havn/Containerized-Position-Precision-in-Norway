@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 import gzip
 import shutil
-from downloadfile import lastned
+from download_ephemeris import download_ephemeris
 
 from time import perf_counter_ns
 
@@ -546,7 +546,7 @@ def sortData(daynumber, date):
         #print(f"Data on day {daynumber} already sorted")
         return
     filename = f'unzipped/BRD400DLR_S_{date.year}{daynumber}0000_01D_MN.rnx'
-    lastned(daynumber,date.year )
+    download_ephemeris(daynumber,date.year )
     #current date
     current_date = date.date()
     #creates new dataFrames, based on the columns from Dataframes

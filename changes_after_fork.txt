@@ -1,0 +1,11 @@
+Renaming
+  downloadfile.py ==> dowload_ephemeris.py
+  lastned() ==> dowload_ephemeris()
+  
+New feature
+  concurrency.py - conurrent prossesing for finding DOP Values and satellite count at point.
+
+
+find_dop_on_point() - change input parameters. Concurrent processing using multiprocessing.pool demands args to be picklable.
+                      Main difference was not passing "src" as an arg, but extracting necessary components and pass
+                      those as args. This change also affected functions called by find_dop_on_point().
