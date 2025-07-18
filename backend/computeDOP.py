@@ -7,10 +7,6 @@ import rasterio
 
 from time import perf_counter_ns
 
-# Set up coordinate transformers between UTM and WGS84
-transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
-transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
-
 def R2(theta):
     """
     Rotation matrix about Y-axis (used in coordinate transformation).
@@ -96,6 +92,9 @@ def create_observers(src: rasterio.io.DatasetReader, dem_data, points) -> np.nda
     """
     Return lat, long, heigth for every point. Coordinates in Easting/Norting.
     """
+    # Set up coordinate transformers between WGS84 and UTM zone 33NUTM
+    transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
+
     # Convert observation point to EN-coordinates and find height from DEM
     observers = np.empty((len(points),3), dtype=np.float32)
     observers_cartesian = np.empty((len(points),3), dtype=np.float32)
