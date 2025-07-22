@@ -51,11 +51,12 @@ def DOPvalues(satellites: list[list], receiver_pos: list[float]) -> list[float]:
     Qxx = np.zeros((4, 4))
     i = 0
     for satellite in satellites:
-        rho_i = geometric_range([satellite[2], satellite[3], satellite[4]], receiver_pos)
+        #print(satellite) #xyz
+        rho_i = geometric_range([satellite[0], satellite[1], satellite[2]], receiver_pos)
 
-        A[i][0] = -((satellite[2] - receiver_pos[0]) / rho_i)
-        A[i][1] = -((satellite[3] - receiver_pos[1]) / rho_i)
-        A[i][2] = -((satellite[4] - receiver_pos[2] ) / rho_i)
+        A[i][0] = -((satellite[0] - receiver_pos[0]) / rho_i)
+        A[i][1] = -((satellite[1] - receiver_pos[1]) / rho_i)
+        A[i][2] = -((satellite[2] - receiver_pos[2] ) / rho_i)
         A[i][3] = -1
         i += 1
     # Compute covariance matrix Qxx
@@ -73,6 +74,8 @@ def DOPvalues(satellites: list[list], receiver_pos: list[float]) -> list[float]:
     return GDOP,PDOP,TDOP,HDOP,VDOP
 
 
+
+
 def DOP_at_epochs(satellites_at_epochs, receiver_pos: list[float]) -> list[float]:
     """
     Computes DOP values over a list of time steps at a point "receiver_pos".
@@ -81,12 +84,14 @@ def DOP_at_epochs(satellites_at_epochs, receiver_pos: list[float]) -> list[float
     for satellites_at_epoch in satellites_at_epochs:
         satellites_array = []
         for satellitedf in satellites_at_epoch:
-            satellites_array.extend(satellitedf.values.tolist())
+            satellites_array.extend(satellitedf[['X', 'Y', 'Z']].values.tolist())
+        #print(satellites_array)
         if len(satellites_array) >= 4:
             DOP_at_epochs.append( DOPvalues(satellites_array, receiver_pos) )
         else:
             DOP_at_epochs.append( [0,0,0,0,0] )
     return DOP_at_epochs
+
 
 def create_observers(src: rasterio.io.DatasetReader, dem_data, points) -> np.ndarray[3, np.float32]:
     """
@@ -121,7 +126,7 @@ def find_dop_on_point(dem_data, gnss_mapping, gnss, time, point, observer, obs_c
     timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
 
     #start = perf_counter_ns()
-    visible_satellites = satellites_visible_from_point(gnss_mapping,gnss, timeNow, obs_cartesian, observer, elevation_angle, dem_data,E_lower, N_upper, step)
+    visible_satellites = satellites_visible_from_point(gnss_mapping, gnss, timeNow, obs_cartesian, observer, elevation_angle, dem_data,E_lower, N_upper, step)
     #print("timing satellites_visible_from_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
     if len(visible_satellites) < 4: return [0, 0, 0, 0, 0]

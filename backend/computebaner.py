@@ -105,7 +105,7 @@ def visualCheck_2(satellites, obs_cartesian,observer,observation_lngLat, elevati
             azimuth = 360 + azimuth
         #fra generateEvelationMask.py
 
-        if check_satellite_sight(observer, dem_data,E_lower, N_upper, 5000, elevation, elevation_mask, azimuth):
+        if check_satellite_sight(observer, dem_data, E_lower, N_upper, 5000, elevation, elevation_mask, azimuth):
             visual_satellites.append([row["X"],row["Y"],row["Z"]])
             satellite_names.loc[len(satellite_names)] = [row["satelite_id"],row['time'],row["X"],row["Y"],row["Z"], azimuth,zenith]
     #if step == 1:
@@ -128,7 +128,7 @@ def satellites_visible_from_point(gnss_mapping,gnss_list,given_date,obs_cartesia
         satellites = get_satellite_positions(gnss_mapping[gnss],gnss,given_date)
 
         visual_satellites = visualCheck_2(satellites, obs_cartesian, observer,observation_lngLat, elevation_mask, dem_data,E_lower, N_upper,step)
-        final_list = final_list + visual_satellites
+        final_list.extend(visual_satellites)
     
     return final_list
 

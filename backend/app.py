@@ -160,7 +160,7 @@ def dopValues():
     daynumber = getDayNumber(time)
     print("timing getDaynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     gnss_mapping = get_gnss(daynumber, time.year)
-    total_steps = len(points) + 1
+    total_steps = len(points)+1
 
     # Prepare data
     dem_data, observers, observers_cartesian, E_lower, N_upper = None, None, None, None, None
@@ -175,18 +175,19 @@ def dopValues():
 
     def generate():
         start = perf_counter_ns()
-        for step in range(1,len(points)):
+        for step in range(len(points)):
             #start = perf_counter_ns()
             dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, time, points[step], observers[step], observers_cartesian[step], elevation_angle, step, E_lower, N_upper)
             #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-            dop_list.append(dop_point)
+            dop_list.append([dop_point]) # Frontend expects "double-wrapped dop_point lists"
             #PDOP_list.append(dop_point[0][1])
-
-            yield f"{int((step / total_steps) * 100)}\n\n"
+            print(f"{int(((1+step) / total_steps) * 100)}\n\n")
+            yield f"{int(((1+step) / total_steps) * 100)}\n\n"
 
         # Når prosessen er ferdig
         print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
         print("timing dopValues (ms):\t", round((perf_counter_ns()-start_dopValues)/1_000_000,3))
+        print(f"{json.dumps(dop_list)}\n\n")
         yield f"{json.dumps(dop_list)}\n\n"
     
     generator = None

@@ -62,13 +62,13 @@ def get_dopvalues_concurrently(data):
     step = 0
     dop_list = []
     with multiprocessing.Pool(processes=config.PROCESSES_COUNT_DOPVALUES) as pool:
-        steps = [i for i in range(1,105)]
-        total_steps = len(steps)-1
+        steps = [i for i in range(len(ROD.points))]
+        total_steps = len(ROD.points)+1
         result_generator = pool.imap(get_dopvalues, steps, chunksize=1)
         for r in result_generator:
-            dop_list.append(r)
+            dop_list.append([r]) # Frontend expects "double-wrapped lists"
             step += 1
-            yield f"{int((step / total_steps) * 100)}\n\n"
+            yield f"{int(((step+1) / total_steps) * 100)}\n\n"
     #dt = (perf_counter_ns()-start)/10**9/60
     #print(f'{int(dt)}:{int((dt-int(dt))*60)}')
     print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
@@ -134,7 +134,7 @@ def runData_check_sight_concurrently(gnss, elevationstring, time, epoch, freq, o
         #print('final_listdf', type(final_listdf), type(final_listdf[0]), len(final_listdf), len(final_listdf[0]))
         #print('LGDF_DFs', type(LGDF_DFs), type(LGDF_DFs[0]), len(LGDF_DFs), len(LGDF_DFs[0]))
         #final_list = [df.to_dict() for df in final_listdf]
-        final_list = [[df.to_dict()] for epoch in LGDF_DFs for df in epoch]
+        final_list = [[df.to_dict() for df in epoch] for epoch in LGDF_DFs]
         elevationCutoffs = list(map(check_satellite_sight_2, repeat(ROS.observation_end), repeat(ROS.dem_data), repeat(src), repeat(5000), repeat(ROS.elevation_mask), range(0,360,1)))
         return final_list, final_listdf, elevationCutoffs, ROS.observation_cartesian
 
