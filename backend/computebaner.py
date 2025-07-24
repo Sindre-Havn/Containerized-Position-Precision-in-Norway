@@ -169,7 +169,6 @@ def satellites_visible_from_point(gnss_mapping: dict[str, pd.DataFrame],
     observation_lnglat = transformer.transform(observer[0], observer[1])
 
     final_list = []
-
     for gnss in gnss_list:
         satellites = get_satellite_positions(gnss_mapping[gnss],gnss,given_date)
         visual_satellites = visual_satellites_xyz(satellites, obs_cartesian, observer,observation_lnglat, elevation_mask, dem_data,E_lower, N_upper)

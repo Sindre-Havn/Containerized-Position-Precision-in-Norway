@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
-from datetime import timedelta
+from datetime import timedelta, datetime
 from common_variables import GM,we
 
-# Time correction based on GPS week rollover
-def TK(t):
+
+def TK(t: float) -> float:
+    """
+    Time correction based on GPS week rollover.
+    """
     tm = t
     if(t >302400):
         return tm-604800
@@ -12,11 +15,18 @@ def TK(t):
         return tm+604800
     else:
         return tm
-# Mean anomaly computation
-def MK(M0, a,deltan, tk):
+
+def MK(M0: float, a: float, deltan: float, tk: float) -> float:
+    """
+    Mean anomaly computation.
+    """
     return M0 + (np.sqrt(GM/a**3)+deltan)*tk
-# Eccentric anomaly computation using iterative approach
-def EK(Mk,e, n):
+
+
+def EK(Mk: float, e: float, n: int) -> float:
+    """
+    Eccentric anomaly computation using iterative approach.
+    """
     E = [Mk]
     i = 1
     if i==1:
@@ -30,51 +40,72 @@ def EK(Mk,e, n):
             i += 1
     return Mk + e*np.sin(E[-1])
 
-# Converts eccentric anomaly (Ek) to true anomaly (fk) using eccentricity (e)
-def FK(e, Ek):
+
+def FK(e: float, Ek: float) -> float:
+    """
+    Converts eccentric anomaly (Ek) to true anomaly (fk) using eccentricity (e).
+    """
     return 2 * np.arctan(np.sqrt((1 + e) / (1 - e)) * np.tan(Ek / 2))
 
-# Computes the argument of latitude (uk) with corrections
-def UK(w, fk, Cuc, Cus):
+def UK(w: float, fk: float, Cuc: float, Cus: float):
+    """
+    Computes the argument of latitude (uk) with corrections.
+    """
     return w + fk + Cuc * (np.cos(2 * (w + fk))) + Cus * (np.sin(2 * (w + fk)))
 
-# Computes the corrected radius (rk)
-def RK(a, e, w, Ek, fk, Crc, Crs):
+def RK(a: float, e: float, w: float, Ek: float, fk: float, Crc: float, Crs: float) -> float:
+    """
+    Computes the corrected radius (rk).
+    """
     return a * (1 - e * np.cos(Ek)) + Crc * (np.cos(2 * (w + fk))) + Crs * (np.sin(2 * (w + fk)))
 
-# Computes the corrected inclination (ik)
-def IK(i0, idot, tk, Cic, w, fk, Cis):
+def IK(i0: float, idot: float, tk: float, Cic: float, w: float, fk: float, Cis: float) -> float:
+    """
+    Computes the corrected inclination (ik).
+    """
     return i0 + idot * tk + Cic * (np.cos(2 * (w + fk))) + Cis * (np.sin(2 * (w + fk)))
 
-# Computes corrected longitude of the ascending node (lambda_k)
-def LAMBDAK(lambda0, omegadot, we, tk, toe):
+def LAMBDAK(lambda0: float, omegadot: float, we: float, tk: float, toe: float) -> float:
+    """
+    Computes corrected longitude of the ascending node (lambda_k).
+    """
     return lambda0 + (omegadot - we) * tk - we * toe
 
-# Rotation matrix around X-axis (R1)
-def R1(theta):
+def R1(theta: float) -> np.ndarray[float]:
+    """
+    Rotation matrix around X-axis (R1).
+    """
     return np.array([
-        [1, 0, 0],
-        [0, np.cos(theta), np.sin(theta)],
+        [1,        0,            0       ],
+        [0,  np.cos(theta), np.sin(theta)],
         [0, -np.sin(theta), np.cos(theta)]
     ])
 
-# Rotation matrix around Z-axis (R3)
-def R3(theta):
+
+def R3(theta: float) -> np.ndarray[float]:
+    """
+    Rotation matrix around Z-axis (R3).
+    """
     return np.array([
-        [np.cos(theta), np.sin(theta), 0],
+        [ np.cos(theta), np.sin(theta), 0],
         [-np.sin(theta), np.cos(theta), 0],
-        [0, 0, 1]
+        [       0,            0,        1]
     ])
 
-# Finds the row in DataFrame closest in time to the given timestamp
-def get_closest_row(data, time):
+def get_closest_row(data: pd.DataFrame, time: datetime) -> pd.DataFrame:
+    """
+    Finds the row in DataFrame closest in time to the given timestamp.
+    """
     if data.empty:
         return None
     differences = (time - data["Datetime"]).abs()
     return data.loc[differences.idxmin()]
 
-# Computes satellite ECEF coordinates from broadcast ephemeris (for GPS, Galileo, BeiDou, QZSS, NavIC)
-def cartesianA_list(data, time):
+
+def cartesianA_list(data: pd.DataFrame, time: datetime) -> list[ str, str, float, float, float ]:
+    """
+    Computes satellite ECEF coordinates from broadcast ephemeris (for GPS, Galileo, BeiDou, QZSS, NavIC).
+    """
     row = get_closest_row(data, time)
     if row is None:
         return []
@@ -96,13 +127,16 @@ def cartesianA_list(data, time):
 
     return [row["satelite_id"], time.strftime("%Y-%m-%dT%H:%M:%S.%f"), coordinates[0], coordinates[1], coordinates[2]]
 
-# Computes satellite ECEF coordinates frombroadcast ephemeris  (GLONASS, SBAS)
-def cartesianC_list(data, time, today, i):
+
+def cartesianC_list(data: pd.DataFrame, time: datetime, is_today: bool) -> list[ str, str, float, float, float ]:
+    """
+    Computes satellite ECEF coordinates frombroadcast ephemeris  (GLONASS, SBAS).
+    """
     if data.empty:
         return []
 
     # Adjust for data timestamp offset if needed
-    timeBack = time - timedelta(hours=11, minutes=15, seconds=44) if today else time
+    timeBack = time - timedelta(hours=11, minutes=15, seconds=44) if is_today else time
     row = get_closest_row(data,timeBack)
 
     # Compute GMST
@@ -116,27 +150,30 @@ def cartesianC_list(data, time, today, i):
 
     return [row["satelite_id"], time.strftime("%Y-%m-%dT%H:%M:%S.%f"), x, y, z]
 
-# Retrieves positions of all satellites at a given time
-def get_satellite_positions(data,gnss,time):
+
+def get_satellite_positions(data: pd.DataFrame, gnss: str, time: datetime) -> pd.DataFrame:
+    """
+    Retrieves positions of all satellites at a given time.
+    """
     if data.empty:
         return pd.DataFrame(columns=["satelite_id", "time", "X", "Y", "Z"])
 
     data["Datetime"] = pd.to_datetime(data["Datetime"])
-    today = time.date() != data.iloc[0]["Datetime"].date()
+    is_today = time.date() != data.iloc[0]["Datetime"].date()
 
     positions = []
     for _, group in data.groupby("satelite_id"):
         if gnss in {"GPS", "Galileo", "BeiDou", "QZSS", "NavIC"}:
             xyz = cartesianA_list(group, time)
         else:
-            xyz = cartesianC_list(group, time, today,1)
+            xyz = cartesianC_list(group, time, is_today)
         if xyz:
             positions.append(xyz)
 
     return pd.DataFrame(positions, columns=["satelite_id", "time", "X", "Y", "Z"])
 
-#testing
 
+# Testing
 if __name__ == '__main__':
 
     def get_satellite_positiontest(data,gnss,time):
@@ -144,6 +181,7 @@ if __name__ == '__main__':
         dataGrouped = data.groupby("satelite_id")
         time = pd.to_datetime(time)
         positions = pd.DataFrame(columns = ["satelite_id","TOW", "X", "Y", "Z" ])
+        is_today = time.date() != data.iloc[0]["Datetime"].date()
         if(gnss == "GPS") or (gnss == "Galileo"):
             for key, group in dataGrouped:
                 if(cartesianA_list(group, time) != []):
@@ -151,12 +189,12 @@ if __name__ == '__main__':
         elif(gnss == "GLONASS") or (gnss == "SBAS"):
             for key, group in dataGrouped:
                 if(cartesianC_list(group, time) != []):
-                    positions.loc[len(positions)] = cartesianC_list(group, time)
-        elif(gnss == "BeiDou") or (gnss == "QZSS") or (gnss == "IRNSS"):
-            for key, group in dataGrouped:
-                if(cartesianB_list(group, time) != []):
-                    positions.loc[len(positions)] = cartesianB_list(group, time)
-        return positions
+                    positions.loc[len(positions)] = cartesianC_list(group, time, is_today)
+        # elif(gnss == "BeiDou") or (gnss == "QZSS") or (gnss == "IRNSS"):
+        #     for key, group in dataGrouped:
+        #         if(cartesianB_list(group, time) != []):
+        #             positions.loc[len(positions)] = cartesianB_list(group, time)
+        # return positions
 
         GLONASSData = pd.read_csv('DataFrames/289/structured_dataR.csv')
         r01 = GLONASSData.loc[GLONASSData['satelite_id'] == 'R01']

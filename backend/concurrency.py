@@ -152,7 +152,6 @@ def data_from_epoch(gnss: list[str],
         ROS = Read_Only_Sat()
 
         DFs_in_2d_list = None
-        print('ROS.frequency', ROS.frequency, type(ROS.frequency))
         with multiprocessing.Pool(processes=config.PROCESSES_COUNT_SATELLITE) as pool:
             calc_count = int(epoch) * int((60/ROS.frequency))+1
             steps = [i for i in range(calc_count)]
@@ -163,10 +162,10 @@ def data_from_epoch(gnss: list[str],
         # Extract positions of every satellites for each timestep
         visible_sats_pos_for_timesteps = []
         for timestep in DFs_in_2d_list:
-            timestep_sats_pos = []
+            sats_pos_dfs = []
             for gnss_df in timestep:
-                timestep_sats_pos.extend(gnss_df[['X', 'Y', 'Z']].values.tolist())
-            visible_sats_pos_for_timesteps.append(timestep_sats_pos)
+                sats_pos_dfs.extend(gnss_df[['X', 'Y', 'Z']].values.tolist())
+            visible_sats_pos_for_timesteps.append(sats_pos_dfs)
             
         elevation_cutoffs = list(map(check_satellite_sight_2, repeat(ROS.observation_end), repeat(ROS.dem_data), repeat(src), repeat(5000), repeat(ROS.elevation_mask), range(0,360,1)))
         elevation_cutoffs = [str(elevation) for elevation in elevation_cutoffs]

@@ -8,7 +8,7 @@ import rasterio
 
 from time import perf_counter_ns
 
-def R2(theta: float) -> np.ndarray:
+def R2(theta: float) -> np.ndarray[float]:
     """
     Rotation matrix about Y-axis (used in coordinate transformation).
     """
@@ -16,7 +16,7 @@ def R2(theta: float) -> np.ndarray:
                     [       0,      1,      0       ],
                     [np.sin(theta) ,0,np.cos(theta)]])
 
-def R3(theta: float) -> np.ndarray:
+def R3(theta: float) -> np.ndarray[float]:
     """
     Rotation matrix about Z-axis.
     """
@@ -24,7 +24,7 @@ def R3(theta: float) -> np.ndarray:
                     [-np.sin(theta),np.cos(theta),0],
                     [       0,            0,      1]])
 
-def P2() -> np.ndarray:
+def P2() -> np.ndarray[int]:
     """
     Mirror/reflection matrix"""
     return np.array([[1, 0, 0],
