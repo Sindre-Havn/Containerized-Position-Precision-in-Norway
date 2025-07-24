@@ -40,6 +40,7 @@ def get_dopvalues(step: int) -> list[list[float]]:
     """
     return find_dop_on_point(ROD.dem_data, ROD.gnss_mapping, ROD.gnss, ROD.time, ROD.points[step], ROD.observers[step], ROD.observers_cartesian[step], ROD.elevation_angle, ROD.E_lower, ROD.N_upper)
 
+
 def get_dopvalues_concurrently(data: tuple[ np.ndarray[float],
                                            dict[str, pd.DataFrame],
                                            list[str], datetime,
@@ -51,6 +52,8 @@ def get_dopvalues_concurrently(data: tuple[ np.ndarray[float],
                                            float
                                            ] ) -> Iterator[str]:
     """
+    Calculates DOP for every point.
+    All input data is packed inside a "data" tuple. This is done to 
     Benchmarked as 2-3x faster at 105 road points compared to single process.
     Tests performed 16GB RAM and Intel® Core™ i5-10310U × 8.
     """
@@ -107,7 +110,7 @@ def data_from_timestep(step: int) -> list[pd.DataFrame]:
 def data_from_epoch(gnss: list[str],
                     elevationstring: str,
                     t: datetime,
-                    epoch: str,
+                    epoch: int,
                     freq: int,
                     observation_lng_lat: list[float]
                     ) -> tuple[ list[list[dict]],
@@ -153,7 +156,7 @@ def data_from_epoch(gnss: list[str],
 
         DFs_in_2d_list = None
         with multiprocessing.Pool(processes=config.PROCESSES_COUNT_SATELLITE) as pool:
-            calc_count = int(epoch) * int((60/ROS.frequency))+1
+            calc_count = epoch * int((60/ROS.frequency))+1
             steps = [i for i in range(calc_count)]
             DFs_in_2d_list = pool.map(data_from_timestep, steps, chunksize=1)
             

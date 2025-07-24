@@ -6,7 +6,7 @@ from pathlib import Path
 def download_ephemeris(day, year):
     """
        Downloads today's ephemeries file from the CDDIS server.
-       Assumes .netrc with correct loggin creditdentials in home directory.
+       Assumes .netrc file with correct loggin creditdentials in home directory.
     """
     folder = Path('unzipped/')
     filename = Path(f'BRD400DLR_S_{year}{day}0000_01D_MN.rnx.gz')

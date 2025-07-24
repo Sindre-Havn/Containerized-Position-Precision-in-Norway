@@ -41,7 +41,7 @@ def satellites():
     time = data.get('time').strip('Z')
     elevation_angle = data.get('elevationAngle')
     gnss = data.get('GNSS')
-    epoch = data.get('epoch')
+    epoch = int(data.get('epoch'))
     frequency = int(data.get('epochFrequency'))
     point = data.get('point')
     #print(f'point: {point}')

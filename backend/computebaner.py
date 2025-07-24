@@ -223,7 +223,7 @@ def visual_satellites_data(satellites: pd.DataFrame,
 def data_from_epoch(gnss_list: list[str],
                     elevation_mask_str: str,
                     start_time: datetime,
-                    epoch: str,
+                    epoch: int,
                     frequency: int,
                     observation_lnglat: tuple[float]
                     ) -> tuple[ list[list[dict]],
@@ -257,7 +257,7 @@ def data_from_epoch(gnss_list: list[str],
         observation_cartesian = Cartesian(observation_lnglat[1]* np.pi/180, observation_lnglat[0]*np.pi/180, observer_height)
         observation_end = [observation_EN[0], observation_EN[1], observer_height]
 
-        calculations = int(epoch) * int((60/frequency))+1
+        calculations = epoch * int((60/frequency))+1
         for i in range(calculations):
          
             time = pd.to_datetime(start_time)+ pd.Timedelta(minutes=i*frequency)
