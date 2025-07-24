@@ -1,7 +1,7 @@
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
-from computebaner import  get_gnss, getDayNumber, runData_check_sight
-from computeDOP import DOP_at_epochs, find_dop_on_point
+from computebaner import  get_gnss, getDayNumber, data_from_epoch
+from computeDOP import DOP_in_epoch, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
 from romsdalenRoad import calculate_travel_time, connect_total_road_segments, get_road_api
@@ -16,7 +16,7 @@ import concurrent.futures
 import pickle
 import numpy as np
 from pyproj import Transformer
-from computeDOP import create_observers
+from computebaner import create_observers
 
 distance = None
 points = None
@@ -48,19 +48,18 @@ def satellites():
     
     is_processing = True
     start = perf_counter_ns()
-    list, df, elevation_cutoffs, obs_cartesian = None, None, None, None
+    visible_sats_data_for_timesteps, DOPvalues, elevation_cutoffs = [], [], []
     if config.USE_CONCURRENCY_FOR_SATELLITE:
-        list, df,elevation_cutoffs, obs_cartesian  = concurrency.runData_check_sight_concurrently(gnss, elevation_angle, time, epoch,frequency, point)
+        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = concurrency.data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
     else:
-        list, df,elevation_cutoffs, obs_cartesian = runData_check_sight(gnss, elevation_angle, time, epoch,frequency, point) 
+        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
     print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-    elevation_strings = [str(elevation) for elevation in elevation_cutoffs]
-    DOPvalues = DOP_at_epochs(df, obs_cartesian)
-
+    DOPvalues = DOP_in_epoch(visible_sats_pos_for_timesteps, observation_cartesian)
+    print('DOPvalues', DOPvalues)
     is_processing = False
     print("timing satellites (ms):\t", round((perf_counter_ns()-start_satellites)/1_000_000,3))
     if not is_processing:
-        response = jsonify({'message': 'Data processed successfully', 'data': list, 'DOP': DOPvalues,   'elevation_cutoffs': elevation_strings})
+        response = jsonify({'message': 'Data processed successfully', 'data': visible_sats_data_for_timesteps, 'DOP': DOPvalues, 'elevation_cutoffs': elevation_cutoffs})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
         return response, 200
     else:
@@ -177,10 +176,9 @@ def dopValues():
         start = perf_counter_ns()
         for step in range(len(points)):
             #start = perf_counter_ns()
-            dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, time, points[step], observers[step], observers_cartesian[step], elevation_angle, step, E_lower, N_upper)
+            dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, time, points[step], observers[step], observers_cartesian[step], elevation_angle, E_lower, N_upper)
             #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
             dop_list.append([dop_point]) # Frontend expects "double-wrapped dop_point lists"
-            #PDOP_list.append(dop_point[0][1])
             print(f"{int(((1+step) / total_steps) * 100)}\n\n")
             yield f"{int(((1+step) / total_steps) * 100)}\n\n"
 

@@ -5,18 +5,18 @@ from time import perf_counter_ns
 import config
 from computeDOP import find_dop_on_point
 import json
-
 from pyproj import Transformer
-from datetime import datetime, timedelta
-from computebaner import getDayNumber, get_gnss, Cartesian, get_satellite_positions, visualCheck_3, check_satellite_sight_2
+from datetime import datetime
+from computebaner import getDayNumber, get_gnss, Cartesian, get_satellite_positions, visual_satellites_data, check_satellite_sight_2
 import rasterio
 import numpy as np
 import pandas as pd
-from itertools import repeat, chain
+from itertools import repeat
+from typing import Iterator
 
 """
 Provides a multiprocess alternative to for
-"find_dop_on_point" and "runData_check_sight" in app.py.
+"find_dop_on_point" and "data_from_epoch" in app.py.
 
 
 This module is tested using 7 processes on a 8 core CPU, but only resulted in
@@ -34,12 +34,22 @@ but this may only be used for values and arrays of primitive types.
 
 
 
-def get_dopvalues(step):
-    #dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper = RO.data
-    #return find_dop_on_point(dem_data, gnss_mapping, gnss, time, points[step], observers[step], observers_cartesian[step], elevation_angle, E_lower, N_upper, step)
-    return find_dop_on_point(ROD.dem_data, ROD.gnss_mapping, ROD.gnss, ROD.time, ROD.points[step], ROD.observers[step], ROD.observers_cartesian[step], ROD.elevation_angle, ROD.E_lower, ROD.N_upper, step)
+def get_dopvalues(step: int) -> list[list[float]]:
+    """
+    Concurrency wrapper for "find_dop_on_point" function.
+    """
+    return find_dop_on_point(ROD.dem_data, ROD.gnss_mapping, ROD.gnss, ROD.time, ROD.points[step], ROD.observers[step], ROD.observers_cartesian[step], ROD.elevation_angle, ROD.E_lower, ROD.N_upper)
 
-def get_dopvalues_concurrently(data):
+def get_dopvalues_concurrently(data: tuple[ np.ndarray[float],
+                                           dict[str, pd.DataFrame],
+                                           list[str], datetime,
+                                           list[dict],
+                                           list[np.ndarray[float]],
+                                           list[np.ndarray[float]],
+                                           str,
+                                           float,
+                                           float
+                                           ] ) -> Iterator[str]:
     """
     Benchmarked as 2-3x faster at 105 road points compared to single process.
     Tests performed 16GB RAM and Intel® Core™ i5-10310U × 8.
@@ -77,30 +87,45 @@ def get_dopvalues_concurrently(data):
 
 
 
-
-
-def find_visual_satellites(i):
-    time2 = pd.to_datetime(ROS.t)+ pd.Timedelta(minutes=i*ROS.frequency)
-        
-    LGDF_df = []
+def data_from_timestep(step: int) -> list[pd.DataFrame]:
+    """
+    Concurrency wrapper for inner-loop for "data_from_epoch" function.
+    Is similar to innerloop of "computerbaner.py->data_from_epoch" function.
+    """
+    time = pd.to_datetime(ROS.start_time)+ pd.Timedelta(minutes=step*ROS.frequency)
+    df_list = []
     for gnss in ROS.gnss_list:
 
-        positions = get_satellite_positions(ROS.gnss_mapping[gnss],gnss,time2)
+        positions = get_satellite_positions(ROS.gnss_mapping[gnss], gnss,time)
+        data = visual_satellites_data(positions, ROS.observation_cartesian, ROS.observation_end, ROS.observation_lnglat, ROS.elevation_mask, ROS.dem_data, ROS.E_lower, ROS.N_upper)
     
-        data = visualCheck_3(positions, ROS.observation_cartesian, ROS.observation_end, ROS.observation_lngLat, ROS.elevation_mask, ROS.dem_data, ROS.E_lower, ROS.N_upper)
-        
-        if not data.empty:
-            LGDF_df += [data]
-    return LGDF_df
+        if data.empty: continue
+        df_list.append(data)
 
-def runData_check_sight_concurrently(gnss, elevationstring, time, epoch, freq, observation_lng_lat):
+    return df_list
+
+def data_from_epoch(gnss: list[str],
+                    elevationstring: str,
+                    t: datetime,
+                    epoch: str,
+                    freq: int,
+                    observation_lng_lat: list[float]
+                    ) -> tuple[ list[list[dict]],
+                                list[str],
+                                list[list[pd.DataFrame]],
+                                list[float] ]:
     """
-    Benchmarked as 10-15% faster on 3 epochs, and 40-50% faster on 61 epochs, compared to single process.
+    A wrapper function for getting DOP and satellite count on a point during a specified epoch.
+    Returns "visible_sats_data_for_timesteps" which is data regarding each satellite visual from that point.
+    This data is structured in a two layer list: top layer is timesteps, second layer is gnss.
+    "visible_sats_pos_for_timesteps" and "observation_cartesian" is returned to calculate DOP outside
+    this function.
+    Benchmarked as 10-15% faster on 3 timesteps, and 40-50% faster on 61 timesteps, compared to single process.
     Tests performed 16GB RAM and Intel® Core™ i5-10310U × 8.
     """
     transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
     observation_EN = transformerToEN.transform(observation_lng_lat[0], observation_lng_lat[1])
-    given_date = datetime.strptime(time, "%Y-%m-%dT%H:%M:%S.%f")
+    given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
     daynumber = getDayNumber(given_date)
     print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
@@ -109,59 +134,40 @@ def runData_check_sight_concurrently(gnss, elevationstring, time, epoch, freq, o
         dem_data_temp = src.read(1)
         observer_height = dem_data_temp[src.index(observation_EN[0], observation_EN[1])]
         start = perf_counter_ns()
+
         @dataclass(frozen=True)
         class Read_Only_Sat:
-            t = time
+            start_time = t
             frequency = freq
             gnss_list = gnss
             gnss_mapping = get_gnss(daynumber,given_date.year)
             observation_cartesian = Cartesian(observation_lng_lat[1]* np.pi/180, observation_lng_lat[0]* np.pi/180, observer_height)
             observation_end = [observation_EN[0], observation_EN[1], observer_height]
-            observation_lngLat = observation_lng_lat
+            observation_lnglat = observation_lng_lat
             elevation_mask = float(elevationstring)
             dem_data = dem_data_temp
             E_lower = src.bounds[0]
             N_upper = src.bounds[3]
         global ROS
         ROS = Read_Only_Sat()
-        #print('finds visual satellites')
-        LGDF_DFs = None
+
+        DFs_in_2d_list = None
+        print('ROS.frequency', ROS.frequency, type(ROS.frequency))
         with multiprocessing.Pool(processes=config.PROCESSES_COUNT_SATELLITE) as pool:
-            calc_count = int(epoch)* int((60/ROS.frequency))+1
+            calc_count = int(epoch) * int((60/ROS.frequency))+1
             steps = [i for i in range(calc_count)]
-            LGDF_DFs = pool.map(find_visual_satellites, steps, chunksize=1)
-        final_listdf = LGDF_DFs
-        #print('final_listdf', type(final_listdf), type(final_listdf[0]), len(final_listdf), len(final_listdf[0]))
-        #print('LGDF_DFs', type(LGDF_DFs), type(LGDF_DFs[0]), len(LGDF_DFs), len(LGDF_DFs[0]))
-        #final_list = [df.to_dict() for df in final_listdf]
-        final_list = [[df.to_dict() for df in epoch] for epoch in LGDF_DFs]
-        elevationCutoffs = list(map(check_satellite_sight_2, repeat(ROS.observation_end), repeat(ROS.dem_data), repeat(src), repeat(5000), repeat(ROS.elevation_mask), range(0,360,1)))
-        return final_list, final_listdf, elevationCutoffs, ROS.observation_cartesian
-
-
-if __name__ == '__main__':
-    """
-    Expects a "multiprocessing_dop_testdata.pkl" file built with expected input parameters of find_dop_on_point, for all steps along road: 
-
-    pickle_data = [dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper]
-    with open('multiprocessing_test.pkl', 'wb') as out:
-        for d in pickle_data:
-            pickle.dump(d, out, pickle.HIGHEST_PROTOCOL)
-    """
-    import pickle
-    dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper = None, None, None, None, None, None, None, None, None, None
-    with open('multiprocessing_dop_testdata.pkl', 'rb') as inp:
-        dem_data = pickle.load(inp)
-        gnss_mapping = pickle.load(inp)
-        gnss = pickle.load(inp)
-        time = pickle.load(inp)
-        points = pickle.load(inp)
-        observers = pickle.load(inp)
-        observers_cartesian = pickle.load(inp)
-        elevation_angle = pickle.load(inp)
-        E_lower = pickle.load(inp)
-        N_upper = pickle.load(inp)
-    data = (dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper)
-    
-    for r in get_dopvalues_concurrently(data):
-        print(r)
+            DFs_in_2d_list = pool.map(data_from_timestep, steps, chunksize=1)
+            
+        visible_sats_data_for_timesteps = [[df.to_dict() for df in timestep] for timestep in DFs_in_2d_list]
+        
+        # Extract positions of every satellites for each timestep
+        visible_sats_pos_for_timesteps = []
+        for timestep in DFs_in_2d_list:
+            timestep_sats_pos = []
+            for gnss_df in timestep:
+                timestep_sats_pos.extend(gnss_df[['X', 'Y', 'Z']].values.tolist())
+            visible_sats_pos_for_timesteps.append(timestep_sats_pos)
+            
+        elevation_cutoffs = list(map(check_satellite_sight_2, repeat(ROS.observation_end), repeat(ROS.dem_data), repeat(src), repeat(5000), repeat(ROS.elevation_mask), range(0,360,1)))
+        elevation_cutoffs = [str(elevation) for elevation in elevation_cutoffs]
+        return visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, ROS.observation_cartesian
