@@ -83,21 +83,21 @@ def road():
 
     try:
         start_road = perf_counter_ns()
-        vegReferanse = request.json.get('vegReferanse')
-        startPoint = request.json.get('startPoint')
-        endPoint = request.json.get('endPoint')
+        veg_referanse = request.json.get('vegReferanse')
+        startpoint = request.json.get('startPoint')
+        endpoint = request.json.get('endPoint')
         distance = request.json.get('distance')
 
         # Validate input
-        if not vegReferanse or not startPoint or not endPoint or not distance:
+        if not veg_referanse or not startpoint or not endpoint or not distance:
             response = jsonify({'error': 'Missing input parameters.', 'message': 'Please provide startPoint, endPoint, distance and vegReferanse.'})
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             return response, 400
 
         # Get road data
-        segmenter, df, vegsystemreferanse= get_road_api(startPoint, endPoint, vegReferanse)
+        segmenter, df, vegsystemreferanse = get_road_api(startpoint, endpoint, veg_referanse)
         start = perf_counter_ns()
-        road_utm, road_wgs = connect_total_road_segments(segmenter,df, vegsystemreferanse, startPoint, endPoint)
+        road_utm, road_wgs = connect_total_road_segments(segmenter,df, vegsystemreferanse, startpoint, endpoint)
         print("timing connect_total_road_segments (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
         # Calculate points

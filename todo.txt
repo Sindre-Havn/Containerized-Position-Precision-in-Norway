@@ -47,3 +47,8 @@ even though 61 epochs are expected. This should be communicated to the user.
 
 Improve file names:
 - downloadfile.py ==> dowload_ephemeris.py
+
+Functions "in_wrong_direction" and "create new_raster"
+may cause errors because they make assumptions about the
+road being ish-straight, and that no segment may end closer
+to the starting point; than the beginning of the segment.
