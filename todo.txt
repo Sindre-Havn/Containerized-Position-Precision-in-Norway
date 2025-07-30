@@ -52,3 +52,13 @@ Functions "in_wrong_direction" and "create new_raster"
 may cause errors because they make assumptions about the
 road being ish-straight, and that no segment may end closer
 to the starting point; than the beginning of the segment.
+
+Is it correct to have fixed phi and lam in common_variables.py. See:
+    # IS THIS SAFE? Using fixed ENU coordinates for entire Norway!?
+
+As it is now, all request must be in the same area as the "merged_raster.tif".
+If not, there will be no elevation model along the requested road.
+Need to implement file handling system for having multiple clients in paralell,
+as well as deleting unused files.
+Consider hashing the point list, and use that for filename of the merged raster.
+Then delete the oldes file, when exceeding maybe 20 merged files.

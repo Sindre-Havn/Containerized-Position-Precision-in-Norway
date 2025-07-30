@@ -67,7 +67,7 @@ def DOPvalues(satellites: list[list], receiver_pos: list[float]) -> list[float]:
     Qxx = np.linalg.inv(A.T @ A)
     Qxx_local = Qxx[0:3,0:3]
     # Transform to local ENU coordinates
-    T = P2()@R2(phi-np.pi/2)@R3(lam-np.pi)
+    T = P2()@R2(phi-np.pi/2)@R3(lam-np.pi)  # IS THIS SAFE? Using fixed ENU coordinates for entire Norway!?
     Qxx_local = T@Qxx_local@T.T
     # Calculate DOP metrics
     GDOP = np.sqrt(Qxx[0][0] + Qxx[1][1] + Qxx[2][2] + Qxx[3][3])
