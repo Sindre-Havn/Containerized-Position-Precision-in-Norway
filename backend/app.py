@@ -4,10 +4,12 @@ from computebaner import  get_gnss, getDayNumber, data_from_epoch
 from computeDOP import DOP_in_epoch, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
-from romsdalenRoad import calculate_travel_time, connect_total_road_segments, get_road_api
+from romsdalenRoad import extract_points_at_interval, connect_total_road_segments, get_road_and_speedlimits, get_road
 import rasterio
 import config
 import concurrency
+import os
+from downloadHoydedata import create_new_raster
 
 from time import perf_counter_ns
 import multiprocessing
@@ -23,7 +25,7 @@ points = None
 
 app = Flask(__name__)
 CORS(app, resources={r"/satellites": {"origins": "http://localhost:3000"}}, supports_credentials=True)
-CORS(app, resources={r"/dopvalues": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/dopvalues" : {"origins": "http://localhost:3000"}})
 
 @app.route('/satellites', methods=['POST', 'OPTIONS'])
 def satellites():
@@ -44,7 +46,6 @@ def satellites():
     epoch = int(data.get('epoch'))
     frequency = int(data.get('epochFrequency'))
     point = data.get('point')
-    #print(f'point: {point}')
     
     is_processing = True
     start = perf_counter_ns()
@@ -55,7 +56,6 @@ def satellites():
         visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
     print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     DOPvalues = DOP_in_epoch(visible_sats_pos_for_timesteps, observation_cartesian)
-    print('DOPvalues', DOPvalues)
     is_processing = False
     print("timing satellites (ms):\t", round((perf_counter_ns()-start_satellites)/1_000_000,3))
     if not is_processing:
@@ -83,27 +83,38 @@ def road():
 
     try:
         start_road = perf_counter_ns()
-        veg_referanse = request.json.get('vegReferanse')
+        veg_referanse = request.json.get('vegReferanse') # Not needed, depreciated
         startpoint = request.json.get('startPoint')
         endpoint = request.json.get('endPoint')
         distance = request.json.get('distance')
 
         # Validate input
-        if not veg_referanse or not startpoint or not endpoint or not distance:
+        if not startpoint or not endpoint or not distance:
             response = jsonify({'error': 'Missing input parameters.', 'message': 'Please provide startPoint, endPoint, distance and vegReferanse.'})
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             return response, 400
 
         # Get road data
-        segmenter, df, vegsystemreferanse = get_road_api(startpoint, endpoint, veg_referanse)
+        if config.USE_CORRECT_SPEEDLIMITS:
+            road_segments, speedlimits = get_road_and_speedlimits(startpoint, endpoint)
+        else:
+            road_segments, speedlimits = get_road(startpoint, endpoint), []
         start = perf_counter_ns()
-        road_utm, road_wgs = connect_total_road_segments(segmenter,df, vegsystemreferanse, startpoint, endpoint)
+        road_utm, road_wgs = connect_total_road_segments(road_segments, startpoint, speedlimits) # startpoint should be road startpoint, not pin startpoint.
         print("timing connect_total_road_segments (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
         # Calculate points
         start = perf_counter_ns()
-        points = calculate_travel_time(road_utm, float(distance))
-        print('COUNT',len(points))
+        points = extract_points_at_interval(road_utm, float(distance))
+
+        # The following lines regarding deleting/creating raster must be refactored.
+        # It does not support multiple users requesting road routes for different
+        # areas of the country.
+        # Delete merged raster if exists
+        if os.path.exists("data/merged_raster.tif"):
+            os.remove("data/merged_raster.tif")
+        create_new_raster(startpoint, endpoint)
+
         print("timing calculate_travel_time (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
         response = jsonify({'message': 'Data processed successfully', 'road': road_wgs, 'points': points})
