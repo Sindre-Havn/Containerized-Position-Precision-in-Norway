@@ -5,14 +5,23 @@ import math
 import rasterio
 from rasterio.mask import mask
 from shapely.geometry import Polygon, mapping
+import config
 
+# file Not used
 
-# Calculate Euclidean distance between two 2D points
-def calculate_distance(point1, point2):
+def calculate_distance(point1: list[float], point2: list[float]) -> float:
+    # Not used
+    """
+    Calculate Euclidean distance between two 2D points.
+    """
     return math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
-# Generate triangular polygons around a center point forming a full 360-degree circle
-def generate_triangles(center, radius, step=1):
+
+def generate_triangles(center: list[float], radius: float, step: float = 1.0) -> list[Polygon]:
+    # Not used
+    """
+    Generate triangular polygons around a center point forming a full 360-degree circle.
+    """
     polygons = []
     for angle in range(0, 360, step):
         x_end_first = center[0] + radius * math.cos(math.radians(angle))
@@ -34,15 +43,19 @@ def generate_triangles(center, radius, step=1):
     
     return polygons
 
-# Find the maximum elevation angle in each direction (by triangle) from a center point
-def find_highest_elevation_triangle(dem_data, src, center, radius_km, elevation_mask, step=1):
+
+def find_highest_elevation_triangle(dem_data: np.ndarray[float], src: rasterio.io.DatasetReader, center: np.ndarray[float], radius_km: float, elevation_mask: float, step: float = 1):
+    # Not used
+    """
+    Find the maximum elevation angle in each direction (by triangle) from a center point.
+    """
     polygons = generate_triangles(center, radius_km*1000, step)
     center_height = dem_data[src.index(center[0], center[1])]
    
     highest_elevations = []
     for polygon in polygons:             
         out_image, out_transform = mask(src, polygon, crop=True, nodata=src.nodata)
-        out_data = out_image[0]  # Hent første bånd  
+        out_data = out_image[0]  # Fetch first band
         highest_elevation = elevation_mask
 
         if out_data.size > 0:
@@ -66,8 +79,11 @@ def find_highest_elevation_triangle(dem_data, src, center, radius_km, elevation_
     return center_height, highest_elevations
 
 
-# Determine visibility obstruction around the observer in all directions
 def find_obstruction(dem, src, observer, max_distance, angle_step=1):
+    # Not used
+    """
+    Determine visibility obstruction around the observer in all directions.
+    """
     obstructed_points = []  # Store (x, y, elevation) of sight-blocking points
     
     observer_x, observer_y = observer
@@ -103,6 +119,29 @@ def find_obstruction(dem, src, observer, max_distance, angle_step=1):
         obstructed_points.append((obstructing_point, obstructing_height))
    
     return obstructed_points
+
+def sort_elevation_azimuth(elevation: list[float]) -> list[float]:
+    # Not used
+    """
+    Rearrange the elevation from unit-circle-angle to azimuth.
+    """
+    FIRST_3_QUADRANTS = 271 # +1 since this is the first index after the 3 quadrants.
+    idx_Q3 = int( FIRST_3_QUADRANTS / config.SKYPLOT_RESOLUTION_DEGREE )
+    elevation = elevation[::-1]
+    last_part = elevation[idx_Q3:]
+    elevation_azimuth = last_part + elevation[:idx_Q3]
+
+    return elevation_azimuth
+
+
+#bruker trekanter
+def find_elevation_cutoff(dem_data, src, observer, max_distance, elevation_mask):
+    # Not used
+    observer_height, heights_and_points = find_highest_elevation_triangle(dem_data,src, observer,max_distance, elevation_mask, config.SKYPLOT_RESOLUTION_DEGREE)
+
+    elevation_azimuth = sort_elevation_azimuth(heights_and_points)
+    return elevation_azimuth, observer_height
+
 
 
 # def plot_obstructions(observer, obstructions):

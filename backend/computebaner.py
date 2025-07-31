@@ -5,7 +5,7 @@ from sortDataNew import sortData
 from datetime import datetime, timedelta
 #from computeDOP import DOP_at_epochs
 from satellitePositions import get_satellite_positions
-from generateElevationMask import check_satellite_sight, check_satellite_sight_2
+from generateElevationMask import satellite__is_in_sight, check_satellite_sight_2
 from common_variables import wgs
 import rasterio
 
@@ -148,7 +148,7 @@ def visual_satellites_xyz(satellites: pd.DataFrame,
         if azimuth < 0:
             azimuth += 360
 
-        if check_satellite_sight(observer, dem_data, E_lower, N_upper, 5000, elevation, elevation_mask, azimuth):
+        if satellite_is_in_sight(observer, dem_data, E_lower, N_upper, elevation, elevation_mask, azimuth):
             visual_satellites.append([sat["X"],sat["Y"],sat["Z"]])
 
     return visual_satellites
@@ -213,7 +213,7 @@ def visual_satellites_data(satellites: pd.DataFrame,
         if azimuth < 0:
             azimuth = 360 + azimuth
     
-        if check_satellite_sight(observer, dem_data, E_lower, N_upper, 5000, elevation, elevation_mask,azimuth):
+        if satellite_is_in_sight(observer, dem_data, E_lower, N_upper, elevation, elevation_mask,azimuth):
             visual_satellites.append([sat["satelite_id"],sat["time"],sat["X"],sat["Y"],sat["Z"], azimuth,zenith])
 
     df = pd.DataFrame(visual_satellites, columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
@@ -232,8 +232,8 @@ def data_from_epoch(gnss_list: list[str],
                                 list[float] ]:
     """
     A wrapper function for getting DOP and satellite count on a point during a specified epoch.
-    Returns "visible_sats_data_for_timesteps" which is data regarding each satellite visual from that point.
-    This data is structured in a two layer list: top layer is timesteps, second layer is gnss.
+    Returns "visible_sats_data_for_timesteps" which is data regarding each satellite with
+    LOS (line of sight) from that point.
     "visible_sats_pos_for_timesteps" and "observation_cartesian" is returned to calculate DOP outside
     this function.
     """
@@ -276,7 +276,7 @@ def data_from_epoch(gnss_list: list[str],
             visible_sats_pos_for_timesteps.append(sats_pos_dfs)
             visible_sats_data_for_timesteps.append([df.to_dict() for df in sats_data_dfs])
 
-        elevation_cutoffs = list(map(check_satellite_sight_2, repeat(observation_end), repeat(dem_data), repeat(src), repeat(5000), repeat(elevation_mask), range(0,360,1)))
+        elevation_cutoffs = list(map(check_satellite_sight_2, repeat(observation_end), repeat(dem_data), repeat(E_lower), repeat(N_upper), repeat(elevation_mask), range(0,360,1)))
         elevation_cutoffs = [str(elevation) for elevation in elevation_cutoffs]
 
     return visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian

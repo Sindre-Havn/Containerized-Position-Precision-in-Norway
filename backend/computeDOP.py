@@ -1,10 +1,8 @@
 from datetime import timedelta, datetime
 import pandas as pd
 import numpy as np
-from pyproj import Transformer
 from computebaner import satellites_visible_from_point
 from common_variables import phi,lam
-import rasterio
 
 from time import perf_counter_ns
 

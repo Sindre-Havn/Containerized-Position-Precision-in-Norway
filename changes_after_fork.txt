@@ -15,7 +15,7 @@ Remove DOPvalues_2 so only one DOPvalues is used.
 
 Improvements:
 * Finding a route is not limited to EV136.
-* Routes work when overlapping roads such as inside spiraling tunnels.
+* Routes work when overlapping roads, such as inside spiraling tunnels.
 * Routes work over ferry crossings.
 * Can find speedlimits without hardcoding it for EV136.
 * Better documentation and overall concistency.
@@ -25,3 +25,5 @@ Future work:
 * The option "Vegsystemreferanse" in the frontend is not used and should be removed.
 * DOP values should be set to 0 or -1 when inside tunnels.
 * Conscider python library 'dask pandas' for sharing memory inside concurrency.py (bypass GIL) and make it even faster.
+* Give system posibility to handle multiple different 'merged_raster', for different clients.
+* Add memory/ session manager to avoid infinitely growing the number of rinex data and merged raster.
