@@ -9,7 +9,14 @@ def azimuth_to_unit_circle(azimuth: float) -> float:
     return (90 - azimuth) % 360
 
 
-def satellite_is_in_sight(observer, dem_data, E_lower, N_upper, elevation_satellite, elevation_mask, azimuth_satellite) -> bool:
+def satellite_is_in_sight(observer: np.ndarray[float],
+                          dem_data: np.ndarray[float],
+                          E_lower: float,
+                          N_upper: float,
+                          elevation_satellite: float,
+                          elevation_mask: float,
+                          azimuth_satellite: float
+                          ) -> bool:
     """
     Checks if the LOS (line of sight) from the observer to the satelitte is blocked by the terrain.
     Uses the elevation_mask and height-difference to calculate how far away it 'cares' to analyze the terrain.
@@ -41,7 +48,13 @@ def satellite_is_in_sight(observer, dem_data, E_lower, N_upper, elevation_satell
     return True
 
 
-def elevation_of_horizon(observer, dem_data, E_lower, N_upper, elevation_mask, azimuth_satellite) -> float:
+def elevation_of_horizon(observer: np.ndarray[float],
+                        dem_data: np.ndarray[float],
+                        E_lower: float,
+                        N_upper: float,
+                        elevation_mask: float,
+                        azimuth_satellite: float
+                        ) -> float:
     """
     Returns the elevation (in degrees) to the horizon of the terrain, in the direction of the azimuth to a satellite.
     Uses the elevation_mask and height-difference to calculate how far away it 'cares' to analyze the terrain.

@@ -5,7 +5,7 @@ from sortDataNew import sortData
 from datetime import datetime, timedelta
 #from computeDOP import DOP_at_epochs
 from satellitePositions import get_satellite_positions
-from generateElevationMask import satellite__is_in_sight, check_satellite_sight_2
+from generateElevationMask import satellite_is_in_sight, elevation_of_horizon
 from common_variables import wgs
 import rasterio
 
