@@ -53,7 +53,7 @@ def elevation_of_horizon(observer: np.ndarray[float],
                         E_lower: float,
                         N_upper: float,
                         elevation_mask: float,
-                        azimuth_satellite: float
+                        azimuth_step: float
                         ) -> float:
     """
     Returns the elevation (in degrees) to the horizon of the terrain, in the direction of the azimuth to a satellite.
@@ -62,7 +62,7 @@ def elevation_of_horizon(observer: np.ndarray[float],
     max_dist = int((dem_data.max() - observer[2]) / np.tan(np.deg2rad(elevation_mask)))
 
     x,y = observer[0], observer[1]
-    az = np.deg2rad(azimuth_to_unit_circle(azimuth_satellite))
+    az = np.deg2rad(azimuth_to_unit_circle(azimuth_step))
     max_elevation = 0
     step_size = config.FIND_ELEVATION_STEPSIZE
     

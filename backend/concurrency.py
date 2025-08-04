@@ -7,7 +7,7 @@ from computeDOP import find_dop_on_point
 import json
 from pyproj import Transformer
 from datetime import datetime
-from computebaner import getDayNumber, get_gnss, Cartesian, get_satellite_positions, visual_satellites_data, check_satellite_sight_2
+from computebaner import getDayNumber, get_gnss, Cartesian, get_satellite_positions, visual_satellites_data, elevation_of_horizon
 import rasterio
 import numpy as np
 import pandas as pd
@@ -169,7 +169,8 @@ def data_from_epoch(gnss: list[str],
             for gnss_df in timestep:
                 sats_pos_dfs.extend(gnss_df[['X', 'Y', 'Z']].values.tolist())
             visible_sats_pos_for_timesteps.append(sats_pos_dfs)
-            
-        elevation_cutoffs = list(map(check_satellite_sight_2, repeat(ROS.observation_end), repeat(ROS.dem_data), repeat(ROS.E_lower), repeat(ROS.N_upper), repeat(ROS.elevation_mask), range(0,360,1)))
+        
+        elevation_cutoffs = list(map(elevation_of_horizon, repeat(ROS.observation_end), repeat(ROS.dem_data), repeat(ROS.E_lower), repeat(ROS.N_upper), repeat(ROS.elevation_mask), np.arange(0,360,config.SKYPLOT_RESOLUTION_DEGREE)))
         elevation_cutoffs = [str(elevation) for elevation in elevation_cutoffs]
+        elevation_cutoffs.append(elevation_cutoffs[0]) # Add first elevation to end of list to close horizon line (in frontend skyplot).
         return visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, ROS.observation_cartesian

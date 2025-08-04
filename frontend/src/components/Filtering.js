@@ -9,7 +9,7 @@ import { useState } from 'react';
 const FilterComponent = () => {
   const [gnssNames, setGnssNames] = useAtom(gnssState);
   const [elevationAngle, setElevationAngle] = useAtom(elevationState)
-  const [time, setTime] =useAtom(timeState);
+  const [time, setTime] = useAtom(timeState);
   const [hours, setHours] = useAtom(epochState);
   
   const [vegsystemreferanse, setVegsystemreferanse] = useAtom(vegReferanseState);

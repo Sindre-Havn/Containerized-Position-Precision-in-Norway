@@ -1,4 +1,4 @@
-# Concurrency.py / app.py
+# concurrency.py / app.py
 USE_CONCURRENCY_FOR_DOPVALUES = True
 PROCESSES_COUNT_DOPVALUES = 7
 
@@ -13,7 +13,7 @@ HEADERS = {
             "X-Client": "Masteroppgave-vegnett"
 }
 
-# generateElevationMask.py
-SKYPLOT_RESOLUTION_DEGREE = 1 # degree.
+# generateElevationMask.py / computebaner.py
+SKYPLOT_RESOLUTION_DEGREE = 1.0 # [float] degree.
 FIND_ELEVATION_STEPSIZE = 5   # meter, how frequent the elevation is checked.
 

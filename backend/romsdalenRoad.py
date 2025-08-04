@@ -73,6 +73,11 @@ def get_closest_roadsequence(startpoint: list[float], endpoint: list[float]) -> 
 
 
 def get_road(startpoint: list[float], endpoint: list[float]) -> list[list[list[float]]]:
+    """
+    Find road route between two points. First move starpoint and endpoints to their
+    corresponding closest part of the road.
+    Return road segments contatining geometry points of the road curve.
+    """
     start_kortform, end_kortform = get_closest_roadsequence(startpoint, endpoint)
     url = (
             f'https://nvdbapiles-v3.utv.atlas.vegvesen.no/beta/vegnett/rute'
@@ -105,6 +110,12 @@ def get_road(startpoint: list[float], endpoint: list[float]) -> list[list[list[f
 
 
 def get_road_and_speedlimits(startpoint: list[float], endpoint: list[float]) -> tuple[ list[list[list[float]]], list[int] ]:
+    """
+    Find road route between two points and request the speedlimit for each of the segments. First move starpoint and endpoints to their
+    corresponding closest part of the road. Return two lists: road segments contatining geometry points of the road curve, and
+    list of speedlimits for each of the segments. Cant do 'bulk' request for all speedlimits at once
+    because the API dont tell which speedlimits is used where, and for how long of a distance.
+    """
     try:
         start_kortform, end_kortform = get_closest_roadsequence(startpoint, endpoint)
         url = (
@@ -284,13 +295,15 @@ def extract_points_at_interval(road_segments: list[dict], spacing: float) -> lis
     remaining_distance = 0 
 
     transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)  
-
+    i = 0
     for segment in road_segments:
         coords = segment["geometry"]["coordinates"] 
         line = LineString(coords) 
         length = line.length
-        speedlimit = segment["properties"]["fartsgrense"] / 3.6 # Convert speedlimit (Fartsgrense) from km/h to m/s
-        
+        try: # Some roade segments have invalid speedlimits attributes, found string 'V05-02-2016' instead of speedlimit integer.
+            speedlimit = segment["properties"]["fartsgrense"] / 3.6 # Convert speedlimit (Fartsgrense) from km/h to m/s
+        except TypeError:
+            speedlimit = config.DEFAULT_SPEEDLIMIT / 3.6
         distance = remaining_distance
         
         while distance < length:

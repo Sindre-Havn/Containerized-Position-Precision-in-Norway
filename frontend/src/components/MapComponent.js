@@ -131,9 +131,9 @@ const NavMap = () => {
       mode: 'cors',
     })
       .then(async (response) => {
-        const data = await response.json();   // <<=== LEST ALLTID JSON
+        const data = await response.json();   // <<=== READ ALWAYS JSON
         if (!response.ok) {
-          throw new Error(data.message || 'Network response was not ok');  // <<=== KAST etter å ha lest data
+          throw new Error(data.message || 'Network response was not ok');  // <<=== TROW after reading data
         }
         console.log("road", data.road);
         console.log("points", data.points);
@@ -146,7 +146,7 @@ const NavMap = () => {
         console.error('Error name road:', error.name);
         console.error('Error message road:', error.message);
         setUpdateRoad(false);
-        alert(error.message);  // Nå får du faktisk den riktige meldingen fra Flask!
+        alert(error.message);  // Retrieve actuall error from Flask!
       });
   }, [geoJsonData, updateRoad, startPoint, endPoint, distance, setGeoJsonData, setUpdateRoad, vegreferanse, setMarkers]);
   
@@ -160,7 +160,7 @@ const NavMap = () => {
     setStartPoint([124657.85,	6957624.16]);
     setEndPoint([193510.27,6896504.01]);
     setMarkers([]);
-    setVegsystemreferanse('EV136');
+    setVegsystemreferanse('Not used');
     setGeoJsonData(null);
   };
 

@@ -10,7 +10,7 @@ c = 299792458
 wgs = ahrs.utils.WGS()
 
 #romsdalen
-phi = 62.47714 * np.pi/180
+phi = 62.47714 * np.pi/180 # IS THIS SAFE? Using fixed ENU coordinates for entire Norway!?
 lam = 7.772829 * np.pi/180
 h = 60.7
 

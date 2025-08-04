@@ -171,9 +171,12 @@ export const SatelliteMap = ({satellites, cutOffElevation, terrainCutOff}) => {
   });
   console.log("satellitesNames:", satellitesNames);
   console.log("satelllitesRoutes:", satelllitesRoutes);
+
   const tcf = terrainCutOff.map((elevation, index) => { 
     const zenith = 90-elevation;
-    const coords = sphericalToCartesian2D(radius, index, zenith, center);
+    // Normalize azimuth to always draw 360 degree, independent of angel steps.
+    const azimuth = index * 360/(terrainCutOff.length-1) // -1 because the first value is added in the end to close the gap in the plotted line. E.g draw the line back to 0 degree.
+    const coords = sphericalToCartesian2D(radius, azimuth, zenith, center);
     return new Vector3(coords[0], coords[1], 0); 
   });
   return (

@@ -19,6 +19,8 @@ Improvements:
 * Routes work over ferry crossings.
 * Can find speedlimits without hardcoding it for EV136.
 * Better documentation and overall concistency.
+* Add config for azimuth resolution in the skyplot.
+* Close the visual gap at the end of elevation-curve in the skyplot.
 
 
 Future work:

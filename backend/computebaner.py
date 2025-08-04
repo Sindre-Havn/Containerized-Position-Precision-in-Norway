@@ -8,6 +8,7 @@ from satellitePositions import get_satellite_positions
 from generateElevationMask import satellite_is_in_sight, elevation_of_horizon
 from common_variables import wgs
 import rasterio
+import config
 
 from time import perf_counter_ns
 from itertools import repeat
@@ -276,7 +277,8 @@ def data_from_epoch(gnss_list: list[str],
             visible_sats_pos_for_timesteps.append(sats_pos_dfs)
             visible_sats_data_for_timesteps.append([df.to_dict() for df in sats_data_dfs])
 
-        elevation_cutoffs = list(map(check_satellite_sight_2, repeat(observation_end), repeat(dem_data), repeat(E_lower), repeat(N_upper), repeat(elevation_mask), range(0,360,1)))
+        elevation_cutoffs = list(map(elevation_of_horizon, repeat(observation_end), repeat(dem_data), repeat(E_lower), repeat(N_upper), repeat(elevation_mask), np.arange(0,360,config.SKYPLOT_RESOLUTION_DEGREE)))
         elevation_cutoffs = [str(elevation) for elevation in elevation_cutoffs]
+        elevation_cutoffs.append(elevation_cutoffs[0]) # Add first elevation to end of list to close horizon line (in frontend skyplot).
 
     return visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian
