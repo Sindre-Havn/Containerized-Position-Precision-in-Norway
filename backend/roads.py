@@ -99,8 +99,6 @@ def get_road(startpoint: list[float], endpoint: list[float]) -> list[list[list[f
     road_segments_linestrings = [segm['geometri']['wkt'] for segm in road_segment_objects]
     road_segments_coords = list(map(linestring_to_coordinates, road_segments_linestrings))
 
-    print('road_segments_coords', road_segments_coords)
-
     start = perf_counter_ns()
     # print("timing createNewRaster (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
@@ -172,30 +170,6 @@ def get_road_and_speedlimits(startpoint: list[float], endpoint: list[float]) -> 
         road_segments_linestring = [segm['geometri']['wkt'] for segm in road_segments]
         road_segments_coords = list(map(linestring_to_coordinates, road_segments_linestring))
         return road_segments_coords, speedlimits
-        """
-            # Delete merged raster if exists
-            if os.path.exists("data/merged_raster.tif"):
-                os.remove("data/merged_raster.tif")
-            start = perf_counter_ns()
-            create_new_raster(startpoint, endpoint)
-            # print("timing createNewRaster (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-        
-        # Original code gives buggy behaviour for:
-        # (Basically didnt work for anything but the default EV136 route.)
-
-        # Start (E,N) = 124657.85,6957624.16
-        # End   (E,N) = 193510.27,6896504.01
-        # Distance = 1000
-
-        # Start (E,N) = 124657.85,6957624.16
-        # End   (E,N) = 193510.27,6896504.01
-        # Distance = 1000
-
-        # Start (E,N) = 124657.85,6957624.16
-        # End   (E,N) = 193510.27,6896504.01
-        # Distance = 1000
-            
-        """
     except Exception as e:
         print(f"Error in get_road_and_speedlimits: {e}")
         raise  # let Flask catch and handle this

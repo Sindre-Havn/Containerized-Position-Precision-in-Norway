@@ -33,9 +33,9 @@ Future work:
 * Add memory/ session manager to avoid infinitely growing the number of rinex data and merged raster.
   A good solution would be to have a limited number of possible ephemeris data, say 100, and keep
   deleting the "ephemeris-day" that is the longest time since it is opened.
-  The need to create new merged_raster for each request is suboptimal and memory heavy.
+  The need to create new merged_raster for each request is suboptimal,memory heavy,
+  and makes the backend voulnerable to buffer overflow attacks.
   The code should be refactored so that elevation data checks can be done in-place.
-  Needing to merge rasters also open up for buffer overflow attacks.
 * Concider adding code to support GDOP calculation on future date, but set max limit.
   Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
   Set max to 14 or 30 days?.

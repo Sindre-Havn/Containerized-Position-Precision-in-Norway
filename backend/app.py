@@ -108,7 +108,6 @@ def road():
         if os.path.exists("merged_rasters/merged_raster.tif"):
             os.remove("merged_rasters/merged_raster.tif")
         merge_rasters_near_points(points)
-        #create_new_raster(startpoint, endpoint)
 
         print("timing calculate_travel_time (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 

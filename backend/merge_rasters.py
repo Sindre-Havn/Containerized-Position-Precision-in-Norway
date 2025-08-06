@@ -48,11 +48,11 @@ def merge_rasters_near_points(points_dicts_wgs: list[dict]) -> None:
         raster = rasterio.open(file)
         bounds = raster.bounds
         
-        raster_bbox = box(bounds.left+MARGIN, bounds.bottom+MARGIN, bounds.right+MARGIN, bounds.top+MARGIN)
+        raster_bbox = box(bounds.left-MARGIN, bounds.bottom-MARGIN, bounds.right+MARGIN, bounds.top+MARGIN)
 
         if raster_bbox.intersects(points):
             covering_rasters.append(raster)
-            print(file)
+            # print(file)
         else:
             raster.close()
 
