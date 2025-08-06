@@ -10,6 +10,7 @@ import config
 import concurrency
 import os
 from merge_rasters import merge_rasters_near_points
+import traceback
 
 from time import perf_counter_ns
 
@@ -20,49 +21,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/satellites": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 CORS(app, resources={r"/dopvalues" : {"origins": "http://localhost:3000"}})
 
-@app.route('/satellites', methods=['POST', 'OPTIONS'])
-def satellites():
-    start_satellites = perf_counter_ns()
-    if request.method == 'OPTIONS':
-        # Handle the preflight request with necessary headers
-        response = jsonify({'status': 'Preflight request passed'})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-        return response, 200
 
-    # Main POST request handling
-    data = request.json  
-    time = data.get('time').strip('Z')
-    elevation_angle = data.get('elevationAngle')
-    gnss = data.get('GNSS')
-    epoch = int(data.get('epoch'))
-    frequency = int(data.get('epochFrequency'))
-    point = data.get('point')
-    
-    is_processing = True
-    start = perf_counter_ns()
-    visible_sats_data_for_timesteps, DOPvalues, elevation_cutoffs = [], [], []
-    if config.USE_CONCURRENCY_FOR_SATELLITE:
-        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = concurrency.data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
-    else:
-        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
-    print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-    DOPvalues = DOP_in_epoch(visible_sats_pos_for_timesteps, observation_cartesian)
-    is_processing = False
-    print("timing satellites (ms):\t", round((perf_counter_ns()-start_satellites)/1_000_000,3))
-    if not is_processing:
-        response = jsonify({'message': 'Data processed successfully', 'data': visible_sats_data_for_timesteps, 'DOP': DOPvalues, 'elevation_cutoffs': elevation_cutoffs})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-        return response, 200
-    else:
-        response = jsonify({"data": "Data is not ready"})
-        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
-        return response, 202
-
-
-from flask import Flask, request, jsonify
-import traceback
 
 @app.route('/road', methods=['POST', 'OPTIONS'])
 def road():
@@ -202,6 +161,47 @@ def dopValues():
     response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
     return response
 
+
+@app.route('/satellites', methods=['POST', 'OPTIONS'])
+def satellites():
+    start_satellites = perf_counter_ns()
+    if request.method == 'OPTIONS':
+        # Handle the preflight request with necessary headers
+        response = jsonify({'status': 'Preflight request passed'})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+        return response, 200
+
+    # Main POST request handling
+    data = request.json  
+    time = data.get('time').strip('Z')
+    elevation_angle = data.get('elevationAngle')
+    gnss = data.get('GNSS')
+    epoch = int(data.get('epoch'))
+    frequency = int(data.get('epochFrequency'))
+    point = data.get('point')
+    
+    is_processing = True
+    start = perf_counter_ns()
+    visible_sats_data_for_timesteps, DOPvalues, elevation_cutoffs = [], [], []
+    if config.USE_CONCURRENCY_FOR_SATELLITE:
+        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = concurrency.data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
+    else:
+        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
+    print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+    DOPvalues = DOP_in_epoch(visible_sats_pos_for_timesteps, observation_cartesian)
+    is_processing = False
+    print("timing satellites (ms):\t", round((perf_counter_ns()-start_satellites)/1_000_000,3))
+    if not is_processing:
+        response = jsonify({'message': 'Data processed successfully', 'data': visible_sats_data_for_timesteps, 'DOP': DOPvalues, 'elevation_cutoffs': elevation_cutoffs})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
+        return response, 200
+    else:
+        response = jsonify({"data": "Data is not ready"})
+        response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  
+        return response, 202
+    
 
 if __name__ == '__main__':
     app.run(host="127.0.0.1", port=5000, debug=True, threaded=False)
