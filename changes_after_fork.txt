@@ -24,8 +24,11 @@ Improvements:
 
 
 Future work:
+* NVDB APIv3 is used inside function "get_road_and_speedlimits", must be upgraded to v4.
+* The route finder in "get_road_and_speedlimits" often dont find longer routes, maybe v4 is better.
 * The option "Vegsystemreferanse" in the frontend is not used and should be removed.
 * DOP values should be set to 0 or -1 when inside tunnels.
 * Conscider python library 'dask pandas' for sharing memory inside concurrency.py (bypass GIL) and make it even faster.
-* Give system posibility to handle multiple different 'merged_raster', for different clients.
+* Give system posibility to handle multiple different 'merged_raster' and daynumber rinex's, for different clients.
 * Add memory/ session manager to avoid infinitely growing the number of rinex data and merged raster.
+* Concider adding code to support GDOP calculation on future date, but set max limit (maybe 30 days?).

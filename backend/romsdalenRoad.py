@@ -132,8 +132,6 @@ def get_road_and_speedlimits(startpoint: list[float], endpoint: list[float]) -> 
             raise Exception(f"Error from NVDB API: {response.status_code} {response.text}")
 
         data = response.json()
-        if data['metadata']['status_tekst'] == 'IKKE_FUNNET_RUTE':
-            raise ValueError('No rode route found between point A and B')
         road_segments = data.get('vegnettsrutesegmenter', [])
         if not road_segments:
             raise IndexError("No valid route found between startpoint and endpoint.")

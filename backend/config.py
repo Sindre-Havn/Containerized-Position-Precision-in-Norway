@@ -17,3 +17,5 @@ HEADERS = {
 SKYPLOT_RESOLUTION_DEGREE = 1.0 # [float] degree.
 FIND_ELEVATION_STEPSIZE = 5   # meter, how frequent the elevation is checked.
 
+# download høydedata
+MARGIN_TO_NEIGHBOURING_TIF = 10_000 # meters. ≈ 1750/tan(10°). From a observation point, a mountain in a neighbouring .tif grid, may obstruct line of sight to satellites. 10_000 meter is equivalent to a maximum of 1750m tall obstruction in the horizon at 10° mask angle.

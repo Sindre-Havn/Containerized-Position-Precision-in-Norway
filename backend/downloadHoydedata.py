@@ -1,42 +1,57 @@
 import os
-from shapely import LineString, box
+from shapely import LineString, Point, box
 import rasterio
 from rasterio.merge import merge
 import rasterio
+import config
+from pyproj import Transformer
+import numpy as np
 
 from time import perf_counter_ns
+
 
 # First, download the elevation data from hoydedata.no for the area you want to work with
 # Place the downloaded folder inside your project at relative path "data/dom10/data/"
 
-def create_new_raster(startpoint: float, endpoint: float) -> None:
+
+def convert_coordinates(wgs_coords: list[list[np.float64]]) -> list[list[float]]:
     """
-    Merges all available rasterfiles intersecting the direct line
-    from "startpoint" to "endpoint".
-    Bad solution, if "startpoint" and "endpoint" is describing a road
-    segment which unfortunately turns around a raster, the taster to describe
-    the "elbow" of the turn, might not get merged.
+    Convert WGS84 coordinates to UTM 33N coordinates.
+    """
+    coords = np.array(wgs_coords)
+    transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
+    transformed_points = np.column_stack(transformerToEN.transform(coords[:, 0], coords[:, 1]))
+    return transformed_points.tolist()
+
+
+def merge_rasters_near_points(points_dicts_wgs: list[dict]) -> None:
+    """
+    Merges all available rasterfiles with boundaries intersecting the points.
+    The boundery box of the .tif files is upsized by a MARGIN constant in case
+    points is close to such boundary.
     """
 
-    # startPoint = [450459.33,7370679.7]
-    # endPoint = [514148.8, 7414287.3]
-
-    line = LineString([startpoint, endpoint])
-    buffer = line.buffer(distance=10000)
+    points_wgs = [d['geometry']['coordinates'] for d in points_dicts_wgs]
+    line_points_EN = convert_coordinates(points_wgs)
+    points = LineString(line_points_EN) if len(points_dicts_wgs)>1 else Point(line_points_EN[0])
 
     # Find all .tif files in the folder
-    folder_path = "data/dtm10/landsdekkende/"
-    tif_files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if f.endswith(".tif")]
+    FOLDER_PATH = "data/dtm10/landsdekkende/"
+    tif_files = [os.path.join(FOLDER_PATH, f) for f in os.listdir(FOLDER_PATH) if f.endswith(".tif")]
 
     covering_rasters = []
 
+    # MARGIN is added because the horizon view from a point, may be blocked by tall terrain in a neighbouring .tif file (neighbour .tif to the points .tif).
+    MARGIN = config.MARGIN_TO_NEIGHBOURING_TIF
     for file in tif_files:
         raster = rasterio.open(file)
         bounds = raster.bounds
-        raster_bbox = box(bounds.left, bounds.bottom, bounds.right, bounds.top)
+        
+        raster_bbox = box(bounds.left+MARGIN, bounds.bottom+MARGIN, bounds.right+MARGIN, bounds.top+MARGIN)
 
-        if raster_bbox.intersects(buffer):
+        if raster_bbox.intersects(points):
             covering_rasters.append(raster)
+            print(file)
         else:
             raster.close()
 
@@ -62,26 +77,7 @@ def create_new_raster(startpoint: float, endpoint: float) -> None:
     # Close rasters
     for raster in covering_rasters:
         raster.close()
-    
-    """
-    For debugging:
-    
-    for raster in covering_rasters:
-        raster.close()
-        left = out_transform.c
-    top = out_transform.f
-
-    pixel_width = out_transform.a
-    pixel_height = out_transform.e
-    width_in_pixels = mosaic.shape[2]
-    height_in_pixels = mosaic.shape[1]
-
-    right = left + (pixel_width * width_in_pixels)
-    bottom = top + (pixel_height * height_in_pixels)
-    
-    print(f"Lower left corner (bottom-left): ({left}, {bottom})")
-    print(f"Upper right corner (top-right): ({right}, {top})")
-    """
 
 
-#createNewRaster([446098.28,7371410.12],	[475901.49, 7365141.92])
+# Test
+# createNewRaster([446098.28,7371410.12],	[475901.49, 7365141.92])

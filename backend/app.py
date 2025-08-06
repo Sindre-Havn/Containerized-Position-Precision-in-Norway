@@ -9,7 +9,7 @@ import rasterio
 import config
 import concurrency
 import os
-from downloadHoydedata import create_new_raster
+from downloadHoydedata import merge_rasters_near_points
 
 from time import perf_counter_ns
 import multiprocessing
@@ -88,6 +88,7 @@ def road():
         endpoint = request.json.get('endPoint')
         distance = request.json.get('distance')
 
+
         # Validate input
         if not startpoint or not endpoint or not distance:
             response = jsonify({'error': 'Missing input parameters.', 'message': 'Please provide startPoint, endPoint, distance and vegReferanse.'})
@@ -113,7 +114,8 @@ def road():
         # Delete merged raster if exists
         if os.path.exists("data/merged_raster.tif"):
             os.remove("data/merged_raster.tif")
-        create_new_raster(startpoint, endpoint)
+        merge_rasters_near_points(points)
+        #create_new_raster(startpoint, endpoint)
 
         print("timing calculate_travel_time (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
