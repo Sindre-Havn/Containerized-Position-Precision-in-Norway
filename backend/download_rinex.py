@@ -3,7 +3,7 @@ import gzip
 import os
 from pathlib import Path
 
-def download_rinex(day, year):
+def download_rinex(day: str, year: int) -> None:
     """
        Downloads today's RINEX (ephemeris) file from the CDDIS server.
        Assumes .netrc file with correct loggin creditdentials in home directory.

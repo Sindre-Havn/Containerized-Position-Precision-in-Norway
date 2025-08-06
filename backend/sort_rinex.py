@@ -555,11 +555,13 @@ def sort_rinex(daynumber: int, date: datetime) -> None:
     Extracts ephemeris data from rinex file, and store it in a csv file to their
     corresponding GNSS.
     """
-    if os.path.exists(f"ephemeris/{date.year}/{daynumber}/structured_dataG.csv"):
+    DESIRED_LENGTH = 3
+    day = str(daynumber).zfill(DESIRED_LENGTH)
+    if os.path.exists(f'ephemeris/{date.year}_{day}/structured_dataG.csv'):
         #print(f"Data on day {daynumber} already sorted")
         return
-    filename = f'unzipped/BRD400DLR_S_{date.year}{daynumber}0000_01D_MN.rnx'
-    download_rinex(daynumber, date.year)
+    filename = f'unzipped/BRD400DLR_S_{date.year}{day}0000_01D_MN.rnx'
+    download_rinex(day, date.year)
     #current date
     current_date = date.date()
     #creates new dataFrames, based on the columns from Dataframes
@@ -635,7 +637,7 @@ def sort_rinex(daynumber: int, date: datetime) -> None:
     print("timing update_navigation_message_type x2 (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     # Save GNSS datafranes to csv.
-    output_folder = f"ephemeris/{date.year}/" + str(daynumber)
+    output_folder = f'ephemeris/{date.year}_{day}/'
     os.makedirs(output_folder, exist_ok=True)
     file_pathG = os.path.join(output_folder, "structured_dataG.csv")
     structured_dataG = structured_dataG.sort_values(by=['satelite_id', 'Datetime'])

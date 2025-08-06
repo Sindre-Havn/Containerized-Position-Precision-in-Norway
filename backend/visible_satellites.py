@@ -77,14 +77,16 @@ def get_gnss(daynumber: int, year: int) -> dict[str, pd.DataFrame]:
     """
     Load structured GNSS data for a specific day/year.
     """
+    DESIRED_LENGTH = 3
+    day = str(daynumber).zfill(DESIRED_LENGTH)
     gnss_mapping = {
-        'GPS'    : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataG.csv"),
-        'GLONASS': pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataR.csv"),
-        'Galileo': pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataE.csv"),
-        'QZSS'   : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataJ.csv"),
-        'BeiDou' : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataC.csv"),
-        'NavIC'  : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataI.csv"),
-        'SBAS'   : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataS.csv")
+        'GPS'    : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataG.csv"),
+        'GLONASS': pd.read_csv(f"ephemeris/{year}_{day}/structured_dataR.csv"),
+        'Galileo': pd.read_csv(f"ephemeris/{year}_{day}/structured_dataE.csv"),
+        'QZSS'   : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataJ.csv"),
+        'BeiDou' : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataC.csv"),
+        'NavIC'  : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataI.csv"),
+        'SBAS'   : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataS.csv")
     }
     return gnss_mapping
 
