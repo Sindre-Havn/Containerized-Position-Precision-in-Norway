@@ -196,7 +196,7 @@ if __name__ == '__main__':
         #             positions.loc[len(positions)] = cartesianB_list(group, time)
         # return positions
 
-        GLONASSData = pd.read_csv('DataFrames/289/structured_dataR.csv')
+        GLONASSData = pd.read_csv('ephemeris/289/structured_dataR.csv')
         r01 = GLONASSData.loc[GLONASSData['satelite_id'] == 'R01']
         r01['Datetime'] = pd.to_datetime(r01['Datetime'] )
         cartesianC_list(r01, pd.to_datetime("2024-10-15T12:12:02.000"), True)

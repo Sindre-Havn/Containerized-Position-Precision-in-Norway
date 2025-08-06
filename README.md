@@ -107,7 +107,7 @@ Dette prosjektet er satt opp til å bruke **landsdekkende høydedata (DTM 10m)**
 1. Pakk ut `.zip`-filen du får tilsendt.
 2. Flytt hele mappen til prosjektets mappe:
    ```bash
-   backend/data/dtm10/
+   backend/dtm10/
 
 
 

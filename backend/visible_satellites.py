@@ -1,17 +1,17 @@
 import pandas as pd
 import numpy as np
 from pyproj import Transformer
-from sortDataNew import sortData
+from sort_rinex import sort_rinex
 from datetime import datetime, timedelta
-#from computeDOP import DOP_at_epochs
-from satellitePositions import get_satellite_positions
-from generateElevationMask import satellite_is_in_sight, elevation_of_horizon
+from satellite_positions import get_satellite_positions
+from elevation_mask import satellite_is_in_sight, elevation_of_horizon
 from common_variables import wgs
 import rasterio
+from itertools import repeat
 import config
 
 from time import perf_counter_ns
-from itertools import repeat
+
 
 # Set up coordinate transformers: EPSG:4326 = WGS84, EPSG:25833 = UTM zone 33N
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
@@ -68,7 +68,7 @@ def getDayNumber(date: datetime) -> int:
     daynumber = f"{days_difference:03d}"
     
     start = perf_counter_ns()
-    sortData(daynumber, date)
+    sort_rinex(daynumber, date)
     print("timing sortData (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     return daynumber
 
@@ -78,13 +78,13 @@ def get_gnss(daynumber: int, year: int) -> dict[str, pd.DataFrame]:
     Load structured GNSS data for a specific day/year.
     """
     gnss_mapping = {
-        'GPS'    : pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataG.csv"),
-        'GLONASS': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataR.csv"),
-        'Galileo': pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataE.csv"),
-        'QZSS'   : pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataJ.csv"),
-        'BeiDou' : pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataC.csv"),
-        'NavIC'  : pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataI.csv"),
-        'SBAS'   : pd.read_csv(f"DataFrames/{year}/{daynumber}/structured_dataS.csv")
+        'GPS'    : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataG.csv"),
+        'GLONASS': pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataR.csv"),
+        'Galileo': pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataE.csv"),
+        'QZSS'   : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataJ.csv"),
+        'BeiDou' : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataC.csv"),
+        'NavIC'  : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataI.csv"),
+        'SBAS'   : pd.read_csv(f"ephemeris/{year}/{daynumber}/structured_dataS.csv")
     }
     return gnss_mapping
 
@@ -110,7 +110,7 @@ def create_observers(src: rasterio.io.DatasetReader, dem_data: np.ndarray[float]
     return observers, observers_cartesian
 
 
-def visual_satellites_xyz(satellites: pd.DataFrame,
+def visible_satellites_xyz(satellites: pd.DataFrame,
                           observer_cartesian: np.ndarray[float],
                           observer: np.ndarray[float],
                           observation_lnglat: tuple[float],
@@ -123,7 +123,7 @@ def visual_satellites_xyz(satellites: pd.DataFrame,
     Return list of the XYZ (ECEF) position for each satellite visible from the observer,
     with consideration to dem_data and elevation_mask.
     """
-    visual_satellites = []
+    visible_satellites = []
 
     phi = observation_lnglat[1]*np.pi/180
     lam =  observation_lnglat[0]*np.pi/180
@@ -150,9 +150,9 @@ def visual_satellites_xyz(satellites: pd.DataFrame,
             azimuth += 360
 
         if satellite_is_in_sight(observer, dem_data, E_lower, N_upper, elevation, elevation_mask, azimuth):
-            visual_satellites.append([sat["X"],sat["Y"],sat["Z"]])
+            visible_satellites.append([sat["X"],sat["Y"],sat["Z"]])
 
-    return visual_satellites
+    return visible_satellites
 
 
 def satellites_visible_from_point(gnss_mapping: dict[str, pd.DataFrame],
@@ -172,13 +172,13 @@ def satellites_visible_from_point(gnss_mapping: dict[str, pd.DataFrame],
     final_list = []
     for gnss in gnss_list:
         satellites = get_satellite_positions(gnss_mapping[gnss],gnss,given_date)
-        visual_satellites = visual_satellites_xyz(satellites, obs_cartesian, observer,observation_lnglat, elevation_mask, dem_data,E_lower, N_upper)
-        final_list.extend(visual_satellites)
+        visible_satellites = visible_satellites_xyz(satellites, obs_cartesian, observer,observation_lnglat, elevation_mask, dem_data,E_lower, N_upper)
+        final_list.extend(visible_satellites)
     
     return final_list
 
 
-def visual_satellites_data(satellites: pd.DataFrame,
+def visible_satellites_data(satellites: pd.DataFrame,
                            observer_cartesian: np.ndarray[float],
                            observer: np.ndarray[float],
                            observation_lnglat: tuple[float],
@@ -190,7 +190,7 @@ def visual_satellites_data(satellites: pd.DataFrame,
     Return list of the "satelite_id", "time", "X", "Y", "Z" for each satellite visible from the observer,
     with consideration to dem_data and elevation_mask.
     """
-    visual_satellites = []
+    visible_satellites = []
 
     phi = observation_lnglat[1] * np.pi/180
     lam =  observation_lnglat[0] * np.pi/180
@@ -215,9 +215,9 @@ def visual_satellites_data(satellites: pd.DataFrame,
             azimuth = 360 + azimuth
     
         if satellite_is_in_sight(observer, dem_data, E_lower, N_upper, elevation, elevation_mask,azimuth):
-            visual_satellites.append([sat["satelite_id"],sat["time"],sat["X"],sat["Y"],sat["Z"], azimuth,zenith])
+            visible_satellites.append([sat["satelite_id"],sat["time"],sat["X"],sat["Y"],sat["Z"], azimuth,zenith])
 
-    df = pd.DataFrame(visual_satellites, columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
+    df = pd.DataFrame(visible_satellites, columns = ["Satelitenumber","time", "X","Y","Z", "azimuth", "zenith"])
     return df
 
 
@@ -250,7 +250,7 @@ def data_from_epoch(gnss_list: list[str],
     print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     gnss_mapping = get_gnss(daynumber, given_date.year )
     
-    with rasterio.open("data/merged_raster.tif") as src:
+    with rasterio.open("merged_rasters/merged_raster.tif") as src:
         dem_data = src.read(1)
         E_lower = src.bounds[0]
         N_upper = src.bounds[3]
@@ -268,7 +268,7 @@ def data_from_epoch(gnss_list: list[str],
             for gnss in gnss_list:
 
                 positions = get_satellite_positions(gnss_mapping[gnss], gnss, time)
-                data = visual_satellites_data(positions, observation_cartesian, observation_end, observation_lnglat, elevation_mask, dem_data, E_lower, N_upper)
+                data = visible_satellites_data(positions, observation_cartesian, observation_end, observation_lnglat, elevation_mask, dem_data, E_lower, N_upper)
                 if data.empty: continue
 
                 sats_data_dfs.append(data)

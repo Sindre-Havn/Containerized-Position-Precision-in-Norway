@@ -1,10 +1,7 @@
 backend/venv
 backend/__pycache__/
 backend/unzipped/
-backend/DataFrames/
+backend/ephemeris/
+backend/dtm10/
+backend/merged_rasters
 .DS_Store
-backend/data/bilinnsamling/
-backend/data/csv/
-backend/data/dtm10/
-backend/data/DOM10_UTM33_20250117/
-backend/veglenkerEV136.json

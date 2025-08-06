@@ -1,24 +1,17 @@
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
-from computebaner import  get_gnss, getDayNumber, data_from_epoch
-from computeDOP import DOP_in_epoch, find_dop_on_point
+from visible_satellites import  get_gnss, getDayNumber, data_from_epoch, create_observers
+from compute_DOP import DOP_in_epoch, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
-from romsdalenRoad import extract_points_at_interval, connect_total_road_segments, get_road_and_speedlimits, get_road
+from roads import extract_points_at_interval, connect_total_road_segments, get_road_and_speedlimits, get_road
 import rasterio
 import config
 import concurrency
 import os
-from downloadHoydedata import merge_rasters_near_points
+from merge_rasters import merge_rasters_near_points
 
 from time import perf_counter_ns
-import multiprocessing
-import functools
-import concurrent.futures
-import pickle
-import numpy as np
-from pyproj import Transformer
-from computebaner import create_observers
 
 distance = None
 points = None
@@ -112,8 +105,8 @@ def road():
         # It does not support multiple users requesting road routes for different
         # areas of the country.
         # Delete merged raster if exists
-        if os.path.exists("data/merged_raster.tif"):
-            os.remove("data/merged_raster.tif")
+        if os.path.exists("merged_rasters/merged_raster.tif"):
+            os.remove("merged_rasters/merged_raster.tif")
         merge_rasters_near_points(points)
         #create_new_raster(startpoint, endpoint)
 
@@ -176,7 +169,7 @@ def dopValues():
 
     # Prepare data
     dem_data, observers, observers_cartesian, E_lower, N_upper = None, None, None, None, None
-    with rasterio.open("data/merged_raster.tif") as src:
+    with rasterio.open("merged_rasters/merged_raster.tif") as src:
             dem_data = src.read(1)
 
             observers, observers_cartesian = create_observers(src, dem_data, points)

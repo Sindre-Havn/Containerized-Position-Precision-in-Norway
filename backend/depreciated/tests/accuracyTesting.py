@@ -4,10 +4,10 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-from computeDOP import best
-from computebaner import get_gnss, getDayNumber, visualCheck, visualCheck, Cartesian
-from satellitePositions import get_satellite_positions
-from computeDOP import best
+from compute_DOP import best
+from visible_satellites import get_gnss, getDayNumber, visualCheck, visualCheck, Cartesian
+from backend.satellite_positions import get_satellite_positions
+from compute_DOP import best
 
 phi = 63.41458293  * np.pi/180
 lam = 10.41044691  * np.pi/180
@@ -467,7 +467,7 @@ for i in range(len(satellite)):#len(satellite)
 # # lam = 10.41044691  * np.pi/180
 # # h =39.689
 # # recieverPos = [phi,lam,h]
-# # df = pd.read_csv('backend/DataFrames/332/structured_dataR.csv')
+# # df = pd.read_csv('backend/ephemeris/332/structured_dataR.csv')
 
 # # timeDate = pd.to_datetime('2024-11-27T14:32:15.000')
 # # pos = get_satellite_positions(df,'GLONASS',timeDate)

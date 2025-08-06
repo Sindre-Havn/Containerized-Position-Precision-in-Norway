@@ -3,11 +3,11 @@ from dataclasses import dataclass
 import multiprocessing
 from time import perf_counter_ns
 import config
-from computeDOP import find_dop_on_point
+from compute_DOP import find_dop_on_point
 import json
 from pyproj import Transformer
 from datetime import datetime
-from computebaner import getDayNumber, get_gnss, Cartesian, get_satellite_positions, visual_satellites_data, elevation_of_horizon
+from visible_satellites import getDayNumber, get_gnss, Cartesian, get_satellite_positions, visible_satellites_data, elevation_of_horizon
 import rasterio
 import numpy as np
 import pandas as pd
@@ -100,7 +100,7 @@ def data_from_timestep(step: int) -> list[pd.DataFrame]:
     for gnss in ROS.gnss_list:
 
         positions = get_satellite_positions(ROS.gnss_mapping[gnss], gnss,time)
-        data = visual_satellites_data(positions, ROS.observation_cartesian, ROS.observation_end, ROS.observation_lnglat, ROS.elevation_mask, ROS.dem_data, ROS.E_lower, ROS.N_upper)
+        data = visible_satellites_data(positions, ROS.observation_cartesian, ROS.observation_end, ROS.observation_lnglat, ROS.elevation_mask, ROS.dem_data, ROS.E_lower, ROS.N_upper)
     
         if data.empty: continue
         df_list.append(data)
@@ -119,7 +119,7 @@ def data_from_epoch(gnss: list[str],
                                 list[float] ]:
     """
     A wrapper function for getting DOP and satellite count on a point during a specified epoch.
-    Returns "visible_sats_data_for_timesteps" which is data regarding each satellite visual from that point.
+    Returns "visible_sats_data_for_timesteps" which is data regarding each satellite visible from that point.
     This data is structured in a two layer list: top layer is timesteps, second layer is gnss.
     "visible_sats_pos_for_timesteps" and "observation_cartesian" is returned to calculate DOP outside
     this function.
@@ -133,7 +133,7 @@ def data_from_epoch(gnss: list[str],
     daynumber = getDayNumber(given_date)
     print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
-    with rasterio.open("data/merged_raster.tif") as src:
+    with rasterio.open("merged_rasters/merged_raster.tif") as src:
         dem_data_temp = src.read(1)
         observer_height = dem_data_temp[src.index(observation_EN[0], observation_EN[1])]
         start = perf_counter_ns()

@@ -3,9 +3,9 @@ import gzip
 import os
 from pathlib import Path
 
-def download_ephemeris(day, year):
+def download_rinex(day, year):
     """
-       Downloads today's ephemeries file from the CDDIS server.
+       Downloads today's RINEX (ephemeris) file from the CDDIS server.
        Assumes .netrc file with correct loggin creditdentials in home directory.
     """
     folder = Path('unzipped/')
@@ -20,7 +20,6 @@ def download_ephemeris(day, year):
     assert c != b'HTTP Basic: Access denied.\n', 'CDDIS access denied. .netrc file could be faulty.'
     with open(filename, 'wb') as fd:
         fd.write(c)
-
 
     with open(filename,'rb') as fd:
         gzip_fd = gzip.GzipFile(fileobj=fd)

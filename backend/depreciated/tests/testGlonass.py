@@ -7,7 +7,7 @@ import pandas as pd
 
 # # Opprett en instans av Orbit-klassen
 # orb = orbits.orbit()
-# dataframe = pd.read_csv(f"DataFrames/2025/100/structured_dataR.csv")
+# dataframe = pd.read_csv(f"ephemeris/2025/100/structured_dataR.csv")
 # gv = dataframe.iloc[0]
 # #"2025-04-10T00:30:00"
 # # Legg til GLONASS-navigasjonsdata
@@ -194,7 +194,7 @@ import pandas as pd
 
 import rasterio
 
-with rasterio.open("data/dom10/landsdekkende/64m1_1_10m_z33.tif") as src:
+with rasterio.open("dtm10/64m1_1_10m_z33.tif") as src:
     bounds = src.bounds
     print("Venstre:", bounds.left)
     print("Høyre:", bounds.right)

@@ -10,8 +10,9 @@ import numpy as np
 from time import perf_counter_ns
 
 
-# First, download the elevation data from hoydedata.no for the area you want to work with
-# Place the downloaded folder inside your project at relative path "data/dom10/data/"
+# First, download the elevation data from hoydedata.no for the area you want to work with.
+# Nation-wide cover is recomended.
+# Unzip the nation-wide .tif files and place them in folder "dtm10"
 
 
 def convert_coordinates(wgs_coords: list[list[np.float64]]) -> list[list[float]]:
@@ -36,7 +37,7 @@ def merge_rasters_near_points(points_dicts_wgs: list[dict]) -> None:
     points = LineString(line_points_EN) if len(points_dicts_wgs)>1 else Point(line_points_EN[0])
 
     # Find all .tif files in the folder
-    FOLDER_PATH = "data/dtm10/landsdekkende/"
+    FOLDER_PATH = "dtm10/"
     tif_files = [os.path.join(FOLDER_PATH, f) for f in os.listdir(FOLDER_PATH) if f.endswith(".tif")]
 
     covering_rasters = []
@@ -70,7 +71,7 @@ def merge_rasters_near_points(points_dicts_wgs: list[dict]) -> None:
         "transform": out_transform
     })
 
-    output_path = "data/merged_raster.tif"
+    output_path = "merged_rasters/merged_raster.tif"
     with rasterio.open(output_path, "w", **out_meta) as dest:
         dest.write(mosaic)
 

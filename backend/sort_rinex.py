@@ -3,7 +3,7 @@ import numpy as np
 import re
 from datetime import datetime
 import os
-from download_ephemeris import download_ephemeris
+from download_rinex import download_rinex
 
 from time import perf_counter_ns
 
@@ -526,7 +526,7 @@ def flatten(lst: list) -> list:
             flat_list.append(item) 
     return flat_list
 
-def strToFloat(inputstring: str) -> float:
+def str2float(inputstring: str) -> float:
     """
     Converts from scientific notation to python float.
     """
@@ -550,16 +550,16 @@ def update_navigation_message_type(df: pd.DataFrame) -> pd.DataFrame:
     return new_df
 
 
-def sortData(daynumber: int, date: datetime) -> None:
+def sort_rinex(daynumber: int, date: datetime) -> None:
     """
     Extracts ephemeris data from rinex file, and store it in a csv file to their
     corresponding GNSS.
     """
-    if os.path.exists(f"DataFrames/{date.year}/{daynumber}/structured_dataG.csv"):
+    if os.path.exists(f"ephemeris/{date.year}/{daynumber}/structured_dataG.csv"):
         #print(f"Data on day {daynumber} already sorted")
         return
     filename = f'unzipped/BRD400DLR_S_{date.year}{daynumber}0000_01D_MN.rnx'
-    download_ephemeris(daynumber, date.year)
+    download_rinex(daynumber, date.year)
     #current date
     current_date = date.date()
     #creates new dataFrames, based on the columns from Dataframes
@@ -603,12 +603,12 @@ def sortData(daynumber: int, date: datetime) -> None:
         clk_corr = cleaned_firstline[6:]
         for i in range(len(clk_corr)):
             value = clk_corr[i]
-            floatNumber = strToFloat(value)
+            floatNumber = str2float(value)
             clk_corr[i] = floatNumber
         for j in range(len(values_list)):
             value = values_list[j]
             if isinstance(value, str):
-                floatNumber = strToFloat(value)
+                floatNumber = str2float(value)
                 values_list[j] = floatNumber
         
         if time.date() == current_date:
@@ -635,7 +635,7 @@ def sortData(daynumber: int, date: datetime) -> None:
     print("timing update_navigation_message_type x2 (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     # Save GNSS datafranes to csv.
-    output_folder = f"DataFrames/{date.year}/" + str(daynumber)
+    output_folder = f"ephemeris/{date.year}/" + str(daynumber)
     os.makedirs(output_folder, exist_ok=True)
     file_pathG = os.path.join(output_folder, "structured_dataG.csv")
     structured_dataG = structured_dataG.sort_values(by=['satelite_id', 'Datetime'])

@@ -7,9 +7,8 @@ import re
 
 from time import perf_counter_ns
 
-# Set up coordinate transformers between UTM and WGS84
+# Set up coordinate transformers between UTM 33N and WGS84
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
-transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
 
 def linestring_to_coordinates(linestring: str) -> list[list[float]]:
     """
@@ -27,7 +26,7 @@ def linestring_to_coordinates(linestring: str) -> list[list[float]]:
 
 def convert_coordinates(utm_coords: list[list[np.float64]]) -> list[list[float]]:
     """
-    Convert UTM coordinates to WGS84 coordinates.
+    Convert UTM 33N coordinates to WGS84 coordinates.
     """
     coords = np.array(utm_coords)
     transformed_points = np.column_stack(transformer.transform(coords[:, 0], coords[:, 1]))
@@ -290,10 +289,8 @@ def extract_points_at_interval(road_segments: list[dict], spacing: float) -> lis
     points_geojson     = []
     total_time         = 0  
     total_distance     = 0
-    remaining_distance = 0 
+    remaining_distance = 0
 
-    transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)  
-    i = 0
     for segment in road_segments:
         coords = segment["geometry"]["coordinates"] 
         line = LineString(coords) 

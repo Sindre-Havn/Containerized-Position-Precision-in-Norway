@@ -31,4 +31,13 @@ Future work:
 * Conscider python library 'dask pandas' for sharing memory inside concurrency.py (bypass GIL) and make it even faster.
 * Give system posibility to handle multiple different 'merged_raster' and daynumber rinex's, for different clients.
 * Add memory/ session manager to avoid infinitely growing the number of rinex data and merged raster.
-* Concider adding code to support GDOP calculation on future date, but set max limit (maybe 30 days?).
+  A good solution would be to have a limited number of possible ephemeris data, say 100, and keep
+  deleting the "ephemeris-day" that is the longest time since it is opened.
+  The need to create new merged_raster for each request is suboptimal and memory heavy.
+  The code should be refactored so that elevation data checks can be done in-place.
+  Needing to merge rasters also open up for buffer overflow attacks.
+* Concider adding code to support GDOP calculation on future date, but set max limit.
+  Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
+  Set max to 14 or 30 days?.
+  Allowing days in the future also solves that Norway is UTC+2, so finding DOP between kl 00-02 does not result in
+  confusion (from missing RINEX file.)
