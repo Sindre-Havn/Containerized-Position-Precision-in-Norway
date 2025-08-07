@@ -37,8 +37,3 @@ h = 60.7
 # phi = 63.41458293  * np.pi/180
 # lam = 10.41044691  * np.pi/180
 # h =39.689
-
-
-T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
-            [-np.sin(lam), np.cos(lam), 0],
-            [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])

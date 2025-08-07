@@ -196,9 +196,11 @@ def visible_satellites_data(satellites: pd.DataFrame,
 
     phi = observation_lnglat[1] * np.pi/180
     lam =  observation_lnglat[0] * np.pi/180
-    T = np.matrix([[-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam) , np.cos(phi)], 
-            [-np.sin(lam), np.cos(lam), 0],
-            [np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]])
+    T = np.matrix([
+        [-np.sin(phi)*np.cos(lam),-np.sin(phi)*np.sin(lam), np.cos(phi)], 
+        [            -np.sin(lam),             np.cos(lam),      0     ],
+        [ np.cos(phi)*np.cos(lam), np.cos(phi)*np.sin(lam), np.sin(phi)]
+        ])
 
     for _, sat in satellites.iterrows():
         deltaCTRS = np.array([sat["X"]-observer_cartesian[0],
