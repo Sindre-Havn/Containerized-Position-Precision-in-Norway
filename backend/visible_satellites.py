@@ -9,6 +9,7 @@ from common_variables import wgs
 import rasterio
 from itertools import repeat
 import config
+from memory_manager import update_access_time
 
 from time import perf_counter_ns
 
@@ -88,6 +89,7 @@ def get_gnss(daynumber: int, year: int) -> dict[str, pd.DataFrame]:
         'NavIC'  : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataI.csv"),
         'SBAS'   : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataS.csv")
     }
+    update_access_time(f"ephemeris/{year}_{day}")
     return gnss_mapping
 
 

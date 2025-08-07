@@ -1,6 +1,6 @@
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
-from visible_satellites import  get_gnss, getDayNumber, data_from_epoch, create_observers
+from visible_satellites import get_gnss, getDayNumber, data_from_epoch, create_observers
 from compute_DOP import DOP_in_epoch, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
@@ -11,6 +11,7 @@ import concurrency
 import os
 from merge_rasters import merge_rasters_near_points
 import traceback
+from pathlib import Path
 
 from time import perf_counter_ns
 
@@ -204,5 +205,7 @@ def satellites():
     
 
 if __name__ == '__main__':
+    #from memory_manager import delete_old_data
+    #delete_old_data(Path('ephemeris'), max_allowed_count=3)
     app.run(host="127.0.0.1", port=5000, debug=True, threaded=False)
 
