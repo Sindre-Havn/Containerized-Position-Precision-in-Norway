@@ -49,16 +49,13 @@ def get_merged_raster_near_points(points_dicts_wgs: list[dict]) -> None:
     line_points_EN = convert_coordinates(points_wgs)
     points = LineString(line_points_EN) if len(points_dicts_wgs)>1 else Point(line_points_EN[0])
 
-    
-    
-
     # Find all .tif files in the folder
     DEM_PATH = Path('dtm10/')
     tif_files = [os.path.join(DEM_PATH, f) for f in os.listdir(DEM_PATH) if f.endswith(".tif")]
+
+    # MARGIN is added because the horizon from a point, may be blocked by tall terrain in a neighbouring .tif file (neighbour .tif to the .tif file the point is in).
     added_tif_names = []
     covering_rasters = []
-
-    # MARGIN is added because the horizon view from a point, may be blocked by tall terrain in a neighbouring .tif file (neighbour .tif to the points .tif).
     MARGIN = config.MARGIN_TO_NEIGHBOURING_TIF
     for file in tif_files:
         raster = rasterio.open(file)
