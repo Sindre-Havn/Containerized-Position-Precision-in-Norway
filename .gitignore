@@ -1,7 +1,7 @@
 backend/venv
 backend/__pycache__/
-backend/unzipped/
 backend/ephemeris/
-backend/dtm10/
+backend/dtm10/*
+!backend/dtm10/0_landsdekkende_kartruter.pdf
 backend/merged_rasters
 .DS_Store
