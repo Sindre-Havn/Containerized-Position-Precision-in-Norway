@@ -44,3 +44,6 @@ Future work:
   Set max to 14 or 30 days?.
   Allowing days in the future also solves that Norway is UTC+2, so finding DOP between kl 00-02 does not result in
   confusion (from missing RINEX file.)
+* Make it so that clients cannot request DOP calculaton on day with no
+  valid rinex to be downloaded from CDDIS. Dont want backend to crash for everyone if
+  one clients requests a non-existing rinex (For example request rinex 1 year in future).

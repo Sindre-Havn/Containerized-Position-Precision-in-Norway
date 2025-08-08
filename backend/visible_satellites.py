@@ -67,7 +67,6 @@ def get_daynumber(date: datetime) -> int:
     days_difference = (date - first_day_of_year).days + 1
     if date.date() == datetime.now().date():
         days_difference -= 1
-        date = date - timedelta(days=1)
 
     daynumber = f"{days_difference:03d}"
     
@@ -82,15 +81,15 @@ def get_gnss(daynumber: int, year: int) -> dict[str, pd.DataFrame]:
     DESIRED_LENGTH = 3
     day = str(daynumber).zfill(DESIRED_LENGTH)
     gnss_mapping = {
-        'GPS'    : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataG.csv"),
-        'GLONASS': pd.read_csv(f"ephemeris/{year}_{day}/structured_dataR.csv"),
-        'Galileo': pd.read_csv(f"ephemeris/{year}_{day}/structured_dataE.csv"),
-        'QZSS'   : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataJ.csv"),
-        'BeiDou' : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataC.csv"),
-        'NavIC'  : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataI.csv"),
-        'SBAS'   : pd.read_csv(f"ephemeris/{year}_{day}/structured_dataS.csv")
+        'GPS'    : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataG.csv'),
+        'GLONASS': pd.read_csv(f'ephemeris/{year}_{day}/structured_dataR.csv'),
+        'Galileo': pd.read_csv(f'ephemeris/{year}_{day}/structured_dataE.csv'),
+        'QZSS'   : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataJ.csv'),
+        'BeiDou' : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataC.csv'),
+        'NavIC'  : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataI.csv'),
+        'SBAS'   : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataS.csv')
     }
-    update_access_time(f"ephemeris/{year}_{day}")
+    update_access_time(f'ephemeris/{year}_{day}')
     return gnss_mapping
 
 

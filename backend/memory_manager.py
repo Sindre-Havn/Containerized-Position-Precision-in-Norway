@@ -26,10 +26,11 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
     2. If 'file_max_lifetime_hours' is a positive number, it deletes all
        files/folders that have not been access within previouse hours
        specified by this argument. If the argument is negative it is 
-       ignored.
+       ignored -> infinite lifetime.
     
     The time since last access is found by reading the 'st_atime' attribute
-    of a file/folder."""
+    of a file/folder.
+    """
     eph_folders = os.listdir(folder)
     files_and_atime = []
     # Get path and st_atime for every file/folder inside 'folder'.

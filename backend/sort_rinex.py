@@ -560,11 +560,22 @@ def sort_rinex(daynumber: int, date: datetime) -> None:
     if os.path.exists(f'ephemeris/{date.year}_{day}/structured_dataG.csv'):
         #print(f"Data on day {daynumber} already sorted")
         return
-    filename = f'unzipped/BRD400DLR_S_{date.year}{day}0000_01D_MN.rnx'
-    download_rinex(day, date.year)
-    #current date
+    
+    rinex_path = download_rinex(day, date.year)
+    content = []
+    with open(rinex_path, "r") as file:
+        #print(f"Reading file {filename}")
+        content = file.read()
+    os.remove(rinex_path)
+
+    split_index = content.index("END OF HEADER")
+    header_part = content[:split_index] # baneinformasjon
+    data_part = content[split_index+13:] #satelitt informasjon
+
     current_date = date.date()
-    #creates new dataFrames, based on the columns from Dataframes
+    satellitt_data = re.split(r'\s*> EPH\s*', data_part)
+    
+    # Creates empty dataFrames, based on the columns from Dataframes
     structured_dataG = pd.DataFrame(columns = columnsG)
     structured_dataR = pd.DataFrame(columns = columnsR) 
     structured_dataE = pd.DataFrame(columns = columnsE) 
@@ -572,17 +583,8 @@ def sort_rinex(daynumber: int, date: datetime) -> None:
     structured_dataC = pd.DataFrame(columns = columnsC) 
     structured_dataI = pd.DataFrame(columns = columnsI) 
     structured_dataS = pd.DataFrame(columns = columnsS)
-    content = []
-    with open(filename, "r") as file:
-        #print(f"Reading file {filename}")
-        content = file.read()
-
-    split_index = content.index("END OF HEADER")
-    header_part = content[:split_index] # baneinformasjon
-    data_part = content[split_index+13:] #satelitt informasjon
 
     # Build DataFrames for each GNSS
-    satellitt_data = re.split(r'\s*> EPH\s*', data_part)
     for i in range(1,len(satellitt_data)-1):
         lines = satellitt_data[i].strip().splitlines()
         satellitt_id = lines[0].split(' ')[0] 
