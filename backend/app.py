@@ -9,19 +9,14 @@ import rasterio
 import config
 import concurrency
 import os
-from merge_rasters import merge_rasters_near_points
 import traceback
-from pathlib import Path
+from merge_rasters import get_merged_raster_near_points
 
 from time import perf_counter_ns
-
-distance = None
-points = None
 
 app = Flask(__name__)
 CORS(app, resources={r"/satellites": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 CORS(app, resources={r"/dopvalues" : {"origins": "http://localhost:3000"}})
-
 
 
 @app.route('/road', methods=['POST', 'OPTIONS'])
@@ -40,7 +35,6 @@ def road():
         startpoint = request.json.get('startPoint')
         endpoint = request.json.get('endPoint')
         distance = request.json.get('distance')
-
 
         # Validate input
         if not startpoint or not endpoint or not distance:
@@ -65,9 +59,6 @@ def road():
         # It does not support multiple users requesting road routes for different
         # areas of the country.
         # Delete merged raster if exists
-        if os.path.exists("merged_rasters/merged_raster.tif"):
-            os.remove("merged_rasters/merged_raster.tif")
-        merge_rasters_near_points(points)
 
         print("timing calculate_travel_time (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
@@ -118,17 +109,19 @@ def dopValues():
 
     start_dopValues = perf_counter_ns()
     time = datetime.fromisoformat(time_str)
-    dop_list = []
-    #PDOP_list = []
-    start = perf_counter_ns()
-    daynumber = getDayNumber(time)
-    print("timing getDaynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-    gnss_mapping = get_gnss(daynumber, time.year)
+    print('time', time)
     total_steps = len(points)+1
+    start = perf_counter_ns()
+    print("timing getDaynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+    
+    daynumber = getDayNumber(time)
+    gnss_mapping = get_gnss(daynumber, time.year)
+
+    merged_raster = get_merged_raster_near_points(points)
 
     # Prepare data
     dem_data, observers, observers_cartesian, E_lower, N_upper = None, None, None, None, None
-    with rasterio.open("merged_rasters/merged_raster.tif") as src:
+    with rasterio.open(merged_raster) as src:
             dem_data = src.read(1)
 
             observers, observers_cartesian = create_observers(src, dem_data, points)
@@ -136,6 +129,8 @@ def dopValues():
             E_lower = src.bounds[0]
             N_upper = src.bounds[3]
     data = (dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper)
+    
+    dop_list = []
 
     def generate():
         start = perf_counter_ns()
@@ -182,7 +177,7 @@ def satellites():
     epoch = int(data.get('epoch'))
     frequency = int(data.get('epochFrequency'))
     point = data.get('point')
-    
+
     is_processing = True
     start = perf_counter_ns()
     visible_sats_data_for_timesteps, DOPvalues, elevation_cutoffs = [], [], []
@@ -205,7 +200,5 @@ def satellites():
     
 
 if __name__ == '__main__':
-    #from memory_manager import delete_old_data
-    #delete_old_data(Path('ephemeris'), max_allowed_count=3)
     app.run(host="127.0.0.1", port=5000, debug=True, threaded=False)
 

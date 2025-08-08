@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from itertools import repeat
 from typing import Iterator
+from merge_rasters import get_merged_raster_near_points
 
 """
 Provides a multiprocess alternative to for
@@ -112,7 +113,7 @@ def data_from_epoch(gnss: list[str],
                     t: datetime,
                     epoch: int,
                     freq: int,
-                    observation_lng_lat: list[float]
+                    point: dict
                     ) -> tuple[ list[list[dict]],
                                 list[str],
                                 list[list[pd.DataFrame]],
@@ -126,14 +127,17 @@ def data_from_epoch(gnss: list[str],
     Benchmarked as 10-15% faster on 3 timesteps, and 40-50% faster on 61 timesteps, compared to single process.
     Tests performed 16GB RAM and Intel® Core™ i5-10310U × 8.
     """
+    observation_lng_lat = point['geometry']['coordinates']
     transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
     observation_EN = transformerToEN.transform(observation_lng_lat[0], observation_lng_lat[1])
     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
     daynumber = getDayNumber(given_date)
     print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+
+    merged_raster = get_merged_raster_near_points([point])
     
-    with rasterio.open("merged_rasters/merged_raster.tif") as src:
+    with rasterio.open(merged_raster) as src:
         dem_data_temp = src.read(1)
         observer_height = dem_data_temp[src.index(observation_EN[0], observation_EN[1])]
         start = perf_counter_ns()

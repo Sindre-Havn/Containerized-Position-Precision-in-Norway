@@ -1,7 +1,16 @@
 import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import shutil
+
+"""
+This module helps the application to forget data if:
+
+- a type of stored data has reach its max limit.
+- a type of data has exceeded its max allowed time since the file/folder was last opened.
+
+This is so the application does not run out of memory.
+"""
 
 def delete(path: Path) -> None:
     """
@@ -11,12 +20,16 @@ def delete(path: Path) -> None:
 
 def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hours: float = -1.0) -> None:
     """
-    Sort all files/folders inside the 'folder' according to their
-    st_atime (previouse access time).
-    Then delete these files/folders with the oldest st_atime if there
-    are more files/folders inside 'folder' than the 'maximum_allowed_count'.
-    If 'file_max_lifetime_hours' is a positive number, then also delete all files/folders
-    that have not been accessed in time 'file_max_lifetime_hours'."""
+    Delete all files/folders within the specified 'folder' in two ways:
+    1. If the number of files/folders has reached the 'max_allowed_count',
+       then delete the files/folders not access in the longest time.
+    2. If 'file_max_lifetime_hours' is a positive number, it deletes all
+       files/folders that have not been access within previouse hours
+       specified by this argument. If the argument is negative it is 
+       ignored.
+    
+    The time since last access is found by reading the 'st_atime' attribute
+    of a file/folder."""
     eph_folders = os.listdir(folder)
     files_and_atime = []
     # Get path and st_atime for every file/folder inside 'folder'.
@@ -24,7 +37,7 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
         try:
             access_timestamp = os.path.getatime(folder / eph)
             last_access_datetime = datetime.fromtimestamp(access_timestamp)
-            files_and_atime.append({'path': eph, 'atime':last_access_datetime})
+            files_and_atime.append({'path': eph, 'st_atime':last_access_datetime})
 
         except FileNotFoundError:
             print(f"Error: The file '{folder / eph}' was not found.")
@@ -33,7 +46,8 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
             print(f"An error occurred: {e}")
             raise # Let flask catch this
     
-    sorted_by_atime = sorted(files_and_atime, key=lambda x: x['atime'], reverse=True)
+    # Sort the 'path' 'statime' dicts, accordint the 'st_atime'. Sorting-order is newest 'st_atime' first.
+    sorted_by_atime = sorted(files_and_atime, key=lambda x: x['st_atime'], reverse=True)
     
     # If too many files/folders, delete least recent used. 
     while len(os.listdir(folder)) > max_allowed_count:
@@ -46,9 +60,8 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
     # Maximum allowed lifetime of file is specified (not -1)
     # -> delete all older files, even if bellow max_allowed_count
     for file in sorted_by_atime:
-        if datetime.now() - file['atime'] > datetime.timedelta(hours=file_max_lifetime_hours):
+        if datetime.now() - file['atime'] > timedelta(hours=file_max_lifetime_hours):
             delete(folder / file['path'])
-
 
 def update_access_time(file: str) -> None:
     """
@@ -56,6 +69,7 @@ def update_access_time(file: str) -> None:
     The st_atime flag hold the 'access time', e.g. when a file was last read.
     This function is needed because 'pandas.read_csv()' dont seem to update it
     when reading files.
+    
     This function indicates when the files was last used, so they may be deleted
     according to last access-time using the 'delete_old_ephemeris' function. 
     """

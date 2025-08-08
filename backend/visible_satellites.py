@@ -10,6 +10,9 @@ import rasterio
 from itertools import repeat
 import config
 from memory_manager import update_access_time
+from merge_rasters import get_merged_raster_near_points
+from memory_manager import delete_old_data
+from pathlib import Path
 
 from time import perf_counter_ns
 
@@ -69,6 +72,7 @@ def getDayNumber(date: datetime) -> int:
     daynumber = f"{days_difference:03d}"
     
     start = perf_counter_ns()
+    delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
     sort_rinex(daynumber, date)
     print("timing sortData (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     return daynumber
@@ -232,7 +236,7 @@ def data_from_epoch(gnss_list: list[str],
                     start_time: datetime,
                     epoch: int,
                     frequency: int,
-                    observation_lnglat: tuple[float]
+                    point: dict
                     ) -> tuple[ list[list[dict]],
                                 list[str],
                                 list[list[pd.DataFrame]],
@@ -248,6 +252,7 @@ def data_from_epoch(gnss_list: list[str],
     visible_sats_data_for_timesteps = []
     visible_sats_pos_for_timesteps = []
 
+    observation_lnglat = point['geometry']['coordinates']
     elevation_mask = float(elevation_mask_str)
     observation_EN = transformerToEN.transform(observation_lnglat[0], observation_lnglat[1])
     given_date = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
@@ -255,8 +260,10 @@ def data_from_epoch(gnss_list: list[str],
     daynumber = getDayNumber(given_date)
     print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     gnss_mapping = get_gnss(daynumber, given_date.year )
+
+    merged_raster = get_merged_raster_near_points([point])
     
-    with rasterio.open("merged_rasters/merged_raster.tif") as src:
+    with rasterio.open(merged_raster) as src:
         dem_data = src.read(1)
         E_lower = src.bounds[0]
         N_upper = src.bounds[3]
