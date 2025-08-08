@@ -51,6 +51,7 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
     
     # If too many files/folders, delete least recent used. 
     while len(os.listdir(folder)) > max_allowed_count:
+        print('delete', folder / sorted_by_atime[-1]['path'])
         delete(folder / sorted_by_atime[-1]['path'])
 
     # Exit function if we dont want to delete files not used.
@@ -60,7 +61,7 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
     # Maximum allowed lifetime of file is specified (not -1)
     # -> delete all older files, even if bellow max_allowed_count
     for file in sorted_by_atime:
-        if datetime.now() - file['atime'] > timedelta(hours=file_max_lifetime_hours):
+        if datetime.now() - file['st_atime'] > timedelta(hours=file_max_lifetime_hours):
             delete(folder / file['path'])
 
 def update_access_time(file: str) -> None:
@@ -69,7 +70,7 @@ def update_access_time(file: str) -> None:
     The st_atime flag hold the 'access time', e.g. when a file was last read.
     This function is needed because 'pandas.read_csv()' dont seem to update it
     when reading files.
-    
+
     This function indicates when the files was last used, so they may be deleted
     according to last access-time using the 'delete_old_ephemeris' function. 
     """

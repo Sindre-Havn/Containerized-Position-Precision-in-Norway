@@ -7,13 +7,16 @@ from compute_DOP import find_dop_on_point
 import json
 from pyproj import Transformer
 from datetime import datetime
-from visible_satellites import getDayNumber, get_gnss, Cartesian, get_satellite_positions, visible_satellites_data, elevation_of_horizon
+from visible_satellites import get_daynumber, get_gnss, Cartesian, get_satellite_positions, visible_satellites_data, elevation_of_horizon
 import rasterio
 import numpy as np
 import pandas as pd
 from itertools import repeat
 from typing import Iterator
 from merge_rasters import get_merged_raster_near_points
+from memory_manager import delete_old_data
+from pathlib import Path
+from sort_rinex import sort_rinex
 
 """
 Provides a multiprocess alternative to for
@@ -42,7 +45,7 @@ def get_dopvalues(step: int) -> list[list[float]]:
     return find_dop_on_point(ROD.dem_data, ROD.gnss_mapping, ROD.gnss, ROD.time, ROD.points[step], ROD.observers[step], ROD.observers_cartesian[step], ROD.elevation_angle, ROD.E_lower, ROD.N_upper)
 
 
-def get_dopvalues_concurrently(data: tuple[ np.ndarray[float],
+def get_dopvalues_concurrently(args: tuple[ np.ndarray[float],
                                            dict[str, pd.DataFrame],
                                            list[str], datetime,
                                            list[dict],
@@ -54,23 +57,27 @@ def get_dopvalues_concurrently(data: tuple[ np.ndarray[float],
                                            ] ) -> Iterator[str]:
     """
     Calculates DOP for every point.
-    All input data is packed inside a "data" tuple. This is done to 
+    All input data is packed inside a "args" tuple. This is done to
+    get around that the fields in the dataclass
+    cant be the same as the variable name its assigned to. E.g 
+    "dem_data = dem_data" in the dataclass is not allowd.
+
     Benchmarked as 2-3x faster at 105 road points compared to single process.
     Tests performed 16GB RAM and Intel® Core™ i5-10310U × 8.
     """
     start = perf_counter_ns()
     @dataclass(frozen=True)
     class Read_Only_Dop:
-        dem_data = data[0]
-        gnss_mapping = data[1]
-        gnss = data[2]
-        time = data[3]
-        points = data[4]
-        observers = data[5]
-        observers_cartesian = data[6]
-        elevation_angle = data[7]
-        E_lower = data[8]
-        N_upper = data[9]
+        dem_data = args[0]
+        gnss_mapping = args[1]
+        gnss = args[2]
+        time = args[3]
+        points = args[4]
+        observers = args[5]
+        observers_cartesian = args[6]
+        elevation_angle = args[7]
+        E_lower = args[8]
+        N_upper = args[9]
     global ROD
     ROD = Read_Only_Dop()
     step = 0
@@ -132,8 +139,11 @@ def data_from_epoch(gnss: list[str],
     observation_EN = transformerToEN.transform(observation_lng_lat[0], observation_lng_lat[1])
     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
-    daynumber = getDayNumber(given_date)
-    print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+
+    daynumber = get_daynumber(given_date)
+    delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
+    sort_rinex(daynumber, given_date)
+    print("timing get_daynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     merged_raster = get_merged_raster_near_points([point])
     

@@ -58,11 +58,11 @@ def CartesianToGeodetic(X: float, Y: float, Z: float, a: float, b: float) -> lis
     return [phi_deg, lam_deg, h]
 
 
-def getDayNumber(date: datetime) -> int:
+def get_daynumber(date: datetime) -> int:
     """
     Get day number of year from date, adjust if today.
     """
-    #print('in getDayNumber', date)
+    #print('in get_daynumber', date)
     first_day_of_year = datetime(date.year, 1, 1)
     days_difference = (date - first_day_of_year).days + 1
     if date.date() == datetime.now().date():
@@ -72,11 +72,8 @@ def getDayNumber(date: datetime) -> int:
     daynumber = f"{days_difference:03d}"
     
     start = perf_counter_ns()
-    delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
-    sort_rinex(daynumber, date)
     print("timing sortData (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     return daynumber
-
 
 def get_gnss(daynumber: int, year: int) -> dict[str, pd.DataFrame]:
     """
@@ -257,9 +254,13 @@ def data_from_epoch(gnss_list: list[str],
     observation_EN = transformerToEN.transform(observation_lnglat[0], observation_lnglat[1])
     given_date = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
-    daynumber = getDayNumber(given_date)
-    print("timing getDaynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+    
+    daynumber = get_daynumber(given_date)
+    delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
+    sort_rinex(daynumber, given_date)
     gnss_mapping = get_gnss(daynumber, given_date.year )
+    print("timing get_daynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+    
 
     merged_raster = get_merged_raster_near_points([point])
     

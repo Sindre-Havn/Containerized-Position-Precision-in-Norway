@@ -42,15 +42,19 @@ def get_merged_raster_near_points(points_dicts_wgs: list[dict]) -> None:
     The boundery box of the .tif files is upsized by a MARGIN constant in case
     points is close to such boundary.
     """
+    FOLDER_PATH = Path('merged_rasters')
+    delete_old_data(FOLDER_PATH, config.MERGED_RASTER_MAX_COUNT, config.MERGED_RASTER_LIFETIME_HOURS)
+
     points_wgs = [d['geometry']['coordinates'] for d in points_dicts_wgs]
     line_points_EN = convert_coordinates(points_wgs)
     points = LineString(line_points_EN) if len(points_dicts_wgs)>1 else Point(line_points_EN[0])
 
-    FOLDER_PATH = Path('dtm10/')
-    delete_old_data(FOLDER_PATH, config.MERGED_RASTER_MAX_COUNT, config.MERGED_RASTER_LIFETIME_HOURS)
+    
+    
 
     # Find all .tif files in the folder
-    tif_files = [os.path.join(FOLDER_PATH, f) for f in os.listdir(FOLDER_PATH) if f.endswith(".tif")]
+    DEM_PATH = Path('dtm10/')
+    tif_files = [os.path.join(DEM_PATH, f) for f in os.listdir(DEM_PATH) if f.endswith(".tif")]
     added_tif_names = []
     covering_rasters = []
 
@@ -59,7 +63,6 @@ def get_merged_raster_near_points(points_dicts_wgs: list[dict]) -> None:
     for file in tif_files:
         raster = rasterio.open(file)
         bounds = raster.bounds
-        
         raster_bbox = box(bounds.left-MARGIN, bounds.bottom-MARGIN, bounds.right+MARGIN, bounds.top+MARGIN)
 
         if raster_bbox.intersects(points):
@@ -72,7 +75,8 @@ def get_merged_raster_near_points(points_dicts_wgs: list[dict]) -> None:
         raise ValueError("No rasterfile covers the area you specified!")
 
     unique_id = generate_unique_id(added_tif_names)
-    output_path = f'merged_rasters/{unique_id}.tif'
+    file_name = f'{unique_id}.tif'
+    output_path = FOLDER_PATH / file_name
 
     if os.path.exists(output_path):
         for raster in covering_rasters:
@@ -97,7 +101,6 @@ def get_merged_raster_near_points(points_dicts_wgs: list[dict]) -> None:
     # Close rasters
     for raster in covering_rasters:
         raster.close()
-    
     return output_path
 
 

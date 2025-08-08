@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 from compute_DOP import best
-from visible_satellites import get_gnss, getDayNumber, visualCheck, visualCheck, Cartesian
+from visible_satellites import get_gnss, get_daynumber, visualCheck, visualCheck, Cartesian
 from backend.satellite_positions import get_satellite_positions
 from compute_DOP import best
 
@@ -73,7 +73,7 @@ def positionXYZ(positions_old, positions_new):
 # #positions based on first date
 def accuracyDataAll(gnss_list, startTime, endTime, timeDelta):
 
-    daynumber = getDayNumber(startTime)#4. november
+    daynumber = get_daynumber(startTime)#4. november
     gnss_mapping_old = get_gnss(daynumber)
     daynum_minus_1 = int(daynumber)  - 1
     daynumber_minus_1 = f"{daynum_minus_1:03d}"
@@ -91,7 +91,7 @@ def accuracyDataAll(gnss_list, startTime, endTime, timeDelta):
         time = pd.to_datetime(startTime)+ pd.Timedelta(hours= i*timeDelta)
 
         time_str = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        daynumber2 = getDayNumber(time_str)
+        daynumber2 = get_daynumber(time_str)
         gnss_mapping_new = get_gnss(daynumber2)
         daynum2_minus_1 = int(daynumber2)  - 1
         daynumber2_minus_1 = f"{daynum2_minus_1:03d}"
@@ -164,7 +164,7 @@ def accuracyDataAll(gnss_list, startTime, endTime, timeDelta):
 
 #         time_str = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
 #         times.append(time_str)
-#         daynumber2 = getDayNumber(time_str)
+#         daynumber2 = get_daynumber(time_str)
 #         gnss_mapping_new = get_gnss(daynumber2)
 #         num = 0
 #         for gnss in gnss_list:
@@ -180,7 +180,7 @@ def accuracyDataAll(gnss_list, startTime, endTime, timeDelta):
 
 
 # def positionsDataOne(gnss,satelite_id, startTime, endTime, timeDelta):
-#     daynumber = getDayNumber(startTime)#4. november
+#     daynumber = get_daynumber(startTime)#4. november
 #     gnss_mapping_old = get_gnss(daynumber)
 
 #     #sjekker hver 4 time
@@ -193,7 +193,7 @@ def accuracyDataAll(gnss_list, startTime, endTime, timeDelta):
 #     for i in range(iterations+1):
 #         time = pd.to_datetime(startTime)+ pd.Timedelta(hours= i*timeDelta)
 #         time_str = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-#         daynumber2 = getDayNumber(time_str)
+#         daynumber2 = get_daynumber(time_str)
 #         gnss_mapping_new = get_gnss(daynumber2)
 
 #         #finds also the previous data because if we want to find the positions at 00:00 there may be no data in the current dataframe
@@ -229,7 +229,7 @@ def accuracyDataAll(gnss_list, startTime, endTime, timeDelta):
 #     return accuracy_time, pos_list_old, pos_list_new
 
 def positionsXYZOne(gnss,satelite_id, startTime, endTime, timeDelta):
-    daynumber = getDayNumber(startTime)#4. november
+    daynumber = get_daynumber(startTime)#4. november
     gnss_mapping_old = get_gnss(daynumber)
 
     #sjekker hver 4 time
@@ -244,7 +244,7 @@ def positionsXYZOne(gnss,satelite_id, startTime, endTime, timeDelta):
     for i in range(iterations+1):
         time = pd.to_datetime(startTime)+ pd.Timedelta(hours= i*timeDelta)
         time_str = time.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        daynumber2 = getDayNumber(time_str)
+        daynumber2 = get_daynumber(time_str)
         gnss_mapping_new = get_gnss(daynumber2)
 
         #finds also the previous data because if we want to find the positions at 00:00 there may be no data in the current dataframe

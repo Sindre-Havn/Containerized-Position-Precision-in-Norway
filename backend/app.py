@@ -1,6 +1,6 @@
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
-from visible_satellites import get_gnss, getDayNumber, data_from_epoch, create_observers
+from visible_satellites import get_gnss, get_daynumber, data_from_epoch, create_observers
 from compute_DOP import DOP_in_epoch, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
@@ -11,6 +11,9 @@ import concurrency
 import os
 import traceback
 from merge_rasters import get_merged_raster_near_points
+from memory_manager import delete_old_data
+from pathlib import Path
+from sort_rinex import sort_rinex
 
 from time import perf_counter_ns
 
@@ -108,17 +111,16 @@ def dopValues():
         return jsonify({"error": f"Invalid data format: {e}"}), 400
 
     start_dopValues = perf_counter_ns()
-    time = datetime.fromisoformat(time_str)
-    print('time', time)
+    date = datetime.fromisoformat(time_str)
     total_steps = len(points)+1
     start = perf_counter_ns()
-    print("timing getDaynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+    print("timing get_daynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
-    daynumber = getDayNumber(time)
-    gnss_mapping = get_gnss(daynumber, time.year)
-
+    daynumber = get_daynumber(date)
+    delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
+    sort_rinex(daynumber, date)
+    gnss_mapping = get_gnss(daynumber, date.year)
     merged_raster = get_merged_raster_near_points(points)
-
     # Prepare data
     dem_data, observers, observers_cartesian, E_lower, N_upper = None, None, None, None, None
     with rasterio.open(merged_raster) as src:
@@ -128,7 +130,6 @@ def dopValues():
             
             E_lower = src.bounds[0]
             N_upper = src.bounds[3]
-    data = (dem_data, gnss_mapping, gnss, time, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper)
     
     dop_list = []
 
@@ -150,7 +151,8 @@ def dopValues():
     
     generator = None
     if config.USE_CONCURRENCY_FOR_DOPVALUES:
-        generator = concurrency.get_dopvalues_concurrently(data)
+        args = (dem_data, gnss_mapping, gnss, date, points, observers, observers_cartesian, elevation_angle, E_lower, N_upper)
+        generator = concurrency.get_dopvalues_concurrently(args)
     else:
         generator = generate()
     response = Response(stream_with_context(generator), content_type='text/event-stream')
@@ -171,7 +173,7 @@ def satellites():
 
     # Main POST request handling
     data = request.json  
-    time = data.get('time').strip('Z')
+    time_str = data.get('time').strip('Z')
     elevation_angle = data.get('elevationAngle')
     gnss = data.get('GNSS')
     epoch = int(data.get('epoch'))
@@ -182,9 +184,9 @@ def satellites():
     start = perf_counter_ns()
     visible_sats_data_for_timesteps, DOPvalues, elevation_cutoffs = [], [], []
     if config.USE_CONCURRENCY_FOR_SATELLITE:
-        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = concurrency.data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
+        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = concurrency.data_from_epoch(gnss, elevation_angle, time_str, epoch,frequency, point)
     else:
-        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = data_from_epoch(gnss, elevation_angle, time, epoch,frequency, point)
+        visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = data_from_epoch(gnss, elevation_angle, time_str, epoch,frequency, point)
     print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     DOPvalues = DOP_in_epoch(visible_sats_pos_for_timesteps, observation_cartesian)
     is_processing = False

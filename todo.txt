@@ -1,5 +1,5 @@
 Improve function names:
-- The function getDayNumber is a missleading name since it calls on sortData and
+- The function get_daynumber is a missleading name since it calls on sortData and
   does so much more than it should gven its name. Should only get day.
 
 Improve documentation:

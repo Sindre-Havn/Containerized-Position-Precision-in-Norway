@@ -6,7 +6,7 @@ USE_CONCURRENCY_FOR_SATELLITE = True
 PROCESSES_COUNT_SATELLITE = 7
 
 # romsadalenRoad.py
-USE_CORRECT_SPEEDLIMITS = True # Does a GET request for the speedlimit for every parial roadsegment in route. Is 'correct' but slow and expensive.
+USE_CORRECT_SPEEDLIMITS = True # If True, does a GET request for the speedlimit for every parial roadsegment in route. Is 'correct' but slow and expensive. If False, it performs only one API request.
 DEFAULT_SPEEDLIMIT = 50 # km/h, used in absence of defined speedlimit.
 HEADERS = {
             "Accept": "application/json",
