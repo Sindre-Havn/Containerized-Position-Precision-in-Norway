@@ -269,10 +269,10 @@ def data_from_epoch(gnss_list: list[str],
     given_date = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
     
-    daynumber = get_daynumber_and_date_for_ephemeris(given_date)
+    daynumber, eph_date = get_daynumber_and_date_for_ephemeris(given_date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
-    sort_rinex(daynumber, given_date)
-    gnss_mapping = get_gnss(daynumber, given_date.year )
+    sort_rinex(daynumber, eph_date)
+    gnss_mapping = get_gnss(daynumber, eph_date.year )
     print("timing get_daynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
 

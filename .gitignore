@@ -1,7 +1,8 @@
 backend/venv
 backend/__pycache__/
-backend/ephemeris/
 backend/dtm10/*
 !backend/dtm10/0_landsdekkende_kartruter.pdf
+backend/ephemeris/
+backend/rinex_unpacking/
 backend/merged_rasters
 .DS_Store

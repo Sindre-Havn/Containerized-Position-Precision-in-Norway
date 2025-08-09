@@ -571,11 +571,10 @@ def sort_rinex(daynumber: str, date: datetime) -> None:
     with open(rinex_path, "r") as file:
         #print(f"Reading file {filename}")
         content = file.read()
-    os.remove(rinex_path)
 
     split_index = content.index("END OF HEADER")
-    header_part = content[:split_index] # baneinformasjon
-    data_part = content[split_index+13:] #satelitt informasjon
+    header_part = content[:split_index]  # orbit informasjon
+    data_part = content[split_index+13:] # satellite information
 
     current_date = date.date()
     satellitt_data = re.split(r'\s*> EPH\s*', data_part)
