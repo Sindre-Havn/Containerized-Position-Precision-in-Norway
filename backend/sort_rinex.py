@@ -7,6 +7,12 @@ from download_rinex import download_rinex
 
 from time import perf_counter_ns
 
+"""
+This module reads a rinex (version 4 / BRD4 file),
+and sorts the relevant ephemeris data into csv files for each GNSS.
+
+"""
+
 
 # G: GPS
 # R: GLONASS
@@ -550,18 +556,17 @@ def update_navigation_message_type(df: pd.DataFrame) -> pd.DataFrame:
     return new_df
 
 
-def sort_rinex(daynumber: int, date: datetime) -> None:
+def sort_rinex(daynumber: str, date: datetime) -> None:
     """
     Extracts ephemeris data from rinex file, and store it in a csv file to their
     corresponding GNSS.
     """
-    DESIRED_LENGTH = 3
-    day = str(daynumber).zfill(DESIRED_LENGTH)
-    if os.path.exists(f'ephemeris/{date.year}_{day}/structured_dataG.csv'):
+  
+    if os.path.exists(f'ephemeris/{date.year}_{daynumber}/structured_dataG.csv'):
         #print(f"Data on day {daynumber} already sorted")
         return
     
-    rinex_path = download_rinex(day, date.year)
+    rinex_path = download_rinex(daynumber, date.year)
     content = []
     with open(rinex_path, "r") as file:
         #print(f"Reading file {filename}")
@@ -639,7 +644,7 @@ def sort_rinex(daynumber: int, date: datetime) -> None:
     print("timing update_navigation_message_type x2 (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     # Save GNSS datafranes to csv.
-    output_folder = f'ephemeris/{date.year}_{day}/'
+    output_folder = f'ephemeris/{date.year}_{daynumber}/'
     os.makedirs(output_folder, exist_ok=True)
     file_pathG = os.path.join(output_folder, "structured_dataG.csv")
     structured_dataG = structured_dataG.sort_values(by=['satelite_id', 'Datetime'])

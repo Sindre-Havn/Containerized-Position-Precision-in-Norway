@@ -23,6 +23,10 @@ Improvements:
 * Close the visual gap in frontend at the end of elevation-curve in the skyplot.
 * More accurate terrain analysis along borders between .tif files.
 * The backend can handle multiple (different) requests from multiple clients, but they are queued (only one is served at a time).
+* DOP values can now be calculated as forcast. The number of days in the future is
+  determined by NR_FORCAST_DAYS from config.py.
+  Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
+  Ephemeris data should be valid for a few weeks.
 
 
 Future work:
@@ -39,11 +43,6 @@ Future work:
 * The need to create new merged_raster for each request is suboptimal,memory heavy,
   and makes the backend voulnerable to buffer overflow attacks.
   The code should be refactored so that terrain analysis can be performed inplace in the dem10 data.
-* Concider adding code to support GDOP calculation on future date, but set max limit.
-  Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
-  Set max to 14 or 30 days?.
-  Allowing days in the future also solves that Norway is UTC+2, so finding DOP between kl 00-02 does not result in
-  confusion (from missing RINEX file.)
 * Make it so that clients cannot request DOP calculaton on day with no
   valid rinex to be downloaded from CDDIS. Dont want backend to crash for everyone if
   one clients requests a non-existing rinex (For example request rinex 1 year in future).

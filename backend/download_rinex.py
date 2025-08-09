@@ -25,9 +25,10 @@ def download_rinex(day: str, year: int) -> Path:
         raise # Let flask handle this
     
     if file_size_bytes < ONE_MB: # Rinex files is 10 MB+, bad request yield HTML site of ~17kB.
+        print('gzipped size', file_size_bytes)
         print('Bad request, did not get RINEX.')
         os.remove(gzip_rinex)
-        raise requests.exceptions.Response
+        raise requests.exceptions.RequestException
     
     rinex_path = gzip_rinex.stem
     with open(gzip_rinex,'rb') as fd:

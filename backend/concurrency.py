@@ -7,7 +7,7 @@ from compute_DOP import find_dop_on_point
 import json
 from pyproj import Transformer
 from datetime import datetime
-from visible_satellites import get_daynumber, get_gnss, Cartesian, get_satellite_positions, visible_satellites_data, elevation_of_horizon
+from visible_satellites import get_daynumber_and_date_for_ephemeris, get_gnss, Cartesian, get_satellite_positions, visible_satellites_data, elevation_of_horizon
 import rasterio
 import numpy as np
 import pandas as pd
@@ -140,7 +140,7 @@ def data_from_epoch(gnss: list[str],
     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
 
-    daynumber = get_daynumber(given_date)
+    daynumber = get_daynumber_and_date_for_ephemeris(given_date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
     sort_rinex(daynumber, given_date)
     print("timing get_daynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))

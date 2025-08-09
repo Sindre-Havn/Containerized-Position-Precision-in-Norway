@@ -58,38 +58,53 @@ def CartesianToGeodetic(X: float, Y: float, Z: float, a: float, b: float) -> lis
     return [phi_deg, lam_deg, h]
 
 
-def get_daynumber(date: datetime) -> int:
+def get_daynumber_and_date_for_ephemeris(date: datetime) -> tuple[str, datetime]:
     """
-    Get day number of year from date, adjust if today.
+    Get daynumber in year for requesting rinex-data from CDDIS server.
+    Not guaranteed today's rinex is published, so if date is today,
+    use yesterdays' rinex data.
+    If the given date is within config.NR_FORCAST_DAYS-number-of-days in the
+    future, use yesterdays' rinex data.
     """
-    #print('in get_daynumber', date)
-    first_day_of_year = datetime(date.year, 1, 1)
-    days_difference = (date - first_day_of_year).days + 1
-    if date.date() == datetime.now().date():
-        days_difference -= 1
+    YEAR_FIRST_AVAILABLE_RINEX_V4 = 2022
+    if date.year < YEAR_FIRST_AVAILABLE_RINEX_V4:
+        raise # Let flask handle this
 
-    daynumber = f"{days_difference:03d}"
+    days_in_the_future = (date.date()-datetime.now().date()).days
+    if days_in_the_future > config.NR_FORCAST_DAYS:
+        raise # Date is too far in the future, let flask handle error.
+
+    days_difference = None
+    if date.date() < datetime.now().date():
+        first_day_of_year = datetime(date.year, 1, 1)
+        daynumber = (date - first_day_of_year).days + 1 # One indexed
+        return f'{daynumber:03d}', date
     
-    start = perf_counter_ns()
-    print("timing sortData (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-    return daynumber
+    today = datetime.now()
+    first_day_this_year = datetime(today.year, 1, 1)
+    daynumber = (today - first_day_this_year).days + 1 # One indexed
+    daynumber -= 1 # Use yesterday's ephemeris
+    date = date - timedelta(days=1)
+    
+    print('daynumber', daynumber)
+    return f'{daynumber:03d}', date
 
-def get_gnss(daynumber: int, year: int) -> dict[str, pd.DataFrame]:
+
+
+def get_gnss(daynumber: str, year: int) -> dict[str, pd.DataFrame]:
     """
     Load structured GNSS data for a specific day/year.
     """
-    DESIRED_LENGTH = 3
-    day = str(daynumber).zfill(DESIRED_LENGTH)
     gnss_mapping = {
-        'GPS'    : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataG.csv'),
-        'GLONASS': pd.read_csv(f'ephemeris/{year}_{day}/structured_dataR.csv'),
-        'Galileo': pd.read_csv(f'ephemeris/{year}_{day}/structured_dataE.csv'),
-        'QZSS'   : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataJ.csv'),
-        'BeiDou' : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataC.csv'),
-        'NavIC'  : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataI.csv'),
-        'SBAS'   : pd.read_csv(f'ephemeris/{year}_{day}/structured_dataS.csv')
+        'GPS'    : pd.read_csv(f'ephemeris/{year}_{daynumber}/structured_dataG.csv'),
+        'GLONASS': pd.read_csv(f'ephemeris/{year}_{daynumber}/structured_dataR.csv'),
+        'Galileo': pd.read_csv(f'ephemeris/{year}_{daynumber}/structured_dataE.csv'),
+        'QZSS'   : pd.read_csv(f'ephemeris/{year}_{daynumber}/structured_dataJ.csv'),
+        'BeiDou' : pd.read_csv(f'ephemeris/{year}_{daynumber}/structured_dataC.csv'),
+        'NavIC'  : pd.read_csv(f'ephemeris/{year}_{daynumber}/structured_dataI.csv'),
+        'SBAS'   : pd.read_csv(f'ephemeris/{year}_{daynumber}/structured_dataS.csv')
     }
-    update_access_time(f'ephemeris/{year}_{day}')
+    update_access_time(f'ephemeris/{year}_{daynumber}')
     return gnss_mapping
 
 
@@ -254,7 +269,7 @@ def data_from_epoch(gnss_list: list[str],
     given_date = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
     
-    daynumber = get_daynumber(given_date)
+    daynumber = get_daynumber_and_date_for_ephemeris(given_date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
     sort_rinex(daynumber, given_date)
     gnss_mapping = get_gnss(daynumber, given_date.year )

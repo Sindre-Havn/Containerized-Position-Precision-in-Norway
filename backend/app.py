@@ -1,6 +1,6 @@
 import json
 from flask import Flask, Response, jsonify, request, stream_with_context
-from visible_satellites import get_gnss, get_daynumber, data_from_epoch, create_observers
+from visible_satellites import get_gnss, get_daynumber_and_date_for_ephemeris, data_from_epoch, create_observers
 from compute_DOP import DOP_in_epoch, find_dop_on_point
 from flask_cors import CORS
 from datetime import datetime
@@ -116,10 +116,10 @@ def dopValues():
     start = perf_counter_ns()
     print("timing get_daynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
-    daynumber = get_daynumber(date)
+    daynumber, eph_date = get_daynumber_and_date_for_ephemeris(date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
-    sort_rinex(daynumber, date)
-    gnss_mapping = get_gnss(daynumber, date.year)
+    sort_rinex(daynumber, eph_date)
+    gnss_mapping = get_gnss(daynumber, eph_date.year)
     merged_raster = get_merged_raster_near_points(points)
     # Prepare data
     dem_data, observers, observers_cartesian, E_lower, N_upper = None, None, None, None, None
@@ -137,7 +137,7 @@ def dopValues():
         start = perf_counter_ns()
         for step in range(len(points)):
             #start = perf_counter_ns()
-            dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, time, points[step], observers[step], observers_cartesian[step], elevation_angle, E_lower, N_upper)
+            dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, date, points[step], observers[step], observers_cartesian[step], elevation_angle, E_lower, N_upper)
             #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
             dop_list.append([dop_point]) # Frontend expects "double-wrapped dop_point lists"
             print(f"{int(((1+step) / total_steps) * 100)}\n\n")

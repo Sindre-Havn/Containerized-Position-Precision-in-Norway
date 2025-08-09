@@ -26,3 +26,6 @@ EPHEMERIS_LIFETIME_HOURS = -1       # Negative hours are ignored -> infinite lif
 
 MERGED_RASTER_MAX_COUNT = 20 # This is effectively a limit for how many users which can use the application in parallel. If more clients than this max_count requests DOP calculations, all with different merged_rasters, the first client's merged_raster is deleted mid-calculation, not optimal...
 MERGED_RASTER_LIFETIME_HOURS = 0.5  # Negative hours are ignored -> infinite lifetime. Want to delete old merged_rasters (even if they may be reused) because they 
+
+# visible_satellites.py
+NR_FORCAST_DAYS = 14 # During a few days, the satellites may drift a few kilometers. But at 20'000km altitude, the angle difference for estimating DOP is negligable.
