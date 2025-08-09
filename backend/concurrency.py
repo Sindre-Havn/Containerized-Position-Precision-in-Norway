@@ -87,7 +87,7 @@ def get_dopvalues_concurrently(args: tuple[ np.ndarray[float],
         total_steps = len(ROD.points)+1
         result_generator = pool.imap(get_dopvalues, steps, chunksize=1)
         for r in result_generator:
-            dop_list.append([r]) # Frontend expects "double-wrapped lists"
+            dop_list.append(r)
             step += 1
             yield f"{int(((step+1) / total_steps) * 100)}\n\n"
     #dt = (perf_counter_ns()-start)/10**9/60
@@ -140,9 +140,9 @@ def data_from_epoch(gnss: list[str],
     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
     start = perf_counter_ns()
 
-    daynumber = get_daynumber_and_date_for_ephemeris(given_date)
+    daynumber, eph_date = get_daynumber_and_date_for_ephemeris(given_date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
-    sort_rinex(daynumber, given_date)
+    sort_rinex(daynumber, eph_date)
     print("timing get_daynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     merged_raster = get_merged_raster_near_points([point])
@@ -157,7 +157,7 @@ def data_from_epoch(gnss: list[str],
             start_time = t
             frequency = freq
             gnss_list = gnss
-            gnss_mapping = get_gnss(daynumber,given_date.year)
+            gnss_mapping = get_gnss(daynumber,eph_date.year)
             observation_cartesian = Cartesian(observation_lng_lat[1]* np.pi/180, observation_lng_lat[0]* np.pi/180, observer_height)
             observation_end = [observation_EN[0], observation_EN[1], observer_height]
             observation_lnglat = observation_lng_lat

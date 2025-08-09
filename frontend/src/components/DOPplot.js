@@ -78,11 +78,16 @@ export const DOPLineChart = () => {
   
                   const text = decoder.decode(value);
                   console.log('Received text:', text);
-                  if (text.startsWith('[')) {
+                  if (text.includes('[')) {
                       try {
-                          dopData = JSON.parse(text);
-                          const array_of_arrays = dopData.map(arr => arr[0]);
-                          setDOP(array_of_arrays);
+                          if (!text.startsWith('[')) { // For few points, progress int and array come in same message.
+                            dopData = JSON.parse(text.slice(2,-1));
+                          }
+                          else {
+                            dopData = JSON.parse(text);
+                          }
+                          const array_of_DOPs = dopData
+                          setDOP(array_of_DOPs);
                           setUpdateDOP(false);
                           setIsProcessing(false);
                       } catch (error) {

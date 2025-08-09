@@ -139,7 +139,7 @@ def dopValues():
             #start = perf_counter_ns()
             dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, date, points[step], observers[step], observers_cartesian[step], elevation_angle, E_lower, N_upper)
             #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-            dop_list.append([dop_point]) # Frontend expects "double-wrapped dop_point lists"
+            dop_list.append(dop_point)
             print(f"{int(((1+step) / total_steps) * 100)}\n\n")
             yield f"{int(((1+step) / total_steps) * 100)}\n\n"
 
