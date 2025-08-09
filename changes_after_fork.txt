@@ -46,3 +46,5 @@ Future work:
 * Make it so that clients cannot request DOP calculaton on day with no
   valid rinex to be downloaded from CDDIS. Dont want backend to crash for everyone if
   one clients requests a non-existing rinex (For example request rinex 1 year in future).
+* Concider changing from 2D to 3D coordinates inside roads.py, because speedlimits
+  are measured along road curve (3D), not top-down (2D).
