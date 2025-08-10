@@ -110,7 +110,6 @@ def dopValues():
 
     start_dopValues = perf_counter_ns()
     date = datetime.fromisoformat(time_str)
-    total_steps = len(points)+1
     start = perf_counter_ns()
     print("timing get_daynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
@@ -129,8 +128,8 @@ def dopValues():
             E_lower = src.bounds[0]
             N_upper = src.bounds[3]
     
+    total_steps = len(points)
     dop_list = []
-
     def generate():
         start = perf_counter_ns()
         for step in range(len(points)):
@@ -138,8 +137,8 @@ def dopValues():
             dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, date, points[step], observers[step], observers_cartesian[step], elevation_angle, E_lower, N_upper)
             #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
             dop_list.append(dop_point)
-            print(f"{int(((1+step) / total_steps) * 100)}\n\n")
-            yield f"{int(((1+step) / total_steps) * 100)}\n\n"
+            print(f"{int(((step+1) / total_steps) * 100)}\n\n")
+            yield f"{int(((step+1) / total_steps) * 100)}\n\n"
 
         # Når prosessen er ferdig
         print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))

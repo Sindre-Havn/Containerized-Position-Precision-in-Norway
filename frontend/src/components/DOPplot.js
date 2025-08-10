@@ -80,8 +80,11 @@ export const DOPLineChart = () => {
                   console.log('Received text:', text);
                   if (text.includes('[')) {
                       try {
-                          if (!text.startsWith('[')) { // For few points, progress int and array come in same message.
-                            dopData = JSON.parse(text.slice(2,-1));
+                          if (!text.startsWith('[')) {
+                            // For few points, progress int and array come in same message.
+                            const split_text = text.split('\n');
+                            const [num, array_str] = split_text.filter((str) => str != '');
+                            dopData = JSON.parse(array_str);
                           }
                           else {
                             dopData = JSON.parse(text);

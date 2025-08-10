@@ -10,7 +10,7 @@ USE_CORRECT_SPEEDLIMITS = True # If True, does a GET request for the speedlimit 
 DEFAULT_SPEEDLIMIT = 50 # km/h, used in absence of defined speedlimit.
 HEADERS = {
             "Accept": "application/json",
-            "X-Client": "Masteroppgave-vegnett"
+            "X-Client": "sommerjobb-vegnett"
 }
 
 # elevation_mask.py / visible_satellites.py
