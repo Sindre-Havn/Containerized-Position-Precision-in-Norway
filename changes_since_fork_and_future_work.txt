@@ -1,4 +1,4 @@
-Improvements:
+Changes since fork:
 * Finding a route is not limited to EV136.
 * Routes work when overlapping roads, such as inside spiraling tunnels.
 * Routes work over ferry crossings.
@@ -34,3 +34,5 @@ Future work:
   one clients requests a non-existing rinex (For example request rinex 1 year in future).
 * Concider changing from 2D to 3D coordinates inside roads.py, because speedlimits
   are measured along road curve (3D), not top-down (2D).
+* Is it correct to have fixed phi and lam in common_variables.py. See:
+    # IS THIS SAFE? Using fixed ENU coordinates for entire Norway!?
