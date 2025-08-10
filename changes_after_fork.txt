@@ -1,18 +1,3 @@
-Renaming
-  downloadfile.py ==> dowload_ephemeris.py
-  lastned() ==> dowload_ephemeris()
-  
-New feature
-  concurrency.py - conurrent prossesing for finding DOP Values and satellite count at point.
-
-find_dop_on_point() - change input parameters. Concurrent processing using multiprocessing.pool demands args to be picklable.
-                      Main difference was not passing "src" as an arg, but extracting necessary components and pass
-                      those as args. This change also affected functions called by find_dop_on_point().
-
-Remove DOPvalues_2 so only one DOPvalues is used.
-
-
-
 Improvements:
 * Finding a route is not limited to EV136.
 * Routes work when overlapping roads, such as inside spiraling tunnels.
@@ -27,24 +12,25 @@ Improvements:
   determined by NR_FORCAST_DAYS from config.py.
   Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
   Ephemeris data should be valid for a few weeks.
+* The option "Vegsystemreferanse" in the frontend is not used and is thoroughly removed.
 
 
 Future work:
 * NVDB APIv3 is used inside function "get_road_and_speedlimits", must be upgraded to v4.
   The route finder in "get_road_and_speedlimits" often dont find routes, even easy short ones.
   maybe v4 is better.
-* The option "Vegsystemreferanse" in the frontend is not used and should be removed.
 * Potentially hard to see difference between zero DOP and
   close to zero DOP as it is not. Invalid DOP values (zeros) should be more obviouse.
   Maybe colorcode or set -1 instead of 0.
 * DOP values should be set invalid inside tunnels.
-* Conscider python library 'dask pandas' for sharing memory inside concurrency.py (bypass GIL) and make it even faster.
+* Consider python library 'dask pandas' for sharing memory inside concurrency.py (bypass GIL) and make it even faster.
 * Give system posibility to handle multiple different 'merged_raster' and daynumber rinex's, for different clients.
 * The need to create new merged_raster for each request is suboptimal,memory heavy,
   and makes the backend voulnerable to buffer overflow attacks.
   The code should be refactored so that terrain analysis can be performed inplace in the dem10 data.
 * Make it so that clients cannot request DOP calculaton on day with no
-  valid rinex to be downloaded from CDDIS. Dont want backend to crash for everyone if
+  valid rinex to be downloaded from CDDIS (see get_daynumber_and_date_for_ephemeris).
+  Dont want backend to crash for everyone if
   one clients requests a non-existing rinex (For example request rinex 1 year in future).
 * Concider changing from 2D to 3D coordinates inside roads.py, because speedlimits
   are measured along road curve (3D), not top-down (2D).
