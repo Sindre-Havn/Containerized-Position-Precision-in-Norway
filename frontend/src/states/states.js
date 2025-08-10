@@ -10,7 +10,6 @@ export const elevationState = atom(10)
 
 export const endPointsState = atom([])
 
-export const vegReferanseState = atom('Not used')
 export const startPointState = atom([124657.85,	6957624.16])
 export const endPointState = atom([193510.27,6896504.01])
 export const distanceState = atom(1000)

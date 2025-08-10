@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAtom, useAtomValue } from 'jotai';
-import {elevationState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, vegReferanseState,geoJsonDataState, epochFrequencyState,roadProgressState} from '../states/states';
+import {elevationState,timeState, gnssState, epochState, startPointState, endPointState, distanceState, roadState, geoJsonDataState, epochFrequencyState,roadProgressState} from '../states/states';
 import '../css/filtering.css';
 import { useState } from 'react';
 
@@ -12,7 +12,6 @@ const FilterComponent = () => {
   const [time, setTime] = useAtom(timeState);
   const [hours, setHours] = useAtom(epochState);
   
-  const [vegsystemreferanse, setVegsystemreferanse] = useAtom(vegReferanseState);
   const [startPoint, setStartPoint] = useAtom(startPointState);
   const [endPoint, setEndPoint] = useAtom(endPointState);
   const [distance, setDistance] = useAtom(distanceState);
@@ -89,18 +88,6 @@ const FilterComponent = () => {
     <div className="filter-container">
       <div className="filter-comps">
         <div className="road-comps">
-          <div>
-            <h4 className="road-comps-header">Vegsystemreferanse</h4>
-            <input
-              type="text"
-              value={vegsystemreferanse}
-              onChange={(e) => setVegsystemreferanse(e.target.value)}
-              placeholder="F.eks. EV136 ..."
-              className='road-input1'
-            />
-            
-          </div>
-
           <div>
             <h4 className="road-comps-header">Distance:</h4>
             <input

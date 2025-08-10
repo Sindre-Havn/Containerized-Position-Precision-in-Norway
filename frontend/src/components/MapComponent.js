@@ -8,7 +8,7 @@ import customMarkerIcon from '../assets/pngwing.png';
 import A from '../assets/A.png';
 import B from '../assets/B.png';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import {startPointState, endPointState, distanceState, roadState,pointsState, vegReferanseState, geoJsonDataState} from '../states/states';
+import {startPointState, endPointState, distanceState, roadState,pointsState, geoJsonDataState} from '../states/states';
 import '../css/map.css';
 import proj4 from 'proj4';
 import FitMapToGeoJson from '../components/FitMapToGeoJson';
@@ -97,7 +97,6 @@ const ClickableMap = ({ setStartMarker, setEndMarker, startMarker, endMarker }) 
 };
 
 const NavMap = () => {
-  const [vegreferanse, setVegsystemreferanse ]= useAtom(vegReferanseState);
   const [startPoint, setStartPoint] = useAtom(startPointState);
   const [endPoint, setEndPoint] = useAtom(endPointState);
   const distance = useAtomValue(distanceState);
@@ -123,7 +122,6 @@ const NavMap = () => {
       },
       method: 'POST',
       body: JSON.stringify({
-        vegReferanse: vegreferanse,
         startPoint: startPoint,
         endPoint: endPoint,
         distance: distance,
@@ -148,7 +146,7 @@ const NavMap = () => {
         setUpdateRoad(false);
         alert(error.message);  // Retrieve actuall error from Flask!
       });
-  }, [geoJsonData, updateRoad, startPoint, endPoint, distance, setGeoJsonData, setUpdateRoad, vegreferanse, setMarkers]);
+  }, [geoJsonData, updateRoad, startPoint, endPoint, distance, setGeoJsonData, setUpdateRoad, setMarkers]);
   
   useEffect(() => {
     fetchRoadData();
@@ -160,7 +158,6 @@ const NavMap = () => {
     setStartPoint([124657.85,	6957624.16]);
     setEndPoint([193510.27,6896504.01]);
     setMarkers([]);
-    setVegsystemreferanse('Not used');
     setGeoJsonData(null);
   };
 

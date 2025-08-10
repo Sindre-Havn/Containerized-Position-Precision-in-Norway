@@ -8,7 +8,6 @@ from roads import extract_points_at_interval, connect_total_road_segments, get_r
 import rasterio
 import config
 import concurrency
-import os
 import traceback
 from merge_rasters import get_merged_raster_near_points
 from memory_manager import delete_old_data
@@ -34,14 +33,13 @@ def road():
 
     try:
         start_road = perf_counter_ns()
-        veg_referanse = request.json.get('vegReferanse') # Not needed, depreciated
         startpoint = request.json.get('startPoint')
         endpoint = request.json.get('endPoint')
         distance = request.json.get('distance')
 
         # Validate input
         if not startpoint or not endpoint or not distance:
-            response = jsonify({'error': 'Missing input parameters.', 'message': 'Please provide startPoint, endPoint, distance and vegReferanse.'})
+            response = jsonify({'error': 'Missing input parameters.', 'message': 'Please provide startPoint, endPoint and distance.'})
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             return response, 400
 
