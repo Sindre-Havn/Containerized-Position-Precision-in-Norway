@@ -199,5 +199,11 @@ def satellites():
     
 
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", port=5000, debug=True, threaded=False)
-
+    app.run(host="localhost", port=5000)#, debug=True, threaded=False)
+    """
+    --cpus limits the total CPU time available to a container, while --cpuset-cpus restricts the container to specific physical CPU cores.
+    """
+    # sette threaded til True? For parallellisering istedenfor queue?
+    # sudo docker build -t position-precision .
+    # sudo docker run --cpus="7" -p 5000:3000 position-precision
+    # gunicorn -w 1 -t 0 -b "localhost:3000" "app:app"    # "-w" threads/workers. "-t" timeout [sec] 0 => inf. Default is 30 sec, which lead to timeout for longer timeconsuming requests. 

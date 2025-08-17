@@ -3,7 +3,7 @@
 Første gang man Cloner prosjektet må man også følge stegene under Laste ned høydedata og Laste ned ephemeris fra CDDIS. Når dette er på plass, skal det funke å starte prosjektet slik som forklart under Starte backend og Starte frontend.
 
 ### Web App
-Prosjektet blir også hostet på denne linken, noe treigere enn det det vil være å kjøre det på egen maskin.
+Tidligere versjon av prosjektet (før fork) blir også hostet på denne linken:
 
 [https://master-2025.vercel.app](https://master-2025.vercel.app/)
 
@@ -155,5 +155,35 @@ password passord
 chmod 600 ~/.netrc
 ```
 
+## Docker
 
+### Last ned
+- Last ned docker https://www.docker.com/get-started/.
 
+### Backend container
+
+- Naviger til /backend og bygg container
+```bash
+sudo docker build -t position-precision-backend .
+```
+
+- Kjøre container. Bruk flagg som '--cpus' eller '--cpuset-cpus' for å tilegne bestemt hardware til containeren slik at tunge utregninger går raskere ved bruk av concurrency.
+```bash
+sudo docker run --cpus="7" -p 5000:5000 position-precision
+```
+
+### Frontend container
+
+- Frontend i containeren klarer ikke å gjøre API-kall til backenden slik den nå er konfigurert. Se 'changes_since_fork_and_future_work.txt' for mer om dette.
+
+- Naviger til /frontend og bygg container:
+```bash
+sudo docker build -t position-precision-frontend .
+```
+
+- Kjøre container:
+```bash
+sudo docker run -p 80:80 frontend
+```
+
+- Åpne applikasjon på http://localhost/ (trenger altså ikke å spesifisere port.).

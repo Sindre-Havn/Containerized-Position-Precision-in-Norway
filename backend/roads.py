@@ -89,7 +89,7 @@ def get_road(startpoint: list[float], endpoint: list[float]) -> list[list[list[f
 
     response = requests.get(url, headers=config.HEADERS)
     if response.status_code != 200:
-        raise Exception(f"Error from NVDB API: {response.status_code} {response.text}")
+        raise Exception(f'Error from NVDB API: {response.status_code} {response.text}')
 
     data = response.json()
     road_segment_objects = data.get('vegnettsrutesegmenter', [])
@@ -126,7 +126,7 @@ def get_road_and_speedlimits(startpoint: list[float], endpoint: list[float]) -> 
 
         response = requests.get(url, headers=config.HEADERS)
         if response.status_code != 200:
-            raise Exception(f"Error from NVDB API: {response.status_code} {response.text}")
+            raise Exception(f'Error from NVDB API: {response.status_code} {response.text}')
 
         data = response.json()
         road_segments = data.get('vegnettsrutesegmenter', [])
@@ -140,20 +140,20 @@ def get_road_and_speedlimits(startpoint: list[float], endpoint: list[float]) -> 
         for segment in road_segments:
             url = (
                 f'https://nvdbapiles.atlas.vegvesen.no/vegobjekter/api/v4/vegobjekter/{SPEEDLIMITS_OBJ_ID}?'
-                f'&veglenkesekvens={segment['kortform']}'
+                f'&veglenkesekvens={segment["kortform"]}'
             )
             speedlimit = None
             try:
                 response = requests.get(url, headers=config.HEADERS)
                 if response.status_code != 200:
-                    raise Exception(f"Error from NVDB API: {response.status_code} {response.text}")
+                    raise Exception(f'Error from NVDB API: {response.status_code} {response.text}')
                 
                 data = response.json()
                 json_data = data.get('objekter', [])
                 href_speed_limits = json_data[0]['href']
                 response = requests.get(href_speed_limits, headers=config.HEADERS)
                 if response.status_code != 200:
-                    raise Exception(f"Error from NVDB API: {response.status_code} {response.text}")
+                    raise Exception(f'Error from NVDB API: {response.status_code} {response.text}')
                 
                 data = response.json()
                 # Not consistent where the speedlimit value is placed, try both places.
@@ -171,7 +171,7 @@ def get_road_and_speedlimits(startpoint: list[float], endpoint: list[float]) -> 
         road_segments_coords = list(map(linestring_to_coordinates, road_segments_linestring))
         return road_segments_coords, speedlimits
     except Exception as e:
-        print(f"Error in get_road_and_speedlimits: {e}")
+        print(f'Error in get_road_and_speedlimits: {e}')
         raise  # let Flask catch and handle this
 
 

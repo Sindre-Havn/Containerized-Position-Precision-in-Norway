@@ -13,12 +13,16 @@ Changes since fork:
   Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
   Ephemeris data should be valid for a few weeks.
 * The option "Vegsystemreferanse" in the frontend is not used and is thoroughly removed.
+* Containerized backend, and attempted 
 
 
 Future work:
 * NVDB APIv3 is used inside function "get_road_and_speedlimits", must be upgraded to v4.
   The route finder in "get_road_and_speedlimits" often dont find routes, even easy short ones.
   maybe v4 is better.
+* Configure server for deployment by setting up TLS/SSL certificate, find a fitting domain, and change the IPs and
+  port defined in backend/app.py and frontend/src/components.
+* Create docker-compose.yml for configuring and running frontend and backend as a single system.
 * Potentially hard to see difference between zero DOP and
   close to zero DOP as it is not. Invalid DOP values (zeros) should be more obviouse.
   Maybe colorcode or set -1 instead of 0.
