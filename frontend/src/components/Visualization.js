@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAtom, useAtomValue } from 'jotai'
-import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState, startPointState, chosenPointState,epochFrequencyState} from '../states/states';
+import {elevationState, updateDataState,timeState, gnssState, epochState, pointsState, chosenPointState,epochFrequencyState} from '../states/states';
 import { SatelliteMap } from './SkyPlot';
 import '../css/visualization.css';
 import { BarChartGraph } from './BoxPlot';
@@ -83,7 +83,7 @@ const Visualization = () => {
     const time =useAtomValue(timeState);
     const epoch = useAtomValue(epochState);
     const points = useAtomValue(pointsState);
-    const cosenPoint = useAtomValue(chosenPointState);
+    const chosenPoint = useAtomValue(chosenPointState);
 
     const labels = Array.from({ length: 2 * epoch +1}, (_, i) => 
       new Date(time.getTime() + i * epochFrequency * 60 * 1000).toISOString().slice(11, 16)
@@ -95,7 +95,7 @@ const Visualization = () => {
       if (!updateData) return; 
     
       const filteredGNSS = Object.keys(gnssNames).filter((key) => gnssNames[key]);
-      const searchPoint = points[cosenPoint];
+      const searchPoint = points[chosenPoint];
 
       fetch('http://127.0.0.1:5000/satellites', {
         headers: {

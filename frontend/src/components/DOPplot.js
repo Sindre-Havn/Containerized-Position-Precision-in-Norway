@@ -82,8 +82,9 @@ export const DOPLineChart = () => {
                       try {
                           if (!text.startsWith('[')) {
                             // For few points, progress int and array come in same message.
+                            // Remove number in front of array string.
                             const split_text = text.split('\n');
-                            const [num, array_str] = split_text.filter((str) => str != '');
+                            const [_, array_str] = split_text.filter((str) => str !== '');
                             dopData = JSON.parse(array_str);
                           }
                           else {
