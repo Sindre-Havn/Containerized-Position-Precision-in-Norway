@@ -5,8 +5,6 @@ from shapely.geometry import LineString
 import config
 import re
 
-from time import perf_counter_ns
-
 # Set up coordinate transformers between UTM 33N and WGS84
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 
@@ -98,9 +96,6 @@ def get_road(startpoint: list[float], endpoint: list[float]) -> list[list[list[f
     
     road_segments_linestrings = [segm['geometri']['wkt'] for segm in road_segment_objects]
     road_segments_coords = list(map(linestring_to_coordinates, road_segments_linestrings))
-
-    
-    # print("timing createNewRaster (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     return road_segments_coords
     
@@ -196,7 +191,6 @@ def connect_road(total_road: list[dict]) -> dict:
     for i in range(1,len(road_segments)-1):
         prev_segment_end_point = road_segments[i-1]["geometry"]["coordinates"][-1]
         start_point = road_segments[i]["geometry"]["coordinates"][0]
-        #print('start, prev', start_point, prev_segment_end_point)
         speedlimit = road_segments[i]["properties"]["fartsgrense"]
         if prev_segment_end_point != start_point:
             geojson_feature = {

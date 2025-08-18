@@ -4,8 +4,6 @@ import numpy as np
 from visible_satellites import satellites_visible_from_point
 from common_variables import phi,lam
 
-from time import perf_counter_ns
-
 def R2(theta: float) -> np.ndarray[float]:
     """
     Rotation matrix about Y-axis (used in coordinate transformation).

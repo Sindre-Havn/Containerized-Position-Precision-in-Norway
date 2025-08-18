@@ -1,7 +1,6 @@
 
 from dataclasses import dataclass
 import multiprocessing
-from time import perf_counter_ns
 import config
 from compute_DOP import find_dop_on_point
 import json

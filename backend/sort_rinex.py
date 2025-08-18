@@ -5,8 +5,6 @@ from datetime import datetime
 import os
 from download_rinex import download_rinex
 
-from time import perf_counter_ns
-
 """
 This module reads a rinex (version 4 / BRD4 file),
 and sorts the relevant ephemeris data into csv files for each GNSS.

@@ -40,14 +40,12 @@ def road():
             response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
             return response, 400
 
-        # Get road data
         if config.USE_CORRECT_SPEEDLIMITS:
             road_segments, speedlimits = get_road_and_speedlimits(startpoint, endpoint)
         else:
-            road_segments, speedlimits = get_road(startpoint, endpoint), []
+            road_segments, speedlimits = get_road(startpoint, endpoint), [] # No speedlimits
         road_utm, road_wgs = connect_total_road_segments(road_segments, startpoint, speedlimits)
 
-        # Calculate points
         points = extract_points_at_interval(road_utm, float(distance))
 
         response = jsonify({'message': 'Data processed successfully', 'road': road_wgs, 'points': points})
@@ -101,7 +99,7 @@ def dopValues():
     sort_rinex(daynumber, eph_date)
     gnss_mapping = get_gnss(daynumber, eph_date.year)
     merged_raster = get_merged_raster_near_points(points)
-    # Prepare data
+
     dem_data, observers, observers_cartesian, E_lower, N_upper = None, None, None, None, None
     with rasterio.open(merged_raster) as src:
             dem_data = src.read(1)
@@ -171,4 +169,4 @@ def satellites():
     
 
 if __name__ == '__main__':
-    app.run(host="localhost:3000", port=5000, debug=True, threaded=False)
+    app.run(host="localhost", port=5000, debug=True, threaded=False)

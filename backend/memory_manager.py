@@ -86,7 +86,6 @@ def update_access_time(file: str) -> None:
         # Set the access time and keep the modification time
         os.utime(file, (new_atime_timestamp, current_mtime))
         print(f"Access time of '{file}' updated successfully.")
-        raise  # Let flask catch this
     except FileNotFoundError:
         print(f"Error: File '{file}' not found.")
         raise  # Let flask catch this

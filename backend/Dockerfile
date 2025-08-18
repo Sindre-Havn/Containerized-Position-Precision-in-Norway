@@ -1,11 +1,3 @@
-# Build app (frontend)
-#FROM node:16-alpine
-#WORKDIR /app
-#COPY . /app
-#RUN npm install
-#RUN npm start
-
-
 # Build the api (backend)
 FROM python:3.10-slim-buster
 

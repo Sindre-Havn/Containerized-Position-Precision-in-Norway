@@ -6,7 +6,7 @@ USE_CONCURRENCY_FOR_SATELLITE = True
 PROCESSES_COUNT_SATELLITE = 7
 
 # roads.py
-USE_CORRECT_SPEEDLIMITS = True # If True, does a GET request for the speedlimit for every parial roadsegment in route. This is 'correct' but slow and expensive. If False, it performs only one API request.
+USE_CORRECT_SPEEDLIMITS = False # If True, does a GET request for the speedlimit for every parial roadsegment in route. This is 'correct' but slow and expensive. If False, it performs only one API request.
 DEFAULT_SPEEDLIMIT = 50 # km/h, used in absence of defined speedlimit.
 HEADERS = {
             "Accept": "application/json",
@@ -25,7 +25,7 @@ EPHEMERIS_MAX_COUNT = 50
 EPHEMERIS_LIFETIME_HOURS = -1       # Negative hours are ignored -> infinite lifetime.
 
 MERGED_RASTER_MAX_COUNT = 20 # This is effectively a limit for how many users which can use the application in parallel. If more clients than this max_count requests DOP calculations, all with different merged_rasters, the first client's merged_raster is deleted mid-calculation, not optimal...
-MERGED_RASTER_LIFETIME_HOURS = 0.25  # Negative hours are ignored -> infinite lifetime. Want to delete old merged_rasters (even if they may be reused) because they 
+MERGED_RASTER_LIFETIME_HOURS = 0.1  # Negative hours are ignored -> infinite lifetime. Want to delete old merged_rasters (even if they may be reused) because they 
 
 # visible_satellites.py
-NR_FORCAST_DAYS = 14 # During a few days, the satellites may drift a few kilometers. But at 20'000km altitude, the angle difference for estimating DOP is negligable.
+NR_FORCAST_DAYS = 14 # During a few days, the satellites may drift a few kilometers. But at 20'000km altitude, the angle difference for estimating DOP is negligable. Therefor some days forcast is considered valid.

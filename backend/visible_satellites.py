@@ -14,9 +14,6 @@ from merge_rasters import get_merged_raster_near_points
 from memory_manager import delete_old_data
 from pathlib import Path
 
-from time import perf_counter_ns
-
-
 # Set up coordinate transformers: EPSG:4326 = WGS84, EPSG:25833 = UTM zone 33N
 transformer = Transformer.from_crs("EPSG:25833", "EPSG:4326", always_xy=True)
 transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
@@ -74,7 +71,6 @@ def get_daynumber_and_date_for_ephemeris(date: datetime) -> tuple[str, datetime]
     if days_in_the_future > config.NR_FORCAST_DAYS:
         raise # Date is too far in the future, let flask handle error.
 
-    days_difference = None
     if date.date() < datetime.now().date():
         first_day_of_year = datetime(date.year, 1, 1)
         daynumber = (date - first_day_of_year).days + 1 # One indexed
@@ -86,7 +82,6 @@ def get_daynumber_and_date_for_ephemeris(date: datetime) -> tuple[str, datetime]
     daynumber -= 1 # Use yesterday's ephemeris
     date = date - timedelta(days=1)
     
-    print('daynumber', daynumber)
     return f'{daynumber:03d}', date
 
 
@@ -272,8 +267,7 @@ def data_from_epoch(gnss_list: list[str],
     daynumber, eph_date = get_daynumber_and_date_for_ephemeris(given_date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
     sort_rinex(daynumber, eph_date)
-    gnss_mapping = get_gnss(daynumber, eph_date.year )
-    print("timing get_daynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+    gnss_mapping = get_gnss(daynumber, eph_date.year)
     
 
     merged_raster = get_merged_raster_near_points([point])
