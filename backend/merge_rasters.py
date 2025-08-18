@@ -10,8 +10,6 @@ import hashlib
 from memory_manager import delete_old_data
 from pathlib import Path
 
-from time import perf_counter_ns
-
 
 # First, download the elevation data from hoydedata.no for the area you want to work with.
 # Nation-wide cover is recomended.

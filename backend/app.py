@@ -14,8 +14,6 @@ from memory_manager import delete_old_data
 from pathlib import Path
 from sort_rinex import sort_rinex
 
-from time import perf_counter_ns
-
 app = Flask(__name__)
 CORS(app, resources={r"/satellites": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 CORS(app, resources={r"/dopvalues" : {"origins": "http://localhost:3000"}})
@@ -32,7 +30,6 @@ def road():
         return response, 200
 
     try:
-        start_road = perf_counter_ns()
         startpoint = request.json.get('startPoint')
         endpoint = request.json.get('endPoint')
         distance = request.json.get('distance')
@@ -48,24 +45,13 @@ def road():
             road_segments, speedlimits = get_road_and_speedlimits(startpoint, endpoint)
         else:
             road_segments, speedlimits = get_road(startpoint, endpoint), []
-        start = perf_counter_ns()
-        road_utm, road_wgs = connect_total_road_segments(road_segments, startpoint, speedlimits) # startpoint should be road startpoint, not pin startpoint.
-        print("timing connect_total_road_segments (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+        road_utm, road_wgs = connect_total_road_segments(road_segments, startpoint, speedlimits)
 
         # Calculate points
-        start = perf_counter_ns()
         points = extract_points_at_interval(road_utm, float(distance))
-
-        # The following lines regarding deleting/creating raster must be refactored.
-        # It does not support multiple users requesting road routes for different
-        # areas of the country.
-        # Delete merged raster if exists
-
-        print("timing calculate_travel_time (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
         response = jsonify({'message': 'Data processed successfully', 'road': road_wgs, 'points': points})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")
-        print("timing road (ms):\t", round((perf_counter_ns()-start_road)/1_000_000,3))
         return response, 200
 
     except IndexError as e:
@@ -108,10 +94,7 @@ def dopValues():
     except Exception as e:
         return jsonify({"error": f"Invalid data format: {e}"}), 400
 
-    start_dopValues = perf_counter_ns()
     date = datetime.fromisoformat(time_str)
-    start = perf_counter_ns()
-    print("timing get_daynumber_dopValues (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
     daynumber, eph_date = get_daynumber_and_date_for_ephemeris(date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
@@ -131,19 +114,11 @@ def dopValues():
     total_steps = len(points)
     dop_list = []
     def generate():
-        start = perf_counter_ns()
         for step in range(len(points)):
-            #start = perf_counter_ns()
             dop_point = find_dop_on_point(dem_data, gnss_mapping, gnss, date, points[step], observers[step], observers_cartesian[step], elevation_angle, E_lower, N_upper)
-            #print("timing find_dop_on_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
             dop_list.append(dop_point)
-            print(f"{int(((step+1) / total_steps) * 100)}\n\n")
             yield f"{int(((step+1) / total_steps) * 100)}\n\n"
 
-        # Når prosessen er ferdig
-        print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-        print("timing dopValues (ms):\t", round((perf_counter_ns()-start_dopValues)/1_000_000,3))
-        print(f"{json.dumps(dop_list)}\n\n")
         yield f"{json.dumps(dop_list)}\n\n"
     
     generator = None
@@ -159,7 +134,6 @@ def dopValues():
 
 @app.route('/satellites', methods=['POST', 'OPTIONS'])
 def satellites():
-    start_satellites = perf_counter_ns()
     if request.method == 'OPTIONS':
         # Handle the preflight request with necessary headers
         response = jsonify({'status': 'Preflight request passed'})
@@ -178,16 +152,14 @@ def satellites():
     point = data.get('point')
 
     is_processing = True
-    start = perf_counter_ns()
     visible_sats_data_for_timesteps, DOPvalues, elevation_cutoffs = [], [], []
     if config.USE_CONCURRENCY_FOR_SATELLITE:
         visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = concurrency.data_from_epoch(gnss, elevation_angle, time_str, epoch,frequency, point)
     else:
         visible_sats_data_for_timesteps, elevation_cutoffs, visible_sats_pos_for_timesteps, observation_cartesian = data_from_epoch(gnss, elevation_angle, time_str, epoch,frequency, point)
-    print("timing runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
+
     DOPvalues = DOP_in_epoch(visible_sats_pos_for_timesteps, observation_cartesian)
     is_processing = False
-    print("timing satellites (ms):\t", round((perf_counter_ns()-start_satellites)/1_000_000,3))
     if not is_processing:
         response = jsonify({'message': 'Data processed successfully', 'data': visible_sats_data_for_timesteps, 'DOP': DOPvalues, 'elevation_cutoffs': elevation_cutoffs})
         response.headers.add("Access-Control-Allow-Origin", "http://localhost:3000")  

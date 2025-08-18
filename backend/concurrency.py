@@ -65,7 +65,7 @@ def get_dopvalues_concurrently(args: tuple[ np.ndarray[float],
     Benchmarked as 2-3x faster at 105 road points compared to single process.
     Tests performed 16GB RAM and Intel® Core™ i5-10310U × 8.
     """
-    start = perf_counter_ns()
+    
     @dataclass(frozen=True)
     class Read_Only_Dop:
         dem_data = args[0]
@@ -90,11 +90,8 @@ def get_dopvalues_concurrently(args: tuple[ np.ndarray[float],
             dop_list.append(r)
             step += 1
             yield f"{int(((step+1) / total_steps) * 100)}\n\n"
-    #dt = (perf_counter_ns()-start)/10**9/60
-    #print(f'{int(dt)}:{int((dt-int(dt))*60)}')
-    print("timing generate (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
-    yield f"{json.dumps(dop_list)}\n\n"
 
+    yield f"{json.dumps(dop_list)}\n\n"
 
 
 
@@ -138,19 +135,16 @@ def data_from_epoch(gnss: list[str],
     transformerToEN = Transformer.from_crs("EPSG:4326","EPSG:25833", always_xy=True)
     observation_EN = transformerToEN.transform(observation_lng_lat[0], observation_lng_lat[1])
     given_date = datetime.strptime(t, "%Y-%m-%dT%H:%M:%S.%f")
-    start = perf_counter_ns()
 
     daynumber, eph_date = get_daynumber_and_date_for_ephemeris(given_date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)
     sort_rinex(daynumber, eph_date)
-    print("timing get_daynumber_runData_check_sight (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     merged_raster = get_merged_raster_near_points([point])
     
     with rasterio.open(merged_raster) as src:
         dem_data_temp = src.read(1)
         observer_height = dem_data_temp[src.index(observation_EN[0], observation_EN[1])]
-        start = perf_counter_ns()
 
         @dataclass(frozen=True)
         class Read_Only_Sat:

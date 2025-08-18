@@ -42,6 +42,7 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
 
         except FileNotFoundError:
             print(f"Error: The file '{folder / eph}' was not found.")
+            raise  # Let flask catch this
 
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -52,7 +53,6 @@ def delete_old_data(folder: Path, max_allowed_count: int, file_max_lifetime_hour
     
     # If too many files/folders, delete least recent used. 
     while len(os.listdir(folder)) > max_allowed_count:
-        print('delete', folder / sorted_by_atime[-1]['path'])
         delete(folder / sorted_by_atime[-1]['path'])
 
     # Exit function if we dont want to delete files not used.
@@ -86,7 +86,10 @@ def update_access_time(file: str) -> None:
         # Set the access time and keep the modification time
         os.utime(file, (new_atime_timestamp, current_mtime))
         print(f"Access time of '{file}' updated successfully.")
+        raise  # Let flask catch this
     except FileNotFoundError:
         print(f"Error: File '{file}' not found.")
+        raise  # Let flask catch this
     except Exception as e:
         print(f"An error occurred: {e}")
+        raise  # Let flask catch this

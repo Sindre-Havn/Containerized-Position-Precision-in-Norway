@@ -569,11 +569,10 @@ def sort_rinex(daynumber: str, date: datetime) -> None:
     rinex_path = download_rinex(daynumber, date.year)
     content = []
     with open(rinex_path, "r") as file:
-        #print(f"Reading file {filename}")
         content = file.read()
 
     split_index = content.index("END OF HEADER")
-    header_part = content[:split_index]  # orbit informasjon
+    # header_part = content[:split_index]  # orbit information
     data_part = content[split_index+13:] # satellite information
 
     current_date = date.date()
@@ -635,12 +634,10 @@ def sort_rinex(daynumber: str, date: datetime) -> None:
             elif "E" in satellitt_id:
                 Galileiodata(structured_dataE,satellitt_id,time,values_list, clk_corr, nav_msg_type)
 
-    start = perf_counter_ns()
     # Update navigation message type for GNSS's with multiple navigation message types.
     #structured_dataG = update_navigation_message_type(structured_dataG)
     structured_dataJ = update_navigation_message_type(structured_dataJ)
     structured_dataC = update_navigation_message_type(structured_dataC)
-    print("timing update_navigation_message_type x2 (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     # Save GNSS datafranes to csv.
     output_folder = f'ephemeris/{date.year}_{daynumber}/'

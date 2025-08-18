@@ -99,7 +99,7 @@ def get_road(startpoint: list[float], endpoint: list[float]) -> list[list[list[f
     road_segments_linestrings = [segm['geometri']['wkt'] for segm in road_segment_objects]
     road_segments_coords = list(map(linestring_to_coordinates, road_segments_linestrings))
 
-    start = perf_counter_ns()
+    
     # print("timing createNewRaster (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
 
     return road_segments_coords

@@ -267,7 +267,7 @@ def data_from_epoch(gnss_list: list[str],
     elevation_mask = float(elevation_mask_str)
     observation_EN = transformerToEN.transform(observation_lnglat[0], observation_lnglat[1])
     given_date = datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S.%f")
-    start = perf_counter_ns()
+    
     
     daynumber, eph_date = get_daynumber_and_date_for_ephemeris(given_date)
     delete_old_data(Path('ephemeris'), config.EPHEMERIS_MAX_COUNT, config.EPHEMERIS_LIFETIME_HOURS)

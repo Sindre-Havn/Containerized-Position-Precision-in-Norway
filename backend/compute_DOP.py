@@ -53,7 +53,6 @@ def DOPvalues(satellites: list[list], receiver_pos: list[float]) -> list[float]:
     Qxx = np.zeros((4, 4))
     i = 0
     for satellite in satellites:
-        #print(satellite) #xyz
         rho_i = geometric_range([satellite[0], satellite[1], satellite[2]], receiver_pos)
 
         A[i][0] = -((satellite[0] - receiver_pos[0]) / rho_i)
@@ -95,9 +94,7 @@ def find_dop_on_point(dem_data: np.ndarray[float], gnss_mapping: dict[str, pd.Da
     # Offset time by current point's offset
     timeNow = time + timedelta(seconds=point['properties']['time_from_start'])
 
-    #start = perf_counter_ns()
     visible_satellites = satellites_visible_from_point(gnss_mapping, gnss, timeNow, obs_cartesian, observer, elevation_angle, dem_data,E_lower, N_upper)
-    #print("timing satellites_visible_from_point (ms):\t", round((perf_counter_ns()-start)/1_000_000,3))
     
     if len(visible_satellites) < 4: return [0.0, 0.0, 0.0, 0.0, 0.0]
     return DOPvalues(visible_satellites, obs_cartesian)
