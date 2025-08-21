@@ -4,6 +4,7 @@ Changes since fork:
 * Routes work over ferry crossings.
 * Can find speedlimits without hardcoding it for EV136.
 * Better documentation and overall concistency.
+* New concurrency.py improves computational speed for DOP calculations.
 * Add config.
 * Close the visual gap in frontend at the end of elevation-curve in the skyplot.
 * More accurate terrain analysis along borders between .tif files.
@@ -13,6 +14,7 @@ Changes since fork:
   Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
   Ephemeris data should be valid for a few weeks.
 * The option "Vegsystemreferanse" in the frontend is not used and is thoroughly removed.
+* New memory_manager.py gives system posibility to handle multiple different 'merged_raster' and daynumber rinex's, for different clients.
 * Containerized backend.
 
 
@@ -21,21 +23,19 @@ Future work:
   The route finder in "get_road_and_speedlimits" often dont find routes, even easy short ones.
   maybe v4 is better.
 * Configure server for deployment by setting up TLS/SSL certificate, find a fitting domain, and change the IPs and
-  port defined in backend/app.py and frontend/src/components.
+  port defined in backend/app.py and frontend/src/components/.
 * Create docker-compose.yml for configuring and running frontend and backend as a single system.
 * Potentially hard to see difference between zero DOP and
   close to zero DOP as it is not. Invalid DOP values (zeros) should be more obviouse.
   Maybe colorcode or set -1 instead of 0.
 * DOP values should be set invalid inside tunnels.
 * Consider python library 'dask pandas' for sharing memory inside concurrency.py (bypass GIL) and make it even faster.
-* Give system posibility to handle multiple different 'merged_raster' and daynumber rinex's, for different clients.
 * The need to create new merged_raster for each request is suboptimal,memory heavy,
   and makes the backend voulnerable to buffer overflow attacks.
   The code should be refactored so that terrain analysis can be performed inplace in the dem10 data.
-* Make it so that clients cannot request DOP calculaton on day with no
+* Make it so that clients (frontend) cannot request DOP calculaton on day with no
   valid rinex to be downloaded from CDDIS (see get_daynumber_and_date_for_ephemeris).
-  Dont want backend to crash for everyone if
-  one clients requests a non-existing rinex (For example request rinex 1 year in future).
+  Dont want backend to crash for everyone if one clients requests a non-existing rinex (For example request rinex 1 year in future).
 * Concider changing from 2D to 3D coordinates inside roads.py, because speedlimits
   are measured along road curve (3D), not top-down (2D).
 * Is it correct to have fixed phi and lam in common_variables.py. See:
