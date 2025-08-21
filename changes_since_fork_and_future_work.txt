@@ -3,7 +3,7 @@ Changes since fork:
 * Routes work when overlapping roads, such as inside spiraling tunnels.
 * Routes work over ferry crossings.
 * Can find speedlimits without hardcoding it for EV136.
-* Better documentation and overall concistency.
+* Better documentation, naming, and overall concistency.
 * New concurrency.py improves computational speed for DOP calculations.
 * Add config.
 * Close the visual gap in frontend at the end of elevation-curve in the skyplot.
@@ -11,8 +11,8 @@ Changes since fork:
 * The backend can handle multiple (different) requests from multiple clients, but they are queued (only one is served at a time).
 * DOP values can now be calculated as forcast. The number of days in the future is
   determined by NR_FORCAST_DAYS from config.py.
-  Satellites drift kilometers (exponentially) in a week (which is neglible at 20'000km distance).
-  Ephemeris data should be valid for a few weeks.
+  Satellites drift (exponentially) to <100 meters in two week (which is neglible at 20'000km distance).
+  Ephemeris data should be valid for DOP-purpose for a few weeks.
 * The option "Vegsystemreferanse" in the frontend is not used and is thoroughly removed.
 * New memory_manager.py gives system posibility to handle multiple different 'merged_raster' and daynumber rinex's, for different clients.
 * Containerized backend.
@@ -40,3 +40,4 @@ Future work:
   are measured along road curve (3D), not top-down (2D).
 * Is it correct to have fixed phi and lam in common_variables.py. See:
     # IS THIS SAFE? Using fixed ENU coordinates for entire Norway!?
+* Wrong DOP values along country borders to Russia/Sweden/Finland because of missing DEM data along borders.
