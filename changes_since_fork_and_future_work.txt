@@ -11,7 +11,7 @@ Changes since fork:
 * The backend can handle multiple (different) requests from multiple clients, but they are queued (only one is served at a time).
 * DOP values can now be calculated as forcast. The number of days in the future is
   determined by NR_FORCAST_DAYS from config.py.
-  Satellites drift (exponentially) to <100 meters in two week (which is neglible at 20'000km distance).
+  Satellites drift (exponentially) to <100 meters in two week (which is neglible at 20'000km distance). See https://navi.ion.org/content/68/1/199.
   Ephemeris data should be valid for DOP-purpose for a few weeks.
 * The option "Vegsystemreferanse" in the frontend is not used and is thoroughly removed.
 * New memory_manager.py gives system posibility to handle multiple different 'merged_raster' and daynumber rinex's, for different clients.
