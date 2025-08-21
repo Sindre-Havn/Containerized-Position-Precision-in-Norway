@@ -40,4 +40,4 @@ Future work:
   are measured along road curve (3D), not top-down (2D).
 * Is it correct to have fixed phi and lam in common_variables.py. See:
     # IS THIS SAFE? Using fixed ENU coordinates for entire Norway!?
-* Wrong DOP values along country borders to Russia/Sweden/Finland because of missing DEM data along borders.
+* Wrong DOP values along country borders to Russia/Sweden/Finland because of missing DEM data other side of borders.
